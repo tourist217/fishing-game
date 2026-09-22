@@ -19,6 +19,7 @@ const DEFAULT_UPGRADES: UpgradesState = {
 };
 
 const BAIT_CAPACITY_MAP = [10, 20, 30, 50];
+const WORM_REGEN_INTERVAL_MS = 60 * 60 * 1000; // 1 час (3600000 мс)
 
 export default function App() {
   const [userName, setUserName] = useState<string>('Рыбак');
@@ -60,13 +61,52 @@ export default function App() {
   const rodIndex = RODS.findIndex((r) => r.id === equippedRodId);
   const playerRodLevel = rodIndex >= 0 ? rodIndex + 1 : 1;
 
-  // Вместимость банки с учетом апгрейда
+  // Вместимость банки
   const currentBaitCapacity = BAIT_CAPACITY_MAP[upgrades.baitCapacityLevel] || 10;
-
-  // Опыт до следующего уровня
   const expToNextLevel = level * 100;
 
-  // Автосохранение в localStorage
+  // 🪱 Логика пассивного пополнения червей (1 шт. в час)
+  useEffect(() => {
+    const now = Date.now();
+    const lastRegenTime = Number(localStorage.getItem('fg_last_worm_time')) || now;
+    const diffMs = now - lastRegenTime;
+
+    if (diffMs >= WORM_REGEN_INTERVAL_MS) {
+      const generatedWorms = Math.floor(diffMs / WORM_REGEN_INTERVAL_MS);
+      const remainingMs = diffMs % WORM_REGEN_INTERVAL_MS;
+
+      setBaits((prev) => {
+        const currentWorms = prev.worm || 0;
+        const newWorms = Math.min(currentBaitCapacity, currentWorms + generatedWorms);
+        return { ...prev, worm: newWorms };
+      });
+
+      // Сдвигаем время с сохранением неполного часа
+      localStorage.setItem('fg_last_worm_time', (now - remainingMs).toString());
+    } else if (!localStorage.getItem('fg_last_worm_time')) {
+      localStorage.setItem('fg_last_worm_time', now.toString());
+    }
+
+    // Фоновый таймер пока приложение открыто
+    const interval = setInterval(() => {
+      const checkNow = Date.now();
+      const lastCheck = Number(localStorage.getItem('fg_last_worm_time')) || checkNow;
+      if (checkNow - lastCheck >= WORM_REGEN_INTERVAL_MS) {
+        setBaits((prev) => {
+          const currentWorms = prev.worm || 0;
+          if (currentWorms < currentBaitCapacity) {
+            return { ...prev, worm: currentWorms + 1 };
+          }
+          return prev;
+        });
+        localStorage.setItem('fg_last_worm_time', checkNow.toString());
+      }
+    }, 60000); // проверяем каждую минуту
+
+    return () => clearInterval(interval);
+  }, [currentBaitCapacity]);
+
+  // Сохранения
   useEffect(() => { localStorage.setItem('fg_coins', coins.toString()); }, [coins]);
   useEffect(() => { localStorage.setItem('fg_exp', exp.toString()); }, [exp]);
   useEffect(() => { localStorage.setItem('fg_level', level.toString()); }, [level]);
@@ -96,7 +136,6 @@ export default function App() {
     }
   };
 
-  // Базовый размер зоны + бонус удочки + бонус от заточки крючков
   const baseZoneWidth = 35 + currentRod.sweetSpotBonus + upgrades.hookSharpenLevel * 5;
   const sweetSpotStart = Math.max(10, 50 - baseZoneWidth / 2);
   const sweetSpotEnd = Math.min(90, 50 + baseZoneWidth / 2);
@@ -140,8 +179,6 @@ export default function App() {
     let localProgress = catchProgress;
 
     const isOverweight = currentFish?.rodBrokenRisk;
-
-    // Множитель скорости смотки от смазки катушки
     const progressSpeedMultiplier = 1 + upgrades.reelOilLevel * 0.15;
 
     const interval = setInterval(() => {
