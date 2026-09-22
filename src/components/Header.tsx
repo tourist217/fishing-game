@@ -5,6 +5,7 @@ interface HeaderProps {
   exp: number;
   rodName?: string;
   rodIcon?: string;
+  onResetProgress?: () => void;
 }
 
 export const Header = ({
@@ -14,7 +15,16 @@ export const Header = ({
   exp,
   rodName = 'Бамбуковая удочка',
   rodIcon = '🎋',
+  onResetProgress,
 }: HeaderProps) => {
+  const handleReset = () => {
+    const confirmed = window.confirm('Точно сбросить весь прогресс до 1 уровня?');
+    if (confirmed) {
+      localStorage.clear();
+      window.location.reload();
+    }
+  };
+
   return (
     <div
       style={{
@@ -32,13 +42,34 @@ export const Header = ({
           Уровень {level} • {rodIcon} {rodName}
         </div>
       </div>
-      <div style={{ display: 'flex', gap: '14px' }}>
-        <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#fbbf24' }}>
-          🪙 {coins}
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#fbbf24' }}>
+            🪙 {coins}
+          </div>
+          <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#a78bfa' }}>
+            ⭐ {exp}
+          </div>
         </div>
-        <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#a78bfa' }}>
-          ⭐ {exp}
-        </div>
+
+        {/* Кнопка быстрого сброса для тестов */}
+        <button
+          onClick={onResetProgress || handleReset}
+          title="Сбросить прогресс"
+          style={{
+            background: 'rgba(239, 68, 68, 0.2)',
+            border: '1px solid rgba(239, 68, 68, 0.4)',
+            color: '#f87171',
+            borderRadius: '8px',
+            padding: '4px 8px',
+            fontSize: '11px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+          }}
+        >
+          Сброс
+        </button>
       </div>
     </div>
   );
