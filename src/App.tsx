@@ -5,7 +5,7 @@ type GameState = 'idle' | 'waiting' | 'hooked' | 'reeling' | 'caught' | 'lost';
 type ActiveTab = 'fishing' | 'inventory';
 
 export interface CaughtFishItem {
-  uid: string; // уникальный id для списка
+  uid: string;
   fish: Fish;
   weight: number;
   price: number;
@@ -144,9 +144,7 @@ export default function App() {
       if (localProgress >= 100) {
         clearInterval(interval);
         if (currentFish) {
-          // Добавляем рыбу в садок (инвентарь)
           setInventory((prev) => [currentFish, ...prev]);
-          // Опыт даем сразу за поимку
           setExp((prev) => {
             const nextExp = prev + currentFish.exp;
             if (nextExp >= level * 100) {
@@ -170,14 +168,12 @@ export default function App() {
     return () => clearInterval(interval);
   }, [gameState, currentFish, level]);
 
-  // Продажа конкретной рыбы
   const sellFish = (uid: string, price: number) => {
     setCoins((prev) => prev + price);
     setInventory((prev) => prev.filter((item) => item.uid !== uid));
     triggerHaptic('impact');
   };
 
-  // Продажа всего улова
   const sellAllFish = () => {
     if (inventory.length === 0) return;
     const total = inventory.reduce((sum, item) => sum + item.price, 0);
@@ -234,7 +230,6 @@ export default function App() {
 
       {/* Контент активной вкладки */}
       {activeTab === 'fishing' ? (
-        /* Вкладка Рыбалки */
         <div
           style={{
             display: 'flex',
@@ -406,7 +401,7 @@ export default function App() {
           )}
         </div>
       ) : (
-        /* Вкладка Садок (Инвентарь) */
+        /* Вкладка Садок */
         <div
           style={{
             flex: 1,
@@ -553,7 +548,8 @@ export default function App() {
             </button>
           )}
 
-          {(gameState === 'caught' || gameState === 'lost') && (
+          {/* Экран Успешного улова */}
+          {gameState === 'caught' && (
             <button
               disabled={!canDismissModal}
               onClick={() => {
@@ -573,6 +569,30 @@ export default function App() {
               }}
             >
               {canDismissModal ? 'Положить в садок 🧺' : 'Осматриваем рыбу...'}
+            </button>
+          )}
+
+          {/* Экран Схода рыбы */}
+          {gameState === 'lost' && (
+            <button
+              disabled={!canDismissModal}
+              onClick={() => {
+                if (canDismissModal) setGameState('idle');
+              }}
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: '16px',
+                border: 'none',
+                background: canDismissModal ? '#475569' : '#334155',
+                color: canDismissModal ? '#ffffff' : '#64748b',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                cursor: canDismissModal ? 'pointer' : 'not-allowed',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {canDismissModal ? 'Попробовать снова 🔄' : 'Рыба уплыла...'}
             </button>
           )}
         </div>
