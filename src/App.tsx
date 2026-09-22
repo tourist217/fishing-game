@@ -8,6 +8,10 @@ import { FishingScreen, type GameState } from './components/FishingScreen';
 import { InventoryScreen, type CaughtFishItem } from './components/InventoryScreen';
 import { ShopScreen } from './components/ShopScreen';
 
+interface ActiveFishState extends CaughtFishItem {
+  rodBrokenRisk?: boolean;
+}
+
 export default function App() {
   const [userName, setUserName] = useState<string>('Рыбак');
   const [coins, setCoins] = useState<number>(() => Number(localStorage.getItem('fg_coins')) || 0);
@@ -18,7 +22,6 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Наживки игрока
   const [baits, setBaits] = useState<Record<string, number>>(() => {
     const saved = localStorage.getItem('fg_baits');
     return saved ? JSON.parse(saved) : INITIAL_BAIT_INVENTORY;
@@ -33,7 +36,7 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('fishing');
   const [gameState, setGameState] = useState<GameState>('idle');
-  const [currentFish, setCurrentFish] = useState<CaughtFishItem | null>(null);
+  const [currentFish, setCurrentFish] = useState<ActiveFishState | null>(null);
   const [canDismissModal, setCanDismissModal] = useState<boolean>(false);
 
   const [tension, setTension] = useState<number>(50);
@@ -41,12 +44,10 @@ export default function App() {
   const isPullingRef = useRef<boolean>(false);
 
   const currentRod: Rod = RODS.find((r) => r.id === equippedRodId) || RODS[0];
-
   const rodIndex = RODS.findIndex((r) => r.id === equippedRodId);
   const playerRodLevel = rodIndex >= 0 ? rodIndex + 1 : 1;
   const expToNextLevel = level * 120 + (level - 1) * 60;
 
-  // Автосохранения
   useEffect(() => { localStorage.setItem('fg_coins', coins.toString()); }, [coins]);
   useEffect(() => { localStorage.setItem('fg_exp', exp.toString()); }, [exp]);
   useEffect(() => { localStorage.setItem('fg_level', level.toString()); }, [level]);
@@ -79,12 +80,10 @@ export default function App() {
   const sweetSpotStart = Math.max(15, 50 - baseZoneWidth / 2);
   const sweetSpotEnd = Math.min(85, 50 + baseZoneWidth / 2);
 
-  // Старт рыбалки с расходом наживки
   const startFishing = () => {
     const availableBait = baits[selectedBaitId] || 0;
     if (availableBait <= 0) return;
 
-    // Списываем 1 наживку
     setBaits((prev) => ({
       ...prev,
       [selectedBaitId]: Math.max(0, (prev[selectedBaitId] || 0) - 1),
@@ -94,7 +93,8 @@ export default function App() {
     triggerHaptic('selection');
 
     setTimeout(() => {
-      const generated = getRandomFish(playerRodLevel);
+      // Передаем наживку и уровень удочки
+      const generated = getRandomFish(playerRodLevel, selectedBaitId);
       const finalPrice = Math.round(generated.price * currentRod.goldBonus);
       setCurrentFish({
         ...generated,
@@ -119,12 +119,19 @@ export default function App() {
     let localTension = tension;
     let localProgress = catchProgress;
 
+    // Если рыба слишком тяжелая для удочки (например, крупная на кукурузу при бамбуке)
+    const isOverweight = currentFish?.rodBrokenRisk;
+
     const interval = setInterval(() => {
-      localTension += isPullingRef.current ? 2.4 : -1.8;
-      if (Math.random() < 0.1) localTension += (Math.random() - 0.5) * 12;
+      // Крупная рыба рвет снасть значительно быстрее и агрессивнее
+      const pullRate = isPullingRef.current ? (isOverweight ? 4.5 : 2.4) : (isOverweight ? -3.5 : -1.8);
+      localTension += pullRate;
+
+      const randomJerk = (Math.random() - 0.5) * (isOverweight ? 25 : 12);
+      if (Math.random() < (isOverweight ? 0.25 : 0.1)) localTension += randomJerk;
 
       const inSweetSpot = localTension >= sweetSpotStart && localTension <= sweetSpotEnd;
-      localProgress += inSweetSpot ? 1.0 : -0.6;
+      localProgress += inSweetSpot ? (isOverweight ? 0.5 : 1.0) : (isOverweight ? -1.2 : -0.6);
 
       if (localTension >= 100 || localTension <= 0 || localProgress <= 0) {
         clearInterval(interval);
@@ -138,7 +145,8 @@ export default function App() {
       if (localProgress >= 100) {
         clearInterval(interval);
         if (currentFish) {
-          setInventory((prev) => [currentFish, ...prev]);
+          const { rodBrokenRisk: _risk, ...cleanFish } = currentFish;
+          setInventory((prev) => [cleanFish, ...prev]);
           setExp((prev) => {
             const nextExp = prev + currentFish.exp;
             if (nextExp >= expToNextLevel) {
@@ -161,7 +169,6 @@ export default function App() {
     return () => clearInterval(interval);
   }, [gameState, currentFish, level, expToNextLevel, sweetSpotStart, sweetSpotEnd]);
 
-  // Покупка наживки в магазине
   const handleBuyBait = (baitId: string, amount: number, totalCost: number) => {
     if (coins < totalCost) return;
     const currentCount = baits[baitId] || 0;
