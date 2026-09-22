@@ -84,12 +84,7 @@ export const FISH_DATABASE: Fish[] = [
   },
 ];
 
-// Матрица весов вероятностей для каждой рыбы в зависимости от наживки
-// Чем больше число, тем выше шанс поклевки
 const BAIT_WEIGHTS: Record<string, Record<string, number>> = {
-  // Хлеб и Тесто:
-  // Мелкий карась и плотва — высокий (50), подлещик — средний (20),
-  // крупный карась и плотва — низкий (5), окунь — 0
   bread: {
     crucian_small: 50,
     roach_small: 50,
@@ -106,10 +101,6 @@ const BAIT_WEIGHTS: Record<string, Record<string, number>> = {
     roach_large: 5,
     perch_small: 0,
   },
-
-  // Червь, Опарыш, Мотыль:
-  // Мелкий окунь, подлещик, мелкий карась — высокий (40),
-  // маленькая плотва — средний (15), крупная рыба — низкий (5)
   worm: {
     perch_small: 40,
     bream_small: 40,
@@ -134,9 +125,6 @@ const BAIT_WEIGHTS: Record<string, Record<string, number>> = {
     crucian_large: 5,
     roach_large: 5,
   },
-
-  // Кукуруза:
-  // Только крупная плотва, крупный карась или подлещик (требуют мощную снасть)
   corn: {
     crucian_small: 0,
     roach_small: 0,
@@ -149,17 +137,17 @@ const BAIT_WEIGHTS: Record<string, Record<string, number>> = {
 
 export function getRandomFish(
   playerRodLevel: number = 1,
-  baitId: string = 'worm'
+  baitId: string = 'worm',
+  locationWeightModifier: number = 1.0
 ): {
   fish: Fish;
   weight: number;
   price: number;
   exp: number;
-  rodBrokenRisk?: boolean; // Флаг: если рыба слишком тяжелая для удочки
+  rodBrokenRisk?: boolean;
 } {
   const baitProfile = BAIT_WEIGHTS[baitId] || BAIT_WEIGHTS['worm'];
 
-  // Формируем список рыб с шансами
   const candidates: { fish: Fish; weightChance: number }[] = [];
   for (const fish of FISH_DATABASE) {
     const chance = baitProfile[fish.id] || 0;
@@ -168,7 +156,6 @@ export function getRandomFish(
     }
   }
 
-  // Взвешенный случайный выбор (рулетка шансов)
   const totalWeight = candidates.reduce((sum, item) => sum + item.weightChance, 0);
   let randomRoll = Math.random() * totalWeight;
   let selectedFish = candidates[0].fish;
@@ -181,12 +168,14 @@ export function getRandomFish(
     randomRoll -= item.weightChance;
   }
 
-  // Генерируем вес рыбы
-  const rawWeight = selectedFish.minWeight + Math.random() * (selectedFish.maxWeight - selectedFish.minWeight);
-  const weight = Math.round(rawWeight * 100) / 100;
+  // Расчет веса с учётом модификатора водоёма
+  const rawBaseWeight = selectedFish.minWeight + Math.random() * (selectedFish.maxWeight - selectedFish.minWeight);
+  const modifiedWeight = rawBaseWeight * locationWeightModifier;
+  const weight = Math.round(modifiedWeight * 100) / 100;
 
-  // Проверка: выдерживает ли удочка игрока эту рыбу
-  const rodBrokenRisk = selectedFish.minRodReq > playerRodLevel;
+  // Если модификатор увеличил рыбу свыше 1.3 кг, бамбуковая удочка первого уровня рискует не выдержать
+  const isTooHeavyForBamboo = playerRodLevel === 1 && weight > 1.3;
+  const rodBrokenRisk = selectedFish.minRodReq > playerRodLevel || isTooHeavyForBamboo;
 
   const price = Math.max(1, Math.round(weight * selectedFish.basePrice));
   const exp = Math.max(5, Math.round(weight * selectedFish.baseExp));
