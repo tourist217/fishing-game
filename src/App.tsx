@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { getRandomFish } from './fishData';
 import { RODS, type Rod } from './shopData';
+import { INITIAL_BAIT_INVENTORY, DEFAULT_BAIT_CAPACITY } from './baitData';
 import { Header } from './components/Header';
 import { Navigation, type ActiveTab } from './components/Navigation';
 import { FishingScreen, type GameState } from './components/FishingScreen';
@@ -16,6 +17,13 @@ export default function App() {
     const saved = localStorage.getItem('fg_inventory');
     return saved ? JSON.parse(saved) : [];
   });
+
+  // Наживки игрока
+  const [baits, setBaits] = useState<Record<string, number>>(() => {
+    const saved = localStorage.getItem('fg_baits');
+    return saved ? JSON.parse(saved) : INITIAL_BAIT_INVENTORY;
+  });
+  const [selectedBaitId, setSelectedBaitId] = useState<string>('worm');
 
   const [equippedRodId, setEquippedRodId] = useState<string>(() => localStorage.getItem('fg_rod') || 'bamboo');
   const [ownedRods, setOwnedRods] = useState<string[]>(() => {
@@ -34,18 +42,16 @@ export default function App() {
 
   const currentRod: Rod = RODS.find((r) => r.id === equippedRodId) || RODS[0];
 
-  // Определяем ранг текущей удочки (1, 2, 3 или 4)
   const rodIndex = RODS.findIndex((r) => r.id === equippedRodId);
   const playerRodLevel = rodIndex >= 0 ? rodIndex + 1 : 1;
-
-  // Формула необходимого опыта: каждый уровень требует больше (ур 1 -> 120, ур 2 -> 250, ур 3 -> 420...)
   const expToNextLevel = level * 120 + (level - 1) * 60;
 
-  // Сохранения в localStorage
+  // Автосохранения
   useEffect(() => { localStorage.setItem('fg_coins', coins.toString()); }, [coins]);
   useEffect(() => { localStorage.setItem('fg_exp', exp.toString()); }, [exp]);
   useEffect(() => { localStorage.setItem('fg_level', level.toString()); }, [level]);
   useEffect(() => { localStorage.setItem('fg_inventory', JSON.stringify(inventory)); }, [inventory]);
+  useEffect(() => { localStorage.setItem('fg_baits', JSON.stringify(baits)); }, [baits]);
   useEffect(() => { localStorage.setItem('fg_rod', equippedRodId); }, [equippedRodId]);
   useEffect(() => { localStorage.setItem('fg_owned_rods', JSON.stringify(ownedRods)); }, [ownedRods]);
 
@@ -73,11 +79,21 @@ export default function App() {
   const sweetSpotStart = Math.max(15, 50 - baseZoneWidth / 2);
   const sweetSpotEnd = Math.min(85, 50 + baseZoneWidth / 2);
 
+  // Старт рыбалки с расходом наживки
   const startFishing = () => {
+    const availableBait = baits[selectedBaitId] || 0;
+    if (availableBait <= 0) return;
+
+    // Списываем 1 наживку
+    setBaits((prev) => ({
+      ...prev,
+      [selectedBaitId]: Math.max(0, (prev[selectedBaitId] || 0) - 1),
+    }));
+
     setGameState('waiting');
     triggerHaptic('selection');
+
     setTimeout(() => {
-      // Передаем уровень удочки в генератор рыбы
       const generated = getRandomFish(playerRodLevel);
       const finalPrice = Math.round(generated.price * currentRod.goldBonus);
       setCurrentFish({
@@ -123,7 +139,6 @@ export default function App() {
         clearInterval(interval);
         if (currentFish) {
           setInventory((prev) => [currentFish, ...prev]);
-          // Плавная прокачка уровня
           setExp((prev) => {
             const nextExp = prev + currentFish.exp;
             if (nextExp >= expToNextLevel) {
@@ -145,6 +160,20 @@ export default function App() {
 
     return () => clearInterval(interval);
   }, [gameState, currentFish, level, expToNextLevel, sweetSpotStart, sweetSpotEnd]);
+
+  // Покупка наживки в магазине
+  const handleBuyBait = (baitId: string, amount: number, totalCost: number) => {
+    if (coins < totalCost) return;
+    const currentCount = baits[baitId] || 0;
+    if (currentCount + amount > DEFAULT_BAIT_CAPACITY) return;
+
+    setCoins((c) => c - totalCost);
+    setBaits((prev) => ({
+      ...prev,
+      [baitId]: (prev[baitId] || 0) + amount,
+    }));
+    triggerHaptic('impact');
+  };
 
   const getRarityLabel = (rarity: string) => {
     switch (rarity) {
@@ -185,6 +214,12 @@ export default function App() {
           sweetSpotEnd={sweetSpotEnd}
           currentFish={currentFish}
           canDismissModal={canDismissModal}
+          selectedBaitId={selectedBaitId}
+          baits={baits}
+          onSelectBait={(id) => {
+            setSelectedBaitId(id);
+            triggerHaptic('selection');
+          }}
           getRarityLabel={getRarityLabel}
           onStartFishing={startFishing}
           onStartReeling={startReeling}
@@ -218,6 +253,8 @@ export default function App() {
           level={level}
           equippedRodId={equippedRodId}
           ownedRods={ownedRods}
+          baits={baits}
+          baitCapacity={DEFAULT_BAIT_CAPACITY}
           onBuyRod={(rod) => {
             if (coins >= rod.price && level >= rod.levelReq) {
               setCoins((c) => c - rod.price);
@@ -230,6 +267,7 @@ export default function App() {
             setEquippedRodId(id);
             triggerHaptic('selection');
           }}
+          onBuyBait={handleBuyBait}
         />
       )}
 

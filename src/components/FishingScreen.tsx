@@ -1,4 +1,5 @@
 import type { CaughtFishItem } from './InventoryScreen';
+import { BAITS } from '../baitData';
 
 export type GameState = 'idle' | 'waiting' | 'hooked' | 'reeling' | 'caught' | 'lost';
 
@@ -10,6 +11,9 @@ interface FishingScreenProps {
   sweetSpotEnd: number;
   currentFish: CaughtFishItem | null;
   canDismissModal: boolean;
+  selectedBaitId: string;
+  baits: Record<string, number>;
+  onSelectBait: (baitId: string) => void;
   getRarityLabel: (rarity: string) => { text: string; color: string };
   onStartFishing: () => void;
   onStartReeling: () => void;
@@ -26,6 +30,9 @@ export const FishingScreen = ({
   sweetSpotEnd,
   currentFish,
   canDismissModal,
+  selectedBaitId,
+  baits,
+  onSelectBait,
   getRarityLabel,
   onStartFishing,
   onStartReeling,
@@ -33,13 +40,46 @@ export const FishingScreen = ({
   onPullEnd,
   onDismissModal,
 }: FishingScreenProps) => {
+  const currentBaitCount = baits[selectedBaitId] || 0;
+  const hasBait = currentBaitCount > 0;
+
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', margin: '16px 0' }}>
+      {/* Центральная игровая зона */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
         {gameState === 'idle' && (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '72px', marginBottom: '16px' }}>🌊</div>
-            <p style={{ color: '#94a3b8' }}>Тихая гладь воды... Пора забросить удочку!</p>
+          <div style={{ textAlign: 'center', width: '100%' }}>
+            <div style={{ fontSize: '64px', marginBottom: '12px' }}>🌊</div>
+            <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '16px' }}>Выберите наживку и забросьте удочку:</p>
+
+            {/* Выбор наживки перед забросом */}
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '4px 0 12px 0', justifyContent: 'center' }}>
+              {BAITS.map((bait) => {
+                const count = baits[bait.id] || 0;
+                const isSelected = selectedBaitId === bait.id;
+                return (
+                  <button
+                    key={bait.id}
+                    onClick={() => onSelectBait(bait.id)}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      padding: '8px 10px',
+                      borderRadius: '12px',
+                      background: isSelected ? 'rgba(37, 99, 235, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                      border: isSelected ? '1.5px solid #3b82f6' : '1px solid rgba(255, 255, 255, 0.08)',
+                      color: isSelected ? '#ffffff' : '#94a3b8',
+                      cursor: 'pointer',
+                      minWidth: '58px',
+                    }}
+                  >
+                    <span style={{ fontSize: '22px' }}>{bait.icon}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 'bold', marginTop: '2px' }}>{count} шт</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -197,23 +237,25 @@ export const FishingScreen = ({
         )}
       </div>
 
+      {/* Кнопка управления */}
       <div>
         {gameState === 'idle' && (
           <button
+            disabled={!hasBait}
             onClick={onStartFishing}
             style={{
               width: '100%',
               padding: '16px',
               borderRadius: '16px',
               border: 'none',
-              background: '#2563eb',
-              color: '#ffffff',
+              background: hasBait ? '#2563eb' : '#334155',
+              color: hasBait ? '#ffffff' : '#64748b',
               fontSize: '18px',
               fontWeight: 'bold',
-              cursor: 'pointer',
+              cursor: hasBait ? 'pointer' : 'not-allowed',
             }}
           >
-            Забросить удочку 🎣
+            {hasBait ? 'Забросить удочку 🎣' : 'Наживка закончилась 🪱'}
           </button>
         )}
 
