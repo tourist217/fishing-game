@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { getRandomFish, Fish } from './fishData';
+import { getRandomFish, type Fish } from './fishData';
 
 type GameState = 'idle' | 'waiting' | 'hooked' | 'reeling' | 'caught' | 'lost';
 
@@ -18,13 +18,11 @@ export default function App() {
   const [gameState, setGameState] = useState<GameState>('idle');
   const [currentFish, setCurrentFish] = useState<CaughtFishItem | null>(null);
 
-  // Состояния для мини-игры вываживания
-  const [tension, setTension] = useState<number>(50); // Натяжение лески: 0-100%
-  const [catchProgress, setCatchProgress] = useState<number>(0); // Прогресс вываживания: 0-100%
+  // Состояния для вываживания
+  const [tension, setTension] = useState<number>(50);
+  const [catchProgress, setCatchProgress] = useState<number>(0);
   const isPullingRef = useRef<boolean>(false);
-  const gameLoopRef = useRef<number | null>(null);
 
-  // Инициализация Telegram
   useEffect(() => {
     const tg = (window as any).Telegram?.WebApp;
     if (tg) {
@@ -36,7 +34,6 @@ export default function App() {
     }
   }, []);
 
-  // Вибрация в Telegram
   const triggerHaptic = (type: 'impact' | 'notification' | 'selection') => {
     const tg = (window as any).Telegram?.WebApp;
     if (tg?.HapticFeedback) {
@@ -46,15 +43,12 @@ export default function App() {
     }
   };
 
-  // 1. Заброс удочки
   const startFishing = () => {
     setGameState('waiting');
     triggerHaptic('selection');
 
-    // Случайное время ожидания поклевки: 2 - 4.5 секунды
     const waitTime = Math.random() * 2500 + 2000;
     setTimeout(() => {
-      // Поклевка!
       const target = getRandomFish();
       setCurrentFish(target);
       setGameState('hooked');
@@ -62,7 +56,6 @@ export default function App() {
     }, waitTime);
   };
 
-  // 2. Подсечка — переходим в режим вываживания
   const startReeling = () => {
     setGameState('reeling');
     setTension(50);
@@ -70,39 +63,31 @@ export default function App() {
     triggerHaptic('impact');
   };
 
-  // 3. Физический цикл вываживания (Game Loop)
   useEffect(() => {
-    if (gameState !== 'reeling') {
-      if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
-      return;
-    }
+    if (gameState !== 'reeling') return;
 
     let localTension = tension;
     let localProgress = catchProgress;
 
     const interval = setInterval(() => {
-      // Если игрок тянет — натяжение растет, если отпустил — падает
       if (isPullingRef.current) {
-        localTension += 2.2;
+        localTension += 2.4;
       } else {
         localTension -= 1.8;
       }
 
-      // Рыба иногда совершает рывки
-      if (Math.random() < 0.08) {
+      if (Math.random() < 0.1) {
         localTension += (Math.random() - 0.5) * 12;
       }
 
-      // Проверяем зеленый диапазон (оптимальное натяжение 35% - 70%)
       const inSweetSpot = localTension >= 35 && localTension <= 70;
 
       if (inSweetSpot) {
-        localProgress += 0.8; // Вытягиваем рыбу
+        localProgress += 1.0;
       } else {
-        localProgress -= 0.5; // Рыба уплывает дальше
+        localProgress -= 0.6;
       }
 
-      // Условия поражения: обрыв лески или сход
       if (localTension >= 100 || localTension <= 0 || localProgress <= 0) {
         clearInterval(interval);
         setGameState('lost');
@@ -111,7 +96,6 @@ export default function App() {
         return;
       }
 
-      // Условие победы: выловили рыбу
       if (localProgress >= 100) {
         clearInterval(interval);
         if (currentFish) {
@@ -148,7 +132,6 @@ export default function App() {
         userSelect: 'none',
       }}
     >
-      {/* Верхняя плашка профиля и ресурсов */}
       <div
         style={{
           display: 'flex',
@@ -157,7 +140,6 @@ export default function App() {
           background: 'rgba(255, 255, 255, 0.08)',
           borderRadius: '16px',
           padding: '12px 16px',
-          backdropFilter: 'blur(10px)',
         }}
       >
         <div>
@@ -174,7 +156,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Центральная игровая зона */}
       <div
         style={{
           display: 'flex',
@@ -193,9 +174,7 @@ export default function App() {
 
         {gameState === 'waiting' && (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '72px', marginBottom: '16px', animation: 'pulse 1.5s infinite' }}>
-              📍
-            </div>
+            <div style={{ fontSize: '72px', marginBottom: '16px' }}>📍</div>
             <p style={{ color: '#38bdf8', fontWeight: 'bold' }}>Ждем поклевку...</p>
           </div>
         )}
@@ -211,7 +190,6 @@ export default function App() {
 
         {gameState === 'reeling' && (
           <div style={{ width: '100%', maxWidth: '280px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
-            {/* Шкала поимки рыбы */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
                 <span>Вываживание</span>
@@ -229,11 +207,10 @@ export default function App() {
               </div>
             </div>
 
-            {/* Шкала натяжения лески */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
                 <span>Натяжение лески</span>
-                <span style={{ color: tension > 80 || tension < 20 ? '#ef4444' : '#22c55e' }}>
+                <span style={{ color: tension > 70 || tension < 35 ? '#ef4444' : '#22c55e' }}>
                   {tension > 70 ? 'Слишком сильно!' : tension < 35 ? 'Слишком слабо!' : 'Идеально'}
                 </span>
               </div>
@@ -247,7 +224,6 @@ export default function App() {
                   overflow: 'hidden',
                 }}
               >
-                {/* Зеленая безопасная зона по центру */}
                 <div
                   style={{
                     position: 'absolute',
@@ -259,7 +235,6 @@ export default function App() {
                     borderRight: '2px dashed #22c55e',
                   }}
                 />
-                {/* Бегунок натяжения */}
                 <div
                   style={{
                     position: 'absolute',
@@ -308,13 +283,12 @@ export default function App() {
             <div style={{ fontSize: '64px', marginBottom: '12px' }}>💨</div>
             <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#ef4444' }}>Рыба сорвалась!</h3>
             <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '6px' }}>
-              Леска ослабла или порвалась от перенатяжения.
+              Леска ослабла или оборвалась.
             </p>
           </div>
         )}
       </div>
 
-      {/* Нижняя кнопка управления */}
       <div>
         {gameState === 'idle' && (
           <button
@@ -348,7 +322,6 @@ export default function App() {
               fontSize: '18px',
               fontWeight: 'bold',
               cursor: 'pointer',
-              animation: 'bounce 0.5s infinite',
             }}
           >
             ПОДСЕЧЬ! ⚡
