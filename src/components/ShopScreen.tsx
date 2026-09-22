@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { RODS, type Rod } from '../shopData';
-import { BAITS, type Bait, DEFAULT_BAIT_CAPACITY } from '../baitData';
+import { BAITS, DEFAULT_BAIT_CAPACITY } from '../baitData';
 
 interface ShopScreenProps {
   coins: number;
