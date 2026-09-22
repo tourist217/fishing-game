@@ -46,7 +46,9 @@ export default function App() {
   const currentRod: Rod = RODS.find((r) => r.id === equippedRodId) || RODS[0];
   const rodIndex = RODS.findIndex((r) => r.id === equippedRodId);
   const playerRodLevel = rodIndex >= 0 ? rodIndex + 1 : 1;
-  const expToNextLevel = level * 120 + (level - 1) * 60;
+
+  // Опыт, необходимый для закрытия текущего уровня
+  const expToNextLevel = level * 100;
 
   useEffect(() => { localStorage.setItem('fg_coins', coins.toString()); }, [coins]);
   useEffect(() => { localStorage.setItem('fg_exp', exp.toString()); }, [exp]);
@@ -93,7 +95,6 @@ export default function App() {
     triggerHaptic('selection');
 
     setTimeout(() => {
-      // Передаем наживку и уровень удочки
       const generated = getRandomFish(playerRodLevel, selectedBaitId);
       const finalPrice = Math.round(generated.price * currentRod.goldBonus);
       setCurrentFish({
@@ -119,11 +120,9 @@ export default function App() {
     let localTension = tension;
     let localProgress = catchProgress;
 
-    // Если рыба слишком тяжелая для удочки (например, крупная на кукурузу при бамбуке)
     const isOverweight = currentFish?.rodBrokenRisk;
 
     const interval = setInterval(() => {
-      // Крупная рыба рвет снасть значительно быстрее и агрессивнее
       const pullRate = isPullingRef.current ? (isOverweight ? 4.5 : 2.4) : (isOverweight ? -3.5 : -1.8);
       localTension += pullRate;
 
@@ -147,10 +146,13 @@ export default function App() {
         if (currentFish) {
           const { rodBrokenRisk: _risk, ...cleanFish } = currentFish;
           setInventory((prev) => [cleanFish, ...prev]);
+
+          // Начисление опыта со сбросом остатка на новый уровень
           setExp((prev) => {
             const nextExp = prev + currentFish.exp;
             if (nextExp >= expToNextLevel) {
               setLevel((lvl) => lvl + 1);
+              return nextExp - expToNextLevel; // перенос излишка опыта
             }
             return nextExp;
           });
@@ -208,6 +210,7 @@ export default function App() {
         level={level}
         coins={coins}
         exp={exp}
+        maxExp={expToNextLevel}
         rodName={currentRod.name}
         rodIcon={currentRod.icon}
       />
