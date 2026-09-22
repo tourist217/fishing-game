@@ -1,374 +1,426 @@
-import type { CaughtFishItem } from './InventoryScreen';
-import { BAITS } from '../baitData';
-import type { FishingLocation } from '../locationsData';
+import { useEffect, useState, useRef } from 'react';
+import { getRandomFish } from './fishData';
+import { RODS, type Rod } from './shopData';
+import { INITIAL_BAIT_INVENTORY } from './baitData';
+import { LOCATIONS, DEFAULT_LOCATION_ID, type FishingLocation } from './locationsData';
+import { Header } from './components/Header';
+import { Navigation, type ActiveTab } from './components/Navigation';
+import { FishingScreen, type GameState } from './components/FishingScreen';
+import { InventoryScreen, type CaughtFishItem } from './components/InventoryScreen';
+import { ShopScreen, type UpgradesState } from './components/ShopScreen';
+import { MapScreen } from './components/MapScreen';
+import { HomeScreen } from './components/HomeScreen';
 
-export type GameState = 'idle' | 'waiting' | 'hooked' | 'reeling' | 'caught' | 'lost';
-
-interface FishingScreenProps {
-  gameState: GameState;
-  tension: number;
-  catchProgress: number;
-  sweetSpotStart: number;
-  sweetSpotEnd: number;
-  currentFish: CaughtFishItem | null;
-  canDismissModal: boolean;
-  selectedBaitId: string;
-  baits: Record<string, number>;
-  currentLocation: FishingLocation;
-  onOpenMap: () => void;
-  onSelectBait: (id: string) => void;
-  getRarityLabel: (rarity: string) => { text: string; color: string };
-  onStartFishing: () => void;
-  onStartReeling: () => void;
-  onPullStart: () => void;
-  onPullEnd: () => void;
-  onDismissModal: () => void;
+interface ActiveFishState extends CaughtFishItem {
+  rodBrokenRisk?: boolean;
 }
 
-export const FishingScreen = ({
-  gameState,
-  tension,
-  catchProgress,
-  sweetSpotStart,
-  sweetSpotEnd,
-  currentFish,
-  canDismissModal,
-  selectedBaitId,
-  baits,
-  currentLocation,
-  onOpenMap,
-  onSelectBait,
-  getRarityLabel,
-  onStartFishing,
-  onStartReeling,
-  onPullStart,
-  onPullEnd,
-  onDismissModal,
-}: FishingScreenProps) => {
-  const currentBaitCount = baits[selectedBaitId] || 0;
-  const inSweetSpot = tension >= sweetSpotStart && tension <= sweetSpotEnd;
+const DEFAULT_UPGRADES: UpgradesState = {
+  baitCapacityLevel: 0,
+  hookSharpenLevel: 0,
+  reelOilLevel: 0,
+};
+
+const BAIT_CAPACITY_MAP = [10, 20, 30, 50];
+const WORM_REGEN_INTERVAL_MS = 60 * 60 * 1000;
+
+export default function App() {
+  const [userName, setUserName] = useState<string>('Рыбак');
+  const [coins, setCoins] = useState<number>(() => Number(localStorage.getItem('fg_coins')) || 0);
+  const [exp, setExp] = useState<number>(() => Number(localStorage.getItem('fg_exp')) || 0);
+  const [level, setLevel] = useState<number>(() => Number(localStorage.getItem('fg_level')) || 1);
+  const [inventory, setInventory] = useState<CaughtFishItem[]>(() => {
+    const saved = localStorage.getItem('fg_inventory');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [baits, setBaits] = useState<Record<string, number>>(() => {
+    const saved = localStorage.getItem('fg_baits');
+    return saved ? JSON.parse(saved) : INITIAL_BAIT_INVENTORY;
+  });
+  const [selectedBaitId, setSelectedBaitId] = useState<string>('worm');
+
+  const [upgrades, setUpgrades] = useState<UpgradesState>(() => {
+    const saved = localStorage.getItem('fg_upgrades');
+    return saved ? JSON.parse(saved) : DEFAULT_UPGRADES;
+  });
+
+  const [equippedRodId, setEquippedRodId] = useState<string>(() => localStorage.getItem('fg_rod') || 'bamboo');
+  const [ownedRods, setOwnedRods] = useState<string[]>(() => {
+    const saved = localStorage.getItem('fg_owned_rods');
+    return saved ? JSON.parse(saved) : ['bamboo'];
+  });
+
+  // Локации и навигация между Хабом и Берегом
+  const [selectedLocationId, setSelectedLocationId] = useState<string>(
+    () => localStorage.getItem('fg_selected_location') || DEFAULT_LOCATION_ID
+  );
+  const [isAtPond, setIsAtPond] = useState<boolean>(false);
+  const [isMapOpen, setIsMapOpen] = useState<boolean>(false);
+
+  const [activeTab, setActiveTab] = useState<ActiveTab>('fishing');
+  const [gameState, setGameState] = useState<GameState>('idle');
+  const [currentFish, setCurrentFish] = useState<ActiveFishState | null>(null);
+  const [canDismissModal, setCanDismissModal] = useState<boolean>(false);
+
+  const [tension, setTension] = useState<number>(50);
+  const [catchProgress, setCatchProgress] = useState<number>(0);
+  const isPullingRef = useRef<boolean>(false);
+
+  const currentLocation: FishingLocation =
+    LOCATIONS.find((l) => l.id === selectedLocationId) || LOCATIONS[0];
+
+  const currentRod: Rod = RODS.find((r) => r.id === equippedRodId) || RODS[0];
+  const rodIndex = RODS.findIndex((r) => r.id === equippedRodId);
+  const playerRodLevel = rodIndex >= 0 ? rodIndex + 1 : 1;
+
+  const currentBaitCapacity = BAIT_CAPACITY_MAP[upgrades.baitCapacityLevel] || 10;
+  const expToNextLevel = level * 100;
+
+  // Черви: пассивный доход раз в час
+  useEffect(() => {
+    const now = Date.now();
+    const lastRegenTime = Number(localStorage.getItem('fg_last_worm_time')) || now;
+    const diffMs = now - lastRegenTime;
+
+    if (diffMs >= WORM_REGEN_INTERVAL_MS) {
+      const generatedWorms = Math.floor(diffMs / WORM_REGEN_INTERVAL_MS);
+      const remainingMs = diffMs % WORM_REGEN_INTERVAL_MS;
+
+      setBaits((prev) => {
+        const currentWorms = prev.worm || 0;
+        const newWorms = Math.min(currentBaitCapacity, currentWorms + generatedWorms);
+        return { ...prev, worm: newWorms };
+      });
+
+      localStorage.setItem('fg_last_worm_time', (now - remainingMs).toString());
+    } else if (!localStorage.getItem('fg_last_worm_time')) {
+      localStorage.setItem('fg_last_worm_time', now.toString());
+    }
+
+    const interval = setInterval(() => {
+      const checkNow = Date.now();
+      const lastCheck = Number(localStorage.getItem('fg_last_worm_time')) || checkNow;
+      if (checkNow - lastCheck >= WORM_REGEN_INTERVAL_MS) {
+        setBaits((prev) => {
+          const currentWorms = prev.worm || 0;
+          if (currentWorms < currentBaitCapacity) {
+            return { ...prev, worm: currentWorms + 1 };
+          }
+          return prev;
+        });
+        localStorage.setItem('fg_last_worm_time', checkNow.toString());
+      }
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [currentBaitCapacity]);
+
+  // Сохранения в localStorage
+  useEffect(() => { localStorage.setItem('fg_coins', coins.toString()); }, [coins]);
+  useEffect(() => { localStorage.setItem('fg_exp', exp.toString()); }, [exp]);
+  useEffect(() => { localStorage.setItem('fg_level', level.toString()); }, [level]);
+  useEffect(() => { localStorage.setItem('fg_inventory', JSON.stringify(inventory)); }, [inventory]);
+  useEffect(() => { localStorage.setItem('fg_baits', JSON.stringify(baits)); }, [baits]);
+  useEffect(() => { localStorage.setItem('fg_upgrades', JSON.stringify(upgrades)); }, [upgrades]);
+  useEffect(() => { localStorage.setItem('fg_rod', equippedRodId); }, [equippedRodId]);
+  useEffect(() => { localStorage.setItem('fg_owned_rods', JSON.stringify(ownedRods)); }, [ownedRods]);
+  useEffect(() => { localStorage.setItem('fg_selected_location', selectedLocationId); }, [selectedLocationId]);
+
+  useEffect(() => {
+    const tg = (window as any).Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      if (tg.initDataUnsafe?.user?.first_name) {
+        setUserName(tg.initDataUnsafe.user.first_name);
+      }
+    }
+  }, []);
+
+  const triggerHaptic = (type: 'impact' | 'notification' | 'selection') => {
+    const tg = (window as any).Telegram?.WebApp;
+    if (tg?.HapticFeedback) {
+      if (type === 'impact') tg.HapticFeedback.impactOccurred('medium');
+      if (type === 'notification') tg.HapticFeedback.notificationOccurred('success');
+      if (type === 'selection') tg.HapticFeedback.selectionChanged();
+    }
+  };
+
+  const baseZoneWidth = 35 + currentRod.sweetSpotBonus + upgrades.hookSharpenLevel * 5;
+  const sweetSpotStart = Math.max(10, 50 - baseZoneWidth / 2);
+  const sweetSpotEnd = Math.min(90, 50 + baseZoneWidth / 2);
+
+  const startFishing = () => {
+    const availableBait = baits[selectedBaitId] || 0;
+    if (availableBait <= 0) return;
+
+    setBaits((prev) => ({
+      ...prev,
+      [selectedBaitId]: Math.max(0, (prev[selectedBaitId] || 0) - 1),
+    }));
+
+    setGameState('waiting');
+    triggerHaptic('selection');
+
+    setTimeout(() => {
+      const generated = getRandomFish(playerRodLevel, selectedBaitId, currentLocation.weightModifier);
+      const finalPrice = Math.round(generated.price * currentRod.goldBonus);
+      setCurrentFish({
+        ...generated,
+        price: finalPrice,
+        uid: Math.random().toString(36).substring(2, 9),
+        caughtAt: Date.now(),
+      });
+      setGameState('hooked');
+      triggerHaptic('notification');
+    }, Math.random() * 2500 + 2000);
+  };
+
+  const startReeling = () => {
+    setGameState('reeling');
+    setTension(50);
+    setCatchProgress(15);
+    triggerHaptic('impact');
+  };
+
+  useEffect(() => {
+    if (gameState !== 'reeling') return;
+    let localTension = tension;
+    let localProgress = catchProgress;
+
+    const isOverweight = currentFish?.rodBrokenRisk;
+    const progressSpeedMultiplier = 1 + upgrades.reelOilLevel * 0.15;
+
+    const interval = setInterval(() => {
+      const pullRate = isPullingRef.current ? (isOverweight ? 4.5 : 2.4) : (isOverweight ? -3.5 : -1.8);
+      localTension += pullRate;
+
+      const randomJerk = (Math.random() - 0.5) * (isOverweight ? 25 : 12);
+      if (Math.random() < (isOverweight ? 0.25 : 0.1)) localTension += randomJerk;
+
+      const inSweetSpot = localTension >= sweetSpotStart && localTension <= sweetSpotEnd;
+      const baseProgressGain = (isOverweight ? 0.5 : 1.0) * progressSpeedMultiplier;
+      localProgress += inSweetSpot ? baseProgressGain : (isOverweight ? -1.2 : -0.6);
+
+      if (localTension >= 100 || localTension <= 0 || localProgress <= 0) {
+        clearInterval(interval);
+        setGameState('lost');
+        setCanDismissModal(false);
+        setTimeout(() => setCanDismissModal(true), 1200);
+        (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error');
+        return;
+      }
+
+      if (localProgress >= 100) {
+        clearInterval(interval);
+        if (currentFish) {
+          const { rodBrokenRisk: _risk, ...cleanFish } = currentFish;
+          setInventory((prev) => [cleanFish, ...prev]);
+
+          setExp((prev) => {
+            const nextExp = prev + currentFish.exp;
+            if (nextExp >= expToNextLevel) {
+              setLevel((lvl) => lvl + 1);
+              return nextExp - expToNextLevel;
+            }
+            return nextExp;
+          });
+        }
+        setGameState('caught');
+        setCanDismissModal(false);
+        setTimeout(() => setCanDismissModal(true), 1500);
+        triggerHaptic('notification');
+        return;
+      }
+
+      setTension(Math.max(0, Math.min(100, localTension)));
+      setCatchProgress(Math.max(0, Math.min(100, localProgress)));
+    }, 40);
+
+    return () => clearInterval(interval);
+  }, [gameState, currentFish, level, expToNextLevel, sweetSpotStart, sweetSpotEnd, upgrades.reelOilLevel]);
+
+  const handleBuyBait = (baitId: string, amount: number, totalCost: number) => {
+    if (coins < totalCost) return;
+    const currentCount = baits[baitId] || 0;
+    if (currentCount + amount > currentBaitCapacity) return;
+
+    setCoins((c) => c - totalCost);
+    setBaits((prev) => ({
+      ...prev,
+      [baitId]: (prev[baitId] || 0) + amount,
+    }));
+    triggerHaptic('impact');
+  };
+
+  const handleBuyUpgrade = (type: keyof UpgradesState, cost: number) => {
+    if (coins < cost) return;
+    setCoins((c) => c - cost);
+    setUpgrades((prev) => ({
+      ...prev,
+      [type]: prev[type] + 1,
+    }));
+    triggerHaptic('notification');
+  };
+
+  const getRarityLabel = (rarity: string) => {
+    switch (rarity) {
+      case 'legendary': return { text: 'ЛЕГЕНДАРНАЯ', color: '#fbbf24' };
+      case 'epic': return { text: 'ЭПИЧЕСКАЯ', color: '#c084fc' };
+      case 'rare': return { text: 'РЕДКАЯ', color: '#60a5fa' };
+      default: return { text: 'ОБЫЧНАЯ', color: '#94a3b8' };
+    }
+  };
 
   return (
     <div
       style={{
-        flex: 1,
         display: 'flex',
         flexDirection: 'column',
+        height: '100%',
+        padding: '16px 16px 8px 16px',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        margin: '12px 0',
-        width: '100%',
-        position: 'relative',
+        background: isAtPond ? currentLocation.gradient : 'linear-gradient(180deg, #091325 0%, #0d2744 60%, #06192d 100%)',
+        userSelect: 'none',
+        transition: 'background 0.5s ease',
       }}
     >
-      {/* Плашка выбранного водоёма с кнопкой перехода на карту */}
-      <div
-        style={{
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: 'rgba(255, 255, 255, 0.06)',
-          borderRadius: '14px',
-          padding: '8px 12px',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '20px' }}>{currentLocation.icon}</span>
-          <div>
-            <div style={{ fontWeight: 'bold', fontSize: '13px', color: currentLocation.accentColor }}>
-              {currentLocation.name}
-            </div>
-            <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-              Вес рыбы: x{currentLocation.weightModifier}
-            </div>
-          </div>
-        </div>
+      <Header
+        userName={userName}
+        level={level}
+        coins={coins}
+        exp={exp}
+        maxExp={expToNextLevel}
+        rodName={currentRod.name}
+        rodIcon={currentRod.icon}
+      />
 
-        <button
-          onClick={onOpenMap}
-          disabled={gameState !== 'idle'}
-          style={{
-            padding: '6px 12px',
-            background: gameState === 'idle' ? '#2563eb' : 'rgba(255,255,255,0.08)',
-            border: 'none',
-            borderRadius: '8px',
-            color: gameState === 'idle' ? '#fff' : '#64748b',
-            fontSize: '11px',
-            fontWeight: 'bold',
-            cursor: gameState === 'idle' ? 'pointer' : 'not-allowed',
+      {/* Экран карты водоёмов */}
+      {isMapOpen && (
+        <MapScreen
+          playerLevel={level}
+          currentLocationId={selectedLocationId}
+          onSelectLocation={(loc) => {
+            setSelectedLocationId(loc.id);
+            triggerHaptic('selection');
           }}
-        >
-          Карта 🗺️
-        </button>
-      </div>
-
-      {/* Центральная зона визуализации поклёвки */}
-      <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '12px',
-          width: '100%',
-        }}
-      >
-        {gameState === 'idle' && (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '8px' }}>🪣</div>
-            <div style={{ color: '#94a3b8', fontSize: '13px' }}>Выберите наживку и забросьте снасть</div>
-          </div>
-        )}
-
-        {gameState === 'waiting' && (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '56px', animation: 'bounce 1.5s infinite' }}>🌊</div>
-            <div style={{ color: '#38bdf8', fontSize: '14px', fontWeight: 'bold', marginTop: '8px' }}>
-              Поплавок на воде... ждём поклёвку
-            </div>
-          </div>
-        )}
-
-        {gameState === 'hooked' && (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '64px' }}>❗</div>
-            <div style={{ color: '#fbbf24', fontSize: '16px', fontWeight: 'bold' }}>КЛЮЁТ! ПОДСЕКАЙ!</div>
-          </div>
-        )}
-
-        {gameState === 'reeling' && (
-          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {/* Шкала вываживания */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
-                <span style={{ color: '#94a3b8' }}>Смотка лески:</span>
-                <span style={{ fontWeight: 'bold', color: '#38bdf8' }}>{Math.round(catchProgress)}%</span>
-              </div>
-              <div style={{ width: '100%', height: '10px', background: 'rgba(255,255,255,0.1)', borderRadius: '5px', overflow: 'hidden' }}>
-                <div
-                  style={{
-                    width: `${catchProgress}%`,
-                    height: '100%',
-                    background: 'linear-gradient(90deg, #38bdf8, #22c55e)',
-                    transition: 'width 0.1s linear',
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Шкала натяжения лески с зеленой зоной */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
-                <span style={{ color: '#94a3b8' }}>Натяжение лески:</span>
-                <span style={{ fontWeight: 'bold', color: inSweetSpot ? '#4ade80' : '#ef4444' }}>
-                  {Math.round(tension)}%
-                </span>
-              </div>
-              <div
-                style={{
-                  width: '100%',
-                  height: '16px',
-                  background: 'rgba(255,255,255,0.1)',
-                  borderRadius: '8px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
-              >
-                {/* Зеленая зона подсечки */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: `${sweetSpotStart}%`,
-                    width: `${sweetSpotEnd - sweetSpotStart}%`,
-                    height: '100%',
-                    background: 'rgba(34, 197, 94, 0.4)',
-                    borderLeft: '1px solid #22c55e',
-                    borderRight: '1px solid #22c55e',
-                  }}
-                />
-                {/* Ползунок */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: `${tension}%`,
-                    top: '0',
-                    width: '6px',
-                    height: '100%',
-                    background: '#ffffff',
-                    transform: 'translateX(-50%)',
-                    borderRadius: '3px',
-                    boxShadow: '0 0 6px rgba(255,255,255,0.8)',
-                    transition: 'left 0.05s linear',
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Выбор насадки (только в состоянии ожидания заброса) */}
-      {gameState === 'idle' && (
-        <div style={{ width: '100%', marginBottom: '12px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>Наживка:</div>
-          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
-            {BAITS.map((bait) => {
-              const count = baits[bait.id] || 0;
-              const isSelected = selectedBaitId === bait.id;
-              return (
-                <button
-                  key={bait.id}
-                  onClick={() => onSelectBait(bait.id)}
-                  style={{
-                    flex: '0 0 auto',
-                    padding: '8px 10px',
-                    borderRadius: '10px',
-                    background: isSelected ? 'rgba(37, 99, 235, 0.3)' : 'rgba(255,255,255,0.05)',
-                    border: isSelected ? '1.5px solid #3b82f6' : '1px solid rgba(255,255,255,0.08)',
-                    color: '#fff',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '2px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <span style={{ fontSize: '18px' }}>{bait.icon}</span>
-                  <span style={{ fontSize: '10px', fontWeight: 'bold' }}>{bait.name}</span>
-                  <span style={{ fontSize: '10px', color: count > 0 ? '#38bdf8' : '#ef4444' }}>
-                    {count} шт.
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+          onGoFishing={() => {
+            setIsMapOpen(false);
+            setIsAtPond(true);
+            setActiveTab('fishing');
+            triggerHaptic('notification');
+          }}
+        />
       )}
 
-      {/* Основная интерактивная кнопка */}
-      <div style={{ width: '100%' }}>
-        {gameState === 'idle' && (
-          <button
-            disabled={currentBaitCount <= 0}
-            onClick={onStartFishing}
-            style={{
-              width: '100%',
-              padding: '14px',
-              borderRadius: '12px',
-              border: 'none',
-              background: currentBaitCount > 0 ? '#2563eb' : '#334155',
-              color: currentBaitCount > 0 ? '#fff' : '#64748b',
-              fontWeight: 'bold',
-              fontSize: '15px',
-              cursor: currentBaitCount > 0 ? 'pointer' : 'not-allowed',
+      {/* Если карта не открыта, показываем выбранную вкладку */}
+      {!isMapOpen && activeTab === 'fishing' && (
+        isAtPond ? (
+          <FishingScreen
+            gameState={gameState}
+            tension={tension}
+            catchProgress={catchProgress}
+            sweetSpotStart={sweetSpotStart}
+            sweetSpotEnd={sweetSpotEnd}
+            currentFish={currentFish}
+            canDismissModal={canDismissModal}
+            selectedBaitId={selectedBaitId}
+            baits={baits}
+            currentLocation={currentLocation}
+            onBackToHub={() => {
+              setIsAtPond(false);
+              triggerHaptic('selection');
             }}
-          >
-            {currentBaitCount > 0 ? 'Забросить удочку 🎣' : 'Нет выбранной наживки!'}
-          </button>
-        )}
-
-        {gameState === 'waiting' && (
-          <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '13px', padding: '14px' }}>
-            Следим за поплавком...
-          </div>
-        )}
-
-        {gameState === 'hooked' && (
-          <button
-            onClick={onStartReeling}
-            style={{
-              width: '100%',
-              padding: '16px',
-              borderRadius: '12px',
-              border: 'none',
-              background: '#eab308',
-              color: '#000',
-              fontWeight: 'bold',
-              fontSize: '16px',
-              cursor: 'pointer',
-              animation: 'pulse 1s infinite',
+            onOpenMap={() => {
+              setIsMapOpen(true);
+              triggerHaptic('selection');
             }}
-          >
-            ПОДСЕЧЬ! ⚡
-          </button>
-        )}
-
-        {gameState === 'reeling' && (
-          <button
-            onMouseDown={onPullStart}
-            onMouseUp={onPullEnd}
-            onTouchStart={onPullStart}
-            onTouchEnd={onPullEnd}
-            style={{
-              width: '100%',
-              padding: '18px',
-              borderRadius: '12px',
-              border: 'none',
-              background: inSweetSpot ? '#16a34a' : '#dc2626',
-              color: '#fff',
-              fontWeight: 'bold',
-              fontSize: '16px',
-              cursor: 'pointer',
-              touchAction: 'manipulation',
+            onSelectBait={(id) => {
+              setSelectedBaitId(id);
+              triggerHaptic('selection');
             }}
-          >
-            ТЯНУТЬ (ДЕРЖИ В ЗЕЛЁНОЙ ЗОНЕ!)
-          </button>
-        )}
-      </div>
-
-      {/* Модальное окно поимки или схода */}
-      {(gameState === 'caught' || gameState === 'lost') && (
-        <div
-          onClick={onDismissModal}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.85)',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            borderRadius: '16px',
-            padding: '20px',
-            zIndex: 50,
-          }}
-        >
-          {gameState === 'caught' && currentFish && (
-            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ fontSize: '56px' }}>{currentFish.fish.icon}</div>
-              <div style={{ fontSize: '12px', fontWeight: 'bold', color: getRarityLabel(currentFish.fish.rarity).color }}>
-                {getRarityLabel(currentFish.fish.rarity).text}
-              </div>
-              <div style={{ fontSize: '20px', fontWeight: 'bold' }}>{currentFish.fish.name}</div>
-              <div style={{ fontSize: '14px', color: '#94a3b8' }}>Вес: {currentFish.weight} кг</div>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '6px' }}>
-                <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>+{currentFish.price} 🪙</span>
-                <span style={{ color: '#a78bfa', fontWeight: 'bold' }}>+{currentFish.exp} ⭐</span>
-              </div>
-            </div>
-          )}
-
-          {gameState === 'lost' && (
-            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ fontSize: '56px' }}>💥</div>
-              <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#ef4444' }}>Срыв или обрыв снасти!</div>
-              <div style={{ fontSize: '12px', color: '#94a3b8' }}>
-                Рыба оказалась сильнее, или леска вышла за пределы шкалы.
-              </div>
-            </div>
-          )}
-
-          {canDismissModal && (
-            <div style={{ marginTop: '16px', fontSize: '12px', color: '#64748b' }}>
-              Нажмите в любом месте, чтобы продолжить
-            </div>
-          )}
-        </div>
+            getRarityLabel={getRarityLabel}
+            onStartFishing={startFishing}
+            onStartReeling={startReeling}
+            onPullStart={() => { isPullingRef.current = true; }}
+            onPullEnd={() => { isPullingRef.current = false; }}
+            onDismissModal={() => { if (canDismissModal) setGameState('idle'); }}
+          />
+        ) : (
+          <HomeScreen
+            currentLocation={currentLocation}
+            currentRod={currentRod}
+            inventoryCount={inventory.length}
+            onGoFishing={() => {
+              setIsAtPond(true);
+              triggerHaptic('notification');
+            }}
+            onOpenMap={() => {
+              setIsMapOpen(true);
+              triggerHaptic('selection');
+            }}
+            onNavigateTab={(tab) => {
+              setActiveTab(tab);
+              triggerHaptic('selection');
+            }}
+          />
+        )
       )}
+
+      {!isMapOpen && activeTab === 'inventory' && (
+        <InventoryScreen
+          inventory={inventory}
+          getRarityLabel={getRarityLabel}
+          onSellFish={(uid, price) => {
+            setCoins((c) => c + price);
+            setInventory((inv) => inv.filter((item) => item.uid !== uid));
+            triggerHaptic('impact');
+          }}
+          onSellAll={() => {
+            const total = inventory.reduce((sum, item) => sum + item.price, 0);
+            setCoins((c) => c + total);
+            setInventory([]);
+            triggerHaptic('notification');
+          }}
+        />
+      )}
+
+      {!isMapOpen && activeTab === 'shop' && (
+        <ShopScreen
+          coins={coins}
+          level={level}
+          equippedRodId={equippedRodId}
+          ownedRods={ownedRods}
+          baits={baits}
+          baitCapacity={currentBaitCapacity}
+          upgrades={upgrades}
+          onBuyRod={(rod) => {
+            if (coins >= rod.price && level >= rod.levelReq) {
+              setCoins((c) => c - rod.price);
+              setOwnedRods((r) => [...r, rod.id]);
+              setEquippedRodId(rod.id);
+              triggerHaptic('notification');
+            }
+          }}
+          onEquipRod={(id) => {
+            setEquippedRodId(id);
+            triggerHaptic('selection');
+          }}
+          onBuyBait={handleBuyBait}
+          onBuyUpgrade={handleBuyUpgrade}
+        />
+      )}
+
+      <Navigation
+        activeTab={activeTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          setIsMapOpen(false);
+          triggerHaptic('selection');
+        }}
+        inventoryCount={inventory.length}
+      />
     </div>
   );
-};
+}
