@@ -18,6 +18,9 @@ export default function App() {
   const [gameState, setGameState] = useState<GameState>('idle');
   const [currentFish, setCurrentFish] = useState<CaughtFishItem | null>(null);
 
+  // Флаг защиты от случайного клика по экрану победы/поражения
+  const [canDismissModal, setCanDismissModal] = useState<boolean>(false);
+
   // Состояния для вываживания
   const [tension, setTension] = useState<number>(50);
   const [catchProgress, setCatchProgress] = useState<number>(0);
@@ -88,14 +91,20 @@ export default function App() {
         localProgress -= 0.6;
       }
 
+      // Рыба сорвалась
       if (localTension >= 100 || localTension <= 0 || localProgress <= 0) {
         clearInterval(interval);
         setGameState('lost');
+        setCanDismissModal(false);
+        // Защитная задержка 1.2 сек перед показом активной кнопки
+        setTimeout(() => setCanDismissModal(true), 1200);
+
         const tg = (window as any).Telegram?.WebApp;
         tg?.HapticFeedback?.notificationOccurred('error');
         return;
       }
 
+      // Рыба выловлена
       if (localProgress >= 100) {
         clearInterval(interval);
         if (currentFish) {
@@ -109,6 +118,10 @@ export default function App() {
           });
         }
         setGameState('caught');
+        setCanDismissModal(false);
+        // Защитная задержка 1.5 сек перед показом активной кнопки
+        setTimeout(() => setCanDismissModal(true), 1500);
+
         triggerHaptic('notification');
         return;
       }
@@ -119,6 +132,16 @@ export default function App() {
 
     return () => clearInterval(interval);
   }, [gameState, currentFish, level]);
+
+  // Названия редкости
+  const getRarityLabel = (rarity: string) => {
+    switch (rarity) {
+      case 'legendary': return { text: 'ЛЕГЕНДАРНАЯ', color: '#fbbf24' };
+      case 'epic': return { text: 'ЭПИЧЕСКАЯ', color: '#c084fc' };
+      case 'rare': return { text: 'РЕДКАЯ', color: '#60a5fa' };
+      default: return { text: 'ОБЫЧНАЯ', color: '#94a3b8' };
+    }
+  };
 
   return (
     <div
@@ -132,6 +155,7 @@ export default function App() {
         userSelect: 'none',
       }}
     >
+      {/* Верхняя плашка профиля */}
       <div
         style={{
           display: 'flex',
@@ -156,6 +180,7 @@ export default function App() {
         </div>
       </div>
 
+      {/* Центральная игровая зона */}
       <div
         style={{
           display: 'flex',
@@ -258,22 +283,60 @@ export default function App() {
           <div
             style={{
               background: 'rgba(255, 255, 255, 0.08)',
-              borderRadius: '20px',
+              borderRadius: '24px',
               padding: '24px',
               textAlign: 'center',
               border: '1px solid rgba(255,255,255,0.15)',
               width: '100%',
               maxWidth: '300px',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
             }}
           >
+            {/* Плашка редкости */}
+            <div
+              style={{
+                display: 'inline-block',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                letterSpacing: '1px',
+                color: getRarityLabel(currentFish.fish.rarity).color,
+                background: 'rgba(255,255,255,0.06)',
+                marginBottom: '12px',
+              }}
+            >
+              {getRarityLabel(currentFish.fish.rarity).text}
+            </div>
+
             <div style={{ fontSize: '64px', marginBottom: '8px' }}>{currentFish.fish.icon}</div>
-            <h3 style={{ fontSize: '20px', fontWeight: 'bold' }}>{currentFish.fish.name}</h3>
-            <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '14px' }}>
-              Вес: {currentFish.weight} кг
+            <h3 style={{ fontSize: '22px', fontWeight: 'bold' }}>{currentFish.fish.name}</h3>
+            <p style={{ color: '#94a3b8', fontSize: '15px', marginTop: '4px', marginBottom: '16px' }}>
+              Вес: <strong style={{ color: '#ffffff' }}>{currentFish.weight} кг</strong>
             </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', fontSize: '15px' }}>
-              <span style={{ color: '#fbbf24' }}>+{currentFish.price} 🪙</span>
-              <span style={{ color: '#a78bfa' }}>+{currentFish.exp} ⭐</span>
+
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-around',
+                background: 'rgba(0,0,0,0.2)',
+                borderRadius: '12px',
+                padding: '10px',
+              }}
+            >
+              <div>
+                <div style={{ fontSize: '11px', color: '#94a3b8' }}>Награда</div>
+                <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#fbbf24' }}>
+                  +{currentFish.price} 🪙
+                </div>
+              </div>
+              <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)' }} />
+              <div>
+                <div style={{ fontSize: '11px', color: '#94a3b8' }}>Опыт</div>
+                <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#a78bfa' }}>
+                  +{currentFish.exp} ⭐
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -283,12 +346,13 @@ export default function App() {
             <div style={{ fontSize: '64px', marginBottom: '12px' }}>💨</div>
             <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#ef4444' }}>Рыба сорвалась!</h3>
             <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '6px' }}>
-              Леска ослабла или оборвалась.
+              Леска ослабла или оборвалась от сильного натяжения.
             </p>
           </div>
         )}
       </div>
 
+      {/* Нижняя кнопка управления */}
       <div>
         {gameState === 'idle' && (
           <button
@@ -352,20 +416,24 @@ export default function App() {
 
         {(gameState === 'caught' || gameState === 'lost') && (
           <button
-            onClick={() => setGameState('idle')}
+            disabled={!canDismissModal}
+            onClick={() => {
+              if (canDismissModal) setGameState('idle');
+            }}
             style={{
               width: '100%',
               padding: '16px',
               borderRadius: '16px',
               border: 'none',
-              background: '#334155',
-              color: '#ffffff',
+              background: canDismissModal ? '#38bdf8' : '#334155',
+              color: canDismissModal ? '#0f172a' : '#64748b',
               fontSize: '16px',
               fontWeight: 'bold',
-              cursor: 'pointer',
+              cursor: canDismissModal ? 'pointer' : 'not-allowed',
+              transition: 'all 0.2s ease',
             }}
           >
-            Продолжить 🎣
+            {canDismissModal ? 'Забрать улов 🎣' : 'Осматриваем рыбу...'}
           </button>
         )}
       </div>
