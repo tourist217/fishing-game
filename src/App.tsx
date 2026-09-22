@@ -34,7 +34,14 @@ export default function App() {
 
   const currentRod: Rod = RODS.find((r) => r.id === equippedRodId) || RODS[0];
 
-  // Сохранения в память браузера
+  // Определяем ранг текущей удочки (1, 2, 3 или 4)
+  const rodIndex = RODS.findIndex((r) => r.id === equippedRodId);
+  const playerRodLevel = rodIndex >= 0 ? rodIndex + 1 : 1;
+
+  // Формула необходимого опыта: каждый уровень требует больше (ур 1 -> 120, ур 2 -> 250, ур 3 -> 420...)
+  const expToNextLevel = level * 120 + (level - 1) * 60;
+
+  // Сохранения в localStorage
   useEffect(() => { localStorage.setItem('fg_coins', coins.toString()); }, [coins]);
   useEffect(() => { localStorage.setItem('fg_exp', exp.toString()); }, [exp]);
   useEffect(() => { localStorage.setItem('fg_level', level.toString()); }, [level]);
@@ -70,7 +77,8 @@ export default function App() {
     setGameState('waiting');
     triggerHaptic('selection');
     setTimeout(() => {
-      const generated = getRandomFish();
+      // Передаем уровень удочки в генератор рыбы
+      const generated = getRandomFish(playerRodLevel);
       const finalPrice = Math.round(generated.price * currentRod.goldBonus);
       setCurrentFish({
         ...generated,
@@ -115,9 +123,12 @@ export default function App() {
         clearInterval(interval);
         if (currentFish) {
           setInventory((prev) => [currentFish, ...prev]);
+          // Плавная прокачка уровня
           setExp((prev) => {
             const nextExp = prev + currentFish.exp;
-            if (nextExp >= level * 100) setLevel((lvl) => lvl + 1);
+            if (nextExp >= expToNextLevel) {
+              setLevel((lvl) => lvl + 1);
+            }
             return nextExp;
           });
         }
@@ -133,7 +144,7 @@ export default function App() {
     }, 40);
 
     return () => clearInterval(interval);
-  }, [gameState, currentFish, level, sweetSpotStart, sweetSpotEnd]);
+  }, [gameState, currentFish, level, expToNextLevel, sweetSpotStart, sweetSpotEnd]);
 
   const getRarityLabel = (rarity: string) => {
     switch (rarity) {
