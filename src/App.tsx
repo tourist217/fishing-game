@@ -1,16 +1,24 @@
 import { useEffect, useState, useRef } from 'react';
 import { getRandomFish } from './fishData';
 import { RODS, type Rod } from './shopData';
-import { INITIAL_BAIT_INVENTORY, DEFAULT_BAIT_CAPACITY } from './baitData';
+import { INITIAL_BAIT_INVENTORY } from './baitData';
 import { Header } from './components/Header';
 import { Navigation, type ActiveTab } from './components/Navigation';
 import { FishingScreen, type GameState } from './components/FishingScreen';
 import { InventoryScreen, type CaughtFishItem } from './components/InventoryScreen';
-import { ShopScreen } from './components/ShopScreen';
+import { ShopScreen, type UpgradesState } from './components/ShopScreen';
 
 interface ActiveFishState extends CaughtFishItem {
   rodBrokenRisk?: boolean;
 }
+
+const DEFAULT_UPGRADES: UpgradesState = {
+  baitCapacityLevel: 0,
+  hookSharpenLevel: 0,
+  reelOilLevel: 0,
+};
+
+const BAIT_CAPACITY_MAP = [10, 20, 30, 50];
 
 export default function App() {
   const [userName, setUserName] = useState<string>('Рыбак');
@@ -27,6 +35,11 @@ export default function App() {
     return saved ? JSON.parse(saved) : INITIAL_BAIT_INVENTORY;
   });
   const [selectedBaitId, setSelectedBaitId] = useState<string>('worm');
+
+  const [upgrades, setUpgrades] = useState<UpgradesState>(() => {
+    const saved = localStorage.getItem('fg_upgrades');
+    return saved ? JSON.parse(saved) : DEFAULT_UPGRADES;
+  });
 
   const [equippedRodId, setEquippedRodId] = useState<string>(() => localStorage.getItem('fg_rod') || 'bamboo');
   const [ownedRods, setOwnedRods] = useState<string[]>(() => {
@@ -47,14 +60,19 @@ export default function App() {
   const rodIndex = RODS.findIndex((r) => r.id === equippedRodId);
   const playerRodLevel = rodIndex >= 0 ? rodIndex + 1 : 1;
 
-  // Опыт, необходимый для закрытия текущего уровня
+  // Вместимость банки с учетом апгрейда
+  const currentBaitCapacity = BAIT_CAPACITY_MAP[upgrades.baitCapacityLevel] || 10;
+
+  // Опыт до следующего уровня
   const expToNextLevel = level * 100;
 
+  // Автосохранение в localStorage
   useEffect(() => { localStorage.setItem('fg_coins', coins.toString()); }, [coins]);
   useEffect(() => { localStorage.setItem('fg_exp', exp.toString()); }, [exp]);
   useEffect(() => { localStorage.setItem('fg_level', level.toString()); }, [level]);
   useEffect(() => { localStorage.setItem('fg_inventory', JSON.stringify(inventory)); }, [inventory]);
   useEffect(() => { localStorage.setItem('fg_baits', JSON.stringify(baits)); }, [baits]);
+  useEffect(() => { localStorage.setItem('fg_upgrades', JSON.stringify(upgrades)); }, [upgrades]);
   useEffect(() => { localStorage.setItem('fg_rod', equippedRodId); }, [equippedRodId]);
   useEffect(() => { localStorage.setItem('fg_owned_rods', JSON.stringify(ownedRods)); }, [ownedRods]);
 
@@ -78,9 +96,10 @@ export default function App() {
     }
   };
 
-  const baseZoneWidth = 35 + currentRod.sweetSpotBonus;
-  const sweetSpotStart = Math.max(15, 50 - baseZoneWidth / 2);
-  const sweetSpotEnd = Math.min(85, 50 + baseZoneWidth / 2);
+  // Базовый размер зоны + бонус удочки + бонус от заточки крючков
+  const baseZoneWidth = 35 + currentRod.sweetSpotBonus + upgrades.hookSharpenLevel * 5;
+  const sweetSpotStart = Math.max(10, 50 - baseZoneWidth / 2);
+  const sweetSpotEnd = Math.min(90, 50 + baseZoneWidth / 2);
 
   const startFishing = () => {
     const availableBait = baits[selectedBaitId] || 0;
@@ -122,6 +141,9 @@ export default function App() {
 
     const isOverweight = currentFish?.rodBrokenRisk;
 
+    // Множитель скорости смотки от смазки катушки
+    const progressSpeedMultiplier = 1 + upgrades.reelOilLevel * 0.15;
+
     const interval = setInterval(() => {
       const pullRate = isPullingRef.current ? (isOverweight ? 4.5 : 2.4) : (isOverweight ? -3.5 : -1.8);
       localTension += pullRate;
@@ -130,7 +152,8 @@ export default function App() {
       if (Math.random() < (isOverweight ? 0.25 : 0.1)) localTension += randomJerk;
 
       const inSweetSpot = localTension >= sweetSpotStart && localTension <= sweetSpotEnd;
-      localProgress += inSweetSpot ? (isOverweight ? 0.5 : 1.0) : (isOverweight ? -1.2 : -0.6);
+      const baseProgressGain = (isOverweight ? 0.5 : 1.0) * progressSpeedMultiplier;
+      localProgress += inSweetSpot ? baseProgressGain : (isOverweight ? -1.2 : -0.6);
 
       if (localTension >= 100 || localTension <= 0 || localProgress <= 0) {
         clearInterval(interval);
@@ -147,12 +170,11 @@ export default function App() {
           const { rodBrokenRisk: _risk, ...cleanFish } = currentFish;
           setInventory((prev) => [cleanFish, ...prev]);
 
-          // Начисление опыта со сбросом остатка на новый уровень
           setExp((prev) => {
             const nextExp = prev + currentFish.exp;
             if (nextExp >= expToNextLevel) {
               setLevel((lvl) => lvl + 1);
-              return nextExp - expToNextLevel; // перенос излишка опыта
+              return nextExp - expToNextLevel;
             }
             return nextExp;
           });
@@ -169,12 +191,12 @@ export default function App() {
     }, 40);
 
     return () => clearInterval(interval);
-  }, [gameState, currentFish, level, expToNextLevel, sweetSpotStart, sweetSpotEnd]);
+  }, [gameState, currentFish, level, expToNextLevel, sweetSpotStart, sweetSpotEnd, upgrades.reelOilLevel]);
 
   const handleBuyBait = (baitId: string, amount: number, totalCost: number) => {
     if (coins < totalCost) return;
     const currentCount = baits[baitId] || 0;
-    if (currentCount + amount > DEFAULT_BAIT_CAPACITY) return;
+    if (currentCount + amount > currentBaitCapacity) return;
 
     setCoins((c) => c - totalCost);
     setBaits((prev) => ({
@@ -182,6 +204,16 @@ export default function App() {
       [baitId]: (prev[baitId] || 0) + amount,
     }));
     triggerHaptic('impact');
+  };
+
+  const handleBuyUpgrade = (type: keyof UpgradesState, cost: number) => {
+    if (coins < cost) return;
+    setCoins((c) => c - cost);
+    setUpgrades((prev) => ({
+      ...prev,
+      [type]: prev[type] + 1,
+    }));
+    triggerHaptic('notification');
   };
 
   const getRarityLabel = (rarity: string) => {
@@ -264,7 +296,8 @@ export default function App() {
           equippedRodId={equippedRodId}
           ownedRods={ownedRods}
           baits={baits}
-          baitCapacity={DEFAULT_BAIT_CAPACITY}
+          baitCapacity={currentBaitCapacity}
+          upgrades={upgrades}
           onBuyRod={(rod) => {
             if (coins >= rod.price && level >= rod.levelReq) {
               setCoins((c) => c - rod.price);
@@ -278,6 +311,7 @@ export default function App() {
             triggerHaptic('selection');
           }}
           onBuyBait={handleBuyBait}
+          onBuyUpgrade={handleBuyUpgrade}
         />
       )}
 
