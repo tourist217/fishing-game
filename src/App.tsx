@@ -9,6 +9,7 @@ import { FishingScreen, type GameState } from './components/FishingScreen';
 import { InventoryScreen, type CaughtFishItem } from './components/InventoryScreen';
 import { ShopScreen, type UpgradesState } from './components/ShopScreen';
 import { MapScreen } from './components/MapScreen';
+import { HomeScreen } from './components/HomeScreen';
 
 interface ActiveFishState extends CaughtFishItem {
   rodBrokenRisk?: boolean;
@@ -50,10 +51,10 @@ export default function App() {
     return saved ? JSON.parse(saved) : ['bamboo'];
   });
 
-  // Локации и водоёмы
   const [selectedLocationId, setSelectedLocationId] = useState<string>(
     () => localStorage.getItem('fg_selected_location') || DEFAULT_LOCATION_ID
   );
+  const [isAtPond, setIsAtPond] = useState<boolean>(false);
   const [isMapOpen, setIsMapOpen] = useState<boolean>(false);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('fishing');
@@ -114,7 +115,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, [currentBaitCapacity]);
 
-  // Сохранения
+  // Сохранения в localStorage
   useEffect(() => { localStorage.setItem('fg_coins', coins.toString()); }, [coins]);
   useEffect(() => { localStorage.setItem('fg_exp', exp.toString()); }, [exp]);
   useEffect(() => { localStorage.setItem('fg_level', level.toString()); }, [level]);
@@ -162,7 +163,6 @@ export default function App() {
     triggerHaptic('selection');
 
     setTimeout(() => {
-      // Передаем уровень удочки, наживку и модификатор веса водоема
       const generated = getRandomFish(playerRodLevel, selectedBaitId, currentLocation.weightModifier);
       const finalPrice = Math.round(generated.price * currentRod.goldBonus);
       setCurrentFish({
@@ -280,7 +280,7 @@ export default function App() {
         height: '100%',
         padding: '16px 16px 8px 16px',
         justifyContent: 'space-between',
-        background: currentLocation.gradient,
+        background: isAtPond ? currentLocation.gradient : 'linear-gradient(180deg, #091325 0%, #0d2744 60%, #06192d 100%)',
         userSelect: 'none',
         transition: 'background 0.5s ease',
       }}
@@ -295,22 +295,27 @@ export default function App() {
         rodIcon={currentRod.icon}
       />
 
-      {/* Экран карты или рыбалки */}
-      {activeTab === 'fishing' && (
-        isMapOpen ? (
-          <MapScreen
-            playerLevel={level}
-            currentLocationId={selectedLocationId}
-            onSelectLocation={(loc) => {
-              setSelectedLocationId(loc.id);
-              triggerHaptic('selection');
-            }}
-            onGoFishing={() => {
-              setIsMapOpen(false);
-              triggerHaptic('notification');
-            }}
-          />
-        ) : (
+      {/* Экран карты водоёмов */}
+      {isMapOpen && (
+        <MapScreen
+          playerLevel={level}
+          currentLocationId={selectedLocationId}
+          onSelectLocation={(loc) => {
+            setSelectedLocationId(loc.id);
+            triggerHaptic('selection');
+          }}
+          onGoFishing={() => {
+            setIsMapOpen(false);
+            setIsAtPond(true);
+            setActiveTab('fishing');
+            triggerHaptic('notification');
+          }}
+        />
+      )}
+
+      {/* Если карта закрыта */}
+      {!isMapOpen && activeTab === 'fishing' && (
+        isAtPond ? (
           <FishingScreen
             gameState={gameState}
             tension={tension}
@@ -322,6 +327,10 @@ export default function App() {
             selectedBaitId={selectedBaitId}
             baits={baits}
             currentLocation={currentLocation}
+            onBackToHub={() => {
+              setIsAtPond(false);
+              triggerHaptic('selection');
+            }}
             onOpenMap={() => {
               setIsMapOpen(true);
               triggerHaptic('selection');
@@ -337,10 +346,28 @@ export default function App() {
             onPullEnd={() => { isPullingRef.current = false; }}
             onDismissModal={() => { if (canDismissModal) setGameState('idle'); }}
           />
+        ) : (
+          <HomeScreen
+            currentLocation={currentLocation}
+            currentRod={currentRod}
+            inventoryCount={inventory.length}
+            onGoFishing={() => {
+              setIsAtPond(true);
+              triggerHaptic('notification');
+            }}
+            onOpenMap={() => {
+              setIsMapOpen(true);
+              triggerHaptic('selection');
+            }}
+            onNavigateTab={(tab) => {
+              setActiveTab(tab);
+              triggerHaptic('selection');
+            }}
+          />
         )
       )}
 
-      {activeTab === 'inventory' && (
+      {!isMapOpen && activeTab === 'inventory' && (
         <InventoryScreen
           inventory={inventory}
           getRarityLabel={getRarityLabel}
@@ -358,7 +385,7 @@ export default function App() {
         />
       )}
 
-      {activeTab === 'shop' && (
+      {!isMapOpen && activeTab === 'shop' && (
         <ShopScreen
           coins={coins}
           level={level}
@@ -388,7 +415,7 @@ export default function App() {
         activeTab={activeTab}
         onTabChange={(tab) => {
           setActiveTab(tab);
-          if (tab !== 'fishing') setIsMapOpen(false);
+          setIsMapOpen(false);
           triggerHaptic('selection');
         }}
         inventoryCount={inventory.length}
