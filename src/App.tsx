@@ -47,7 +47,6 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Новая модульная система снаряжения (Удилища, Катушки, Лески)
   const [gear, setGear] = useState<PlayerGearState>(() => {
     const saved = localStorage.getItem('fg_gear');
     return saved ? JSON.parse(saved) : INITIAL_PLAYER_GEAR;
@@ -138,7 +137,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, [currentBaitCapacity]);
 
-  // Синхронизация localStorage
+  // Сохранения в localStorage
   useEffect(() => { localStorage.setItem('fg_coins', coins.toString()); }, [coins]);
   useEffect(() => { localStorage.setItem('fg_exp', exp.toString()); }, [exp]);
   useEffect(() => { localStorage.setItem('fg_level', level.toString()); }, [level]);
@@ -216,19 +215,23 @@ export default function App() {
     let localProgress = catchProgress;
 
     const isOverweight = currentFish?.rodBrokenRisk;
-    // Множитель скорости смотки зависит от установленной катушки и апгрейда смазки
+    // Множитель скорости смотки зависит от катушки
     const speedMultiplier = reelPullSpeed * (1 + upgrades.reelOilLevel * 0.12);
 
     const interval = setInterval(() => {
-      const pullRate = isPullingRef.current ? (isOverweight ? 4.6 : 2.5) : (isOverweight ? -3.6 : -1.8);
+      // Если тянем — растёт натяжение, если отпустили — ВСЕГДА плавно падает вниз
+      const pullRate = isPullingRef.current ? (isOverweight ? 3.0 : 2.2) : (isOverweight ? -2.2 : -2.0);
       localTension += pullRate;
 
-      const randomJerk = (Math.random() - 0.5) * (isOverweight ? 26 : 12);
-      if (Math.random() < (isOverweight ? 0.25 : 0.1)) localTension += randomJerk;
+      // Мягкие случайные рывки только при перегрузе снасти, без резких скачков
+      if (isOverweight && Math.random() < 0.15) {
+        const randomJerk = (Math.random() - 0.4) * 8;
+        localTension += randomJerk;
+      }
 
       const inSweetSpot = localTension >= sweetSpotStart && localTension <= sweetSpotEnd;
-      const baseProgressGain = (isOverweight ? 0.5 : 1.0) * speedMultiplier;
-      localProgress += inSweetSpot ? baseProgressGain : (isOverweight ? -1.2 : -0.6);
+      const baseProgressGain = (isOverweight ? 0.6 : 1.1) * speedMultiplier;
+      localProgress += inSweetSpot ? baseProgressGain : -0.5;
 
       if (localTension >= 100 || localTension <= 0 || localProgress <= 0) {
         clearInterval(interval);
@@ -268,7 +271,6 @@ export default function App() {
     return () => clearInterval(interval);
   }, [gameState, currentFish, level, expToNextLevel, sweetSpotStart, sweetSpotEnd, reelPullSpeed, upgrades.reelOilLevel]);
 
-  // Обработчики магазина снастей
   const handleBuyRod = (rod: RodTier) => {
     if (coins < rod.basePrice || level < rod.levelReq) return;
     setCoins((c) => c - rod.basePrice);
@@ -277,7 +279,6 @@ export default function App() {
       ownedRods: [...prev.ownedRods, rod.id],
       rodLevels: { ...prev.rodLevels, [rod.id]: 1 },
       equippedRodId: rod.id,
-      // Если удилище без катушкодержателя (камыш) — снимаем катушку
       equippedReelId: rod.canMountReel ? prev.equippedReelId : null,
     }));
     triggerHaptic('notification');
