@@ -1,4 +1,4 @@
-import type { Fish } from '../fishData';
+import type { Fish, FishSizeCategory } from '../fishData';
 
 export interface CaughtFishItem {
   fish: Fish;
@@ -7,6 +7,8 @@ export interface CaughtFishItem {
   exp: number;
   uid: string;
   caughtAt: number;
+  sizeCategory?: FishSizeCategory;
+  categoryLabel?: string;
 }
 
 interface InventoryScreenProps {
@@ -15,6 +17,47 @@ interface InventoryScreenProps {
   onSellFish: (uid: string, price: number) => void;
   onSellAll: () => void;
 }
+
+export const formatWeight = (kg: number): string => {
+  if (kg < 1) {
+    return `${Math.round(kg * 1000)} г`;
+  }
+  return `${kg.toFixed(2)} кг`;
+};
+
+export const getCategoryBadgeStyle = (category?: FishSizeCategory) => {
+  switch (category) {
+    case 'trophy':
+      return {
+        text: '🏆 ТРОФЕЙ',
+        color: '#fbbf24',
+        bg: 'rgba(251, 191, 36, 0.15)',
+        border: '1px solid rgba(251, 191, 36, 0.5)',
+      };
+    case 'large':
+      return {
+        text: 'Крупная',
+        color: '#a855f7',
+        bg: 'rgba(168, 85, 247, 0.12)',
+        border: '1px solid rgba(168, 85, 247, 0.35)',
+      };
+    case 'medium':
+      return {
+        text: 'Средняя',
+        color: '#38bdf8',
+        bg: 'rgba(56, 189, 248, 0.1)',
+        border: '1px solid rgba(56, 189, 248, 0.25)',
+      };
+    case 'small':
+    default:
+      return {
+        text: 'Мелкая',
+        color: '#94a3b8',
+        bg: 'rgba(148, 163, 184, 0.1)',
+        border: '1px solid rgba(148, 163, 184, 0.2)',
+      };
+  }
+};
 
 export const InventoryScreen = ({
   inventory,
@@ -101,13 +144,16 @@ export const InventoryScreen = ({
             const itemPrice = Number(item.price) || 1;
             const itemUid = item.uid || `fish_${index}`;
             const rarity = getRarityLabel(item.fish.rarity);
+            const badge = getCategoryBadgeStyle(item.sizeCategory);
 
             return (
               <div
                 key={itemUid}
                 style={{
                   background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  border: item.sizeCategory === 'trophy' 
+                    ? '1px solid rgba(251, 191, 36, 0.4)' 
+                    : '1px solid rgba(255, 255, 255, 0.08)',
                   borderRadius: '14px',
                   padding: '10px 14px',
                   display: 'flex',
@@ -118,7 +164,7 @@ export const InventoryScreen = ({
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{ fontSize: '28px' }}>{item.fish.icon}</div>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                       <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>
                         {item.fish.name}
                       </span>
@@ -134,9 +180,22 @@ export const InventoryScreen = ({
                       >
                         {rarity.text}
                       </span>
+                      <span
+                        style={{
+                          fontSize: '9px',
+                          fontWeight: 'bold',
+                          color: badge.color,
+                          background: badge.bg,
+                          border: badge.border,
+                          padding: '1px 5px',
+                          borderRadius: '4px',
+                        }}
+                      >
+                        {badge.text}
+                      </span>
                     </div>
-                    <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-                      Вес: <span style={{ color: '#38bdf8' }}>{item.weight} кг</span> • +{item.exp} XP
+                    <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '3px' }}>
+                      Вес: <span style={{ color: '#38bdf8', fontWeight: 'bold' }}>{formatWeight(item.weight)}</span> • +{item.exp} XP
                     </div>
                   </div>
                 </div>
