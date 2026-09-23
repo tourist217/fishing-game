@@ -89,17 +89,47 @@ export function useBaitState(
   // Вместимость наживок
   const currentBaitCapacity = 20 + upgrades.baitCapacityLevel * 10;
 
-  // Безопасная покупка наживки
-  const buyBait = useCallback((baitId: string, count: number = 5): boolean => {
-    setBaits((prevBaits) => {
-      const currentCount = prevBaits[baitId] || 0;
-      return {
-        ...prevBaits,
-        [baitId]: currentCount + count,
-      };
-    });
-    return true;
-  }, []);
+  // Покупка наживки со списанием монет и контролем вместимости
+  const buyBait = useCallback(
+    (baitId: string, count: number = 5): boolean => {
+      const item = AVAILABLE_BAITS.find((b) => b.id === baitId);
+      if (!item) return false;
+
+      const totalCost = item.price; // стоимость порции наживок
+
+      // Проверка баланса
+      if (typeof coins === 'number' && coins < totalCost) {
+        triggerHaptic?.('notification');
+        return false;
+      }
+
+      // Проверка общей вместимости
+      const totalBaitsCount = Object.values(baits).reduce((sum, val) => sum + val, 0);
+      if (totalBaitsCount + count > currentBaitCapacity) {
+        triggerHaptic?.('notification');
+        return false;
+      }
+
+      // Списание монет
+      if (spendCoins) {
+        const success = spendCoins(totalCost);
+        if (!success) return false;
+      }
+
+      // Начисление наживки
+      setBaits((prevBaits) => {
+        const currentCount = prevBaits[baitId] || 0;
+        return {
+          ...prevBaits,
+          [baitId]: currentCount + count,
+        };
+      });
+
+      triggerHaptic?.('impact');
+      return true;
+    },
+    [coins, currentBaitCapacity, baits, spendCoins, triggerHaptic]
+  );
 
   // Расход наживки при забросе
   const consumeBait = useCallback((baitId: string): boolean => {
