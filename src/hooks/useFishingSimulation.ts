@@ -46,7 +46,7 @@ export function useFishingSimulation({
   const tensionRef = useRef<number>(50);
   const progressRef = useRef<number>(15);
 
-  // Рефы для стабильной работы интервала без ре-триггеров
+  // Стабильные ссылки
   const onFishCaughtRef = useRef(onFishCaught);
   useEffect(() => {
     onFishCaughtRef.current = onFishCaught;
@@ -82,21 +82,19 @@ export function useFishingSimulation({
     reelSpeedRef.current = reelPullSpeed * (1 + reelOilLevel * 0.12);
   }, [reelPullSpeed, reelOilLevel]);
 
-  // Динамический центр зелёной зоны
+  // Динамический центр зоны
   const [sweetZoneCenter, setSweetZoneCenter] = useState<number>(50);
   const sweetZoneCenterRef = useRef<number>(50);
 
-  // Расчёт комфортной ширины зоны
+  // Расчёт ширины зоны
   const calculateZoneWidth = () => {
     const fish = currentFishRef.current;
-    // Базовая комфортная ширина
     let width = 42 + hookSharpenRef.current * 4;
 
     if (fish) {
       const effectiveLimit = Math.min(rodStrengthRef.current || 0.25, lineTensileRef.current || 0.4);
       const ratio = fish.weight / effectiveLimit;
 
-      // Сужаем зону в 1.8 раза только если рыба весит более 65% от теста снасти
       if (ratio >= 0.65) {
         width = Math.round(width / 1.8);
       }
@@ -112,7 +110,7 @@ export function useFishingSimulation({
     sweetZoneCenterRef.current = sweetZoneCenter;
   }, [sweetZoneCenter]);
 
-  // Заброс удочки
+  // Заброс
   const startFishing = () => {
     const availableBait = baits[selectedBaitId] || 0;
     if (availableBait <= 0) return;
@@ -132,18 +130,24 @@ export function useFishingSimulation({
         currentLocation.weightModifier
       );
 
-      setCurrentFish({
-        ...generated,
+      const readyFish: ActiveFishState = {
+        fish: generated.fish,
+        weight: generated.weight,
         price: generated.price,
+        exp: generated.exp,
         uid: Math.random().toString(36).substring(2, 9),
         caughtAt: Date.now(),
-      });
+        rodBrokenRisk: generated.rodBrokenRisk,
+      };
+
+      setCurrentFish(readyFish);
+      currentFishRef.current = readyFish;
       setGameState('hooked');
       triggerHapticRef.current?.('notification');
     }, Math.random() * 2000 + 1500);
   };
 
-  // Переход к вываживанию
+  // Начало вываживания
   const startReeling = () => {
     isPullingRef.current = false;
     tensionRef.current = 50;
@@ -156,7 +160,7 @@ export function useFishingSimulation({
     triggerHapticRef.current?.('impact');
   };
 
-  // Блуждание зоны для тяжелой рыбы (весом от 85% теста снасти)
+  // Перемещение зоны для крупной рыбы
   useEffect(() => {
     if (gameState !== 'reeling' || !currentFish) return;
 
@@ -180,7 +184,7 @@ export function useFishingSimulation({
     return () => clearInterval(moveInterval);
   }, [gameState, currentFish]);
 
-  // ГЛАВНЫЙ ИГРОВОЙ ЦИКЛ (ровно 1 запуск на сессию вываживания)
+  // Физический тик (40 мс)
   useEffect(() => {
     if (gameState !== 'reeling') {
       isPullingRef.current = false;
@@ -193,18 +197,16 @@ export function useFishingSimulation({
     setCatchProgress(15);
 
     const interval = setInterval(() => {
-      // 1. Физика тяги
       if (isPullingRef.current) {
         tensionRef.current += 1.9;
       } else {
         tensionRef.current -= 2.1;
       }
 
-      // 2. Проверка попадания в зону
       const fish = currentFishRef.current;
       const effectiveLimit = Math.min(rodStrengthRef.current || 0.25, lineTensileRef.current || 0.4);
       const ratio = fish ? fish.weight / effectiveLimit : 0;
-      
+
       let width = 42 + hookSharpenRef.current * 4;
       if (ratio >= 0.65) {
         width = Math.round(width / 1.8);
@@ -217,7 +219,6 @@ export function useFishingSimulation({
       const inZone = tensionRef.current >= curStart && tensionRef.current <= curEnd;
       progressRef.current += inZone ? 1.0 * reelSpeedRef.current : -0.35;
 
-      // 3. Проигрыш
       if (tensionRef.current >= 100 || tensionRef.current <= 0 || progressRef.current <= 0) {
         clearInterval(interval);
         isPullingRef.current = false;
@@ -228,13 +229,19 @@ export function useFishingSimulation({
         return;
       }
 
-      // 4. Победа
       if (progressRef.current >= 100) {
         clearInterval(interval);
         isPullingRef.current = false;
         const caught = currentFishRef.current;
         if (caught) {
-          const { rodBrokenRisk: _risk, ...cleanFish } = caught;
+          const cleanFish: CaughtFishItem = {
+            fish: caught.fish,
+            weight: caught.weight,
+            price: caught.price,
+            exp: caught.exp,
+            uid: caught.uid,
+            caughtAt: caught.caughtAt,
+          };
           onFishCaughtRef.current(cleanFish, caught.exp);
         }
         setGameState('caught');
@@ -244,7 +251,6 @@ export function useFishingSimulation({
         return;
       }
 
-      // 5. Отрисовка
       setTension(Math.max(0, Math.min(100, tensionRef.current)));
       setCatchProgress(Math.max(0, Math.min(100, progressRef.current)));
     }, 40);

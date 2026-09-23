@@ -1,28 +1,28 @@
 import type { Fish } from '../fishData';
 
 export interface CaughtFishItem {
-  uid: string;
   fish: Fish;
   weight: number;
   price: number;
   exp: number;
+  uid: string;
   caughtAt: number;
 }
 
 interface InventoryScreenProps {
   inventory: CaughtFishItem[];
+  getRarityLabel: (rarity: string) => { text: string; color: string };
   onSellFish: (uid: string, price: number) => void;
   onSellAll: () => void;
-  getRarityLabel: (rarity: string) => { text: string; color: string };
 }
 
 export const InventoryScreen = ({
   inventory,
+  getRarityLabel,
   onSellFish,
   onSellAll,
-  getRarityLabel,
 }: InventoryScreenProps) => {
-  const totalValue = inventory.reduce((sum, item) => sum + item.price, 0);
+  const totalValue = inventory.reduce((sum, item) => sum + (Number(item.price) || 1), 0);
 
   return (
     <div
@@ -30,81 +30,140 @@ export const InventoryScreen = ({
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
+        gap: '12px',
         overflow: 'hidden',
-        margin: '16px 0',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <h2 style={{ fontSize: '18px', fontWeight: 'bold' }}>
-          Садок ({inventory.length} шт.)
-        </h2>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          background: 'rgba(255, 255, 255, 0.05)',
+          padding: '12px 16px',
+          borderRadius: '16px',
+        }}
+      >
+        <div>
+          <div style={{ fontSize: '12px', color: '#94a3b8' }}>Рыбы в садке</div>
+          <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>
+            {inventory.length} шт.
+          </div>
+        </div>
+
         {inventory.length > 0 && (
           <button
             onClick={onSellAll}
             style={{
-              background: '#10b981',
+              background: 'linear-gradient(135deg, #10b981, #059669)',
               border: 'none',
+              borderRadius: '12px',
+              padding: '10px 16px',
               color: '#fff',
-              borderRadius: '10px',
-              padding: '8px 14px',
               fontWeight: 'bold',
               fontSize: '13px',
               cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
             }}
           >
-            Продать всё (+{totalValue} 🪙)
+            Продать всё за {totalValue} 🪙
           </button>
         )}
       </div>
 
-      {inventory.length === 0 ? (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
-          <div style={{ fontSize: '48px', marginBottom: '8px' }}>🧺</div>
-          <div>Садок пуст. Время на рыбалку!</div>
-        </div>
-      ) : (
-        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
-          {inventory.map((item) => (
-            <div
-              key={item.uid}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                background: 'rgba(255, 255, 255, 0.05)',
-                borderRadius: '14px',
-                padding: '10px 14px',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ fontSize: '32px' }}>{item.fish.icon}</div>
-                <div>
-                  <div style={{ fontWeight: 'bold', fontSize: '15px' }}>{item.fish.name}</div>
-                  <div style={{ fontSize: '12px', color: '#94a3b8' }}>
-                    {item.weight} кг • <span style={{ color: getRarityLabel(item.fish.rarity).color }}>{getRarityLabel(item.fish.rarity).text}</span>
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => onSellFish(item.uid, item.price)}
+      <div
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          paddingRight: '4px',
+        }}
+      >
+        {inventory.length === 0 ? (
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              color: '#64748b',
+              gap: '8px',
+            }}
+          >
+            <span style={{ fontSize: '40px' }}>🕸️</span>
+            <span>Садок пуст. Время на рыбалку!</span>
+          </div>
+        ) : (
+          inventory.map((item, index) => {
+            const itemPrice = Number(item.price) || 1;
+            const itemUid = item.uid || `fish_${index}`;
+            const rarity = getRarityLabel(item.fish.rarity);
+
+            return (
+              <div
+                key={itemUid}
                 style={{
-                  background: 'rgba(251, 191, 36, 0.15)',
-                  border: '1px solid rgba(251, 191, 36, 0.3)',
-                  color: '#fbbf24',
-                  borderRadius: '8px',
-                  padding: '6px 12px',
-                  fontWeight: 'bold',
-                  fontSize: '13px',
-                  cursor: 'pointer',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '14px',
+                  padding: '10px 14px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
                 }}
               >
-                +{item.price} 🪙
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ fontSize: '28px' }}>{item.fish.icon}</div>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>
+                        {item.fish.name}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '9px',
+                          fontWeight: 'bold',
+                          color: rarity.color,
+                          border: `1px solid ${rarity.color}40`,
+                          padding: '1px 5px',
+                          borderRadius: '4px',
+                        }}
+                      >
+                        {rarity.text}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+                      Вес: <span style={{ color: '#38bdf8' }}>{item.weight} кг</span> • +{item.exp} XP
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => onSellFish(itemUid, itemPrice)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '10px',
+                    padding: '8px 12px',
+                    color: '#fbbf24',
+                    fontWeight: 'bold',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  +{itemPrice} 🪙
+                </button>
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 };

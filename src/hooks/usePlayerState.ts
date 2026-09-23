@@ -5,20 +5,30 @@ export function usePlayerState() {
   const [userName, setUserName] = useState<string>('Рыбак');
   const [coins, setCoins] = useState<number>(() => {
     const val = localStorage.getItem('fg_coins');
-    return val ? Math.max(0, Number(val)) : 0;
+    const parsed = Number(val);
+    return !isNaN(parsed) && parsed >= 0 ? parsed : 0;
   });
   const [exp, setExp] = useState<number>(() => {
     const val = localStorage.getItem('fg_exp');
-    return val ? Math.max(0, Number(val)) : 0;
+    const parsed = Number(val);
+    return !isNaN(parsed) && parsed >= 0 ? parsed : 0;
   });
   const [level, setLevel] = useState<number>(() => {
     const val = localStorage.getItem('fg_level');
-    return val ? Math.max(1, Number(val)) : 1;
+    const parsed = Number(val);
+    return !isNaN(parsed) && parsed >= 1 ? parsed : 1;
   });
   const [inventory, setInventory] = useState<CaughtFishItem[]>(() => {
     try {
       const saved = localStorage.getItem('fg_inventory');
-      return saved ? JSON.parse(saved) : [];
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map((item: any, idx: number) => ({
+        ...item,
+        uid: item.uid || `fish_${Date.now()}_${idx}`,
+        price: Number(item.price) > 0 ? Number(item.price) : 5,
+      }));
     } catch {
       return [];
     }
@@ -26,7 +36,7 @@ export function usePlayerState() {
 
   const expToNextLevel = level * 100;
 
-  // Инициализация Telegram
+  // Инициализация Telegram данных
   useEffect(() => {
     const tg = (window as any).Telegram?.WebApp;
     if (tg) {
@@ -55,12 +65,19 @@ export function usePlayerState() {
     localStorage.setItem('fg_inventory', JSON.stringify(inventory));
   }, [inventory]);
 
-  // Добавление пойманной рыбы и опыта
+  // Добавление пойманной рыбы
   const addCaughtFish = useCallback((fish: CaughtFishItem, gainedExp: number) => {
-    setInventory((prev) => [fish, ...prev]);
+    const safeFish: CaughtFishItem = {
+      ...fish,
+      uid: fish.uid || Math.random().toString(36).substring(2, 9),
+      price: Number(fish.price) > 0 ? Number(fish.price) : 5,
+      caughtAt: fish.caughtAt || Date.now(),
+    };
+
+    setInventory((prev) => [safeFish, ...prev]);
 
     setExp((prev) => {
-      const nextExp = prev + gainedExp;
+      const nextExp = prev + (gainedExp || 10);
       if (nextExp >= expToNextLevel) {
         setLevel((lvl) => lvl + 1);
         return nextExp - expToNextLevel;
@@ -70,26 +87,30 @@ export function usePlayerState() {
   }, [expToNextLevel]);
 
   // Продажа одной рыбы
-  const sellFish = useCallback((uid: string, price: number) => {
-    if (price <= 0) return;
-    setCoins((prevCoins) => prevCoins + price);
-    setInventory((prevInv) => prevInv.filter((item) => item.uid !== uid));
-  }, []);
+  const sellFish = useCallback((uid: string, fallbackPrice?: number) => {
+    const targetItem = inventory.find((item) => item.uid === uid);
+    const amountToCredit = targetItem
+      ? (Number(targetItem.price) || Number(fallbackPrice) || 1)
+      : (Number(fallbackPrice) || 1);
 
-  // Продажа всего садка
+    setCoins((prevCoins) => prevCoins + amountToCredit);
+    setInventory((prevInv) => prevInv.filter((item) => item.uid !== uid));
+  }, [inventory]);
+
+  // Продажа всего садка (прямой расчёт без сайд-эффектов в апдейтере)
   const sellAllFish = useCallback((): number => {
-    // Вычисляем точную сумму прямо из текущего массива
-    let earned = 0;
-    setInventory((prevInv) => {
-      earned = prevInv.reduce((sum, item) => sum + (item.price || 0), 0);
-      return [];
-    });
-    
-    if (earned > 0) {
-      setCoins((prevCoins) => prevCoins + earned);
-    }
-    return earned;
-  }, []);
+    if (inventory.length === 0) return 0;
+
+    const totalEarned = inventory.reduce(
+      (sum, item) => sum + (Number(item.price) || 1),
+      0
+    );
+
+    setCoins((prevCoins) => prevCoins + totalEarned);
+    setInventory([]);
+
+    return totalEarned;
+  }, [inventory]);
 
   // Списание монет
   const spendCoins = useCallback((amount: number): boolean => {
@@ -104,7 +125,7 @@ export function usePlayerState() {
     return success;
   }, []);
 
-  // Прямое начисление
+  // Прямое начисление монет
   const addCoins = useCallback((amount: number) => {
     if (amount > 0) {
       setCoins((prev) => prev + amount);
