@@ -47,9 +47,22 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  // Защищенная загрузка снаряжения: сбрасываем старые несуществующие ID
   const [gear, setGear] = useState<PlayerGearState>(() => {
-    const saved = localStorage.getItem('fg_gear');
-    return saved ? JSON.parse(saved) : INITIAL_PLAYER_GEAR;
+    try {
+      const saved = localStorage.getItem('fg_gear');
+      if (!saved) return INITIAL_PLAYER_GEAR;
+      const parsed = JSON.parse(saved);
+      // Проверяем, существует ли удилище в новой базе
+      const rodExists = ROD_TIERS.some((r) => r.id === parsed.equippedRodId);
+      const lineExists = LINE_TIERS.some((l) => l.id === parsed.equippedLineId);
+      if (!rodExists || !lineExists) {
+        return INITIAL_PLAYER_GEAR;
+      }
+      return parsed;
+    } catch {
+      return INITIAL_PLAYER_GEAR;
+    }
   });
 
   const [baits, setBaits] = useState<Record<string, number>>(() => {
@@ -83,13 +96,13 @@ export default function App() {
 
   const currentRod: RodTier =
     ROD_TIERS.find((r) => r.id === gear.equippedRodId) || ROD_TIERS[0];
-  const rodLevel = gear.rodLevels[gear.equippedRodId] || 1;
-  const currentRodStrength = getRodStrength(currentRod, rodLevel);
+  const rodLevel = (gear.rodLevels && gear.rodLevels[currentRod.id]) || 1;
+  const currentRodStrength = getRodStrength(currentRod, rodLevel) || 0.25;
 
   const currentReel: ReelTier | null = gear.equippedReelId
     ? REEL_TIERS.find((r) => r.id === gear.equippedReelId) || null
     : null;
-  const reelLevel = currentReel ? gear.reelLevels[currentReel.id] || 1 : 1;
+  const reelLevel = (currentReel && gear.reelLevels && gear.reelLevels[currentReel.id]) || 1;
   const reelPullSpeed = currentReel ? getReelPullSpeed(currentReel, reelLevel) : 1.0;
 
   const currentLine: LineTier =
@@ -98,7 +111,7 @@ export default function App() {
   const currentBaitCapacity = BAIT_CAPACITY_MAP[upgrades.baitCapacityLevel] || 10;
   const expToNextLevel = level * 100;
 
-  // Черви: пассивный доход раз в час
+  // Черви: пассивное восстановление раз в час
   useEffect(() => {
     const now = Date.now();
     const lastRegenTime = Number(localStorage.getItem('fg_last_worm_time')) || now;
@@ -137,7 +150,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, [currentBaitCapacity]);
 
-  // Сохранения в localStorage
+  // Синхронизация localStorage
   useEffect(() => { localStorage.setItem('fg_coins', coins.toString()); }, [coins]);
   useEffect(() => { localStorage.setItem('fg_exp', exp.toString()); }, [exp]);
   useEffect(() => { localStorage.setItem('fg_level', level.toString()); }, [level]);
@@ -175,6 +188,8 @@ export default function App() {
     const availableBait = baits[selectedBaitId] || 0;
     if (availableBait <= 0) return;
 
+    isPullingRef.current = false;
+
     setBaits((prev) => ({
       ...prev,
       [selectedBaitId]: Math.max(0, (prev[selectedBaitId] || 0) - 1),
@@ -199,42 +214,46 @@ export default function App() {
       });
       setGameState('hooked');
       triggerHaptic('notification');
-    }, Math.random() * 2500 + 2000);
+    }, Math.random() * 2000 + 1500);
   };
 
   const startReeling = () => {
-    setGameState('reeling');
+    isPullingRef.current = false;
     setTension(50);
     setCatchProgress(15);
+    setGameState('reeling');
     triggerHaptic('impact');
   };
 
   useEffect(() => {
-    if (gameState !== 'reeling') return;
-    let localTension = tension;
-    let localProgress = catchProgress;
+    if (gameState !== 'reeling') {
+      isPullingRef.current = false;
+      return;
+    }
 
-    const isOverweight = currentFish?.rodBrokenRisk;
-    // Множитель скорости смотки зависит от катушки
+    let localTension = 50;
+    let localProgress = 15;
+    setTension(50);
+    setCatchProgress(15);
+
     const speedMultiplier = reelPullSpeed * (1 + upgrades.reelOilLevel * 0.12);
 
     const interval = setInterval(() => {
-      // Если тянем — растёт натяжение, если отпустили — ВСЕГДА плавно падает вниз
-      const pullRate = isPullingRef.current ? (isOverweight ? 3.0 : 2.2) : (isOverweight ? -2.2 : -2.0);
-      localTension += pullRate;
-
-      // Мягкие случайные рывки только при перегрузе снасти, без резких скачков
-      if (isOverweight && Math.random() < 0.15) {
-        const randomJerk = (Math.random() - 0.4) * 8;
-        localTension += randomJerk;
+      // КРИТИЧЕСКИЙ ФИКС: строгая физика тяги
+      // Если кнопка зажата -> растёт (+2.0). Если отпущена -> ВСЕГДА ПАДАЕТ ВНИЗ (-2.2)
+      if (isPullingRef.current) {
+        localTension += 2.0;
+      } else {
+        localTension -= 2.2;
       }
 
+      // Безопасные границы натяжения
       const inSweetSpot = localTension >= sweetSpotStart && localTension <= sweetSpotEnd;
-      const baseProgressGain = (isOverweight ? 0.6 : 1.1) * speedMultiplier;
-      localProgress += inSweetSpot ? baseProgressGain : -0.5;
+      localProgress += inSweetSpot ? 1.0 * speedMultiplier : -0.4;
 
       if (localTension >= 100 || localTension <= 0 || localProgress <= 0) {
         clearInterval(interval);
+        isPullingRef.current = false;
         setGameState('lost');
         setCanDismissModal(false);
         setTimeout(() => setCanDismissModal(true), 1200);
@@ -244,6 +263,7 @@ export default function App() {
 
       if (localProgress >= 100) {
         clearInterval(interval);
+        isPullingRef.current = false;
         if (currentFish) {
           const { rodBrokenRisk: _risk, ...cleanFish } = currentFish;
           setInventory((prev) => [cleanFish, ...prev]);
@@ -268,7 +288,10 @@ export default function App() {
       setCatchProgress(Math.max(0, Math.min(100, localProgress)));
     }, 40);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      isPullingRef.current = false;
+    };
   }, [gameState, currentFish, level, expToNextLevel, sweetSpotStart, sweetSpotEnd, reelPullSpeed, upgrades.reelOilLevel]);
 
   const handleBuyRod = (rod: RodTier) => {
@@ -277,7 +300,7 @@ export default function App() {
     setGear((prev) => ({
       ...prev,
       ownedRods: [...prev.ownedRods, rod.id],
-      rodLevels: { ...prev.rodLevels, [rod.id]: 1 },
+      rodLevels: { ...(prev.rodLevels || {}), [rod.id]: 1 },
       equippedRodId: rod.id,
       equippedReelId: rod.canMountReel ? prev.equippedReelId : null,
     }));
@@ -285,7 +308,7 @@ export default function App() {
   };
 
   const handleUpgradeRod = (rod: RodTier) => {
-    const currentLvl = gear.rodLevels[rod.id] || 1;
+    const currentLvl = (gear.rodLevels && gear.rodLevels[rod.id]) || 1;
     if (currentLvl >= 5) return;
     const cost = getRodUpgradeCost(rod, currentLvl + 1);
     if (coins < cost) return;
@@ -293,7 +316,7 @@ export default function App() {
     setCoins((c) => c - cost);
     setGear((prev) => ({
       ...prev,
-      rodLevels: { ...prev.rodLevels, [rod.id]: currentLvl + 1 },
+      rodLevels: { ...(prev.rodLevels || {}), [rod.id]: currentLvl + 1 },
     }));
     triggerHaptic('notification');
   };
@@ -314,14 +337,14 @@ export default function App() {
     setGear((prev) => ({
       ...prev,
       ownedReels: [...prev.ownedReels, reel.id],
-      reelLevels: { ...prev.reelLevels, [reel.id]: 1 },
+      reelLevels: { ...(prev.reelLevels || {}), [reel.id]: 1 },
       equippedReelId: currentRod.canMountReel ? reel.id : prev.equippedReelId,
     }));
     triggerHaptic('notification');
   };
 
   const handleUpgradeReel = (reel: ReelTier) => {
-    const currentLvl = gear.reelLevels[reel.id] || 1;
+    const currentLvl = (gear.reelLevels && gear.reelLevels[reel.id]) || 1;
     if (currentLvl >= 3) return;
     const cost = getReelUpgradeCost(reel, currentLvl + 1);
     if (coins < cost) return;
@@ -329,7 +352,7 @@ export default function App() {
     setCoins((c) => c - cost);
     setGear((prev) => ({
       ...prev,
-      reelLevels: { ...prev.reelLevels, [reel.id]: currentLvl + 1 },
+      reelLevels: { ...(prev.reelLevels || {}), [reel.id]: currentLvl + 1 },
     }));
     triggerHaptic('notification');
   };
@@ -345,7 +368,7 @@ export default function App() {
     setCoins((c) => c - line.price);
     setGear((prev) => ({
       ...prev,
-      lineStock: { ...prev.lineStock, [line.id]: (prev.lineStock[line.id] || 0) + 1 },
+      lineStock: { ...(prev.lineStock || {}), [line.id]: ((prev.lineStock && prev.lineStock[line.id]) || 0) + 1 },
       equippedLineId: prev.equippedLineId || line.id,
     }));
     triggerHaptic('impact');
@@ -442,10 +465,12 @@ export default function App() {
             baits={baits}
             currentLocation={currentLocation}
             onBackToHub={() => {
+              isPullingRef.current = false;
               setIsAtPond(false);
               triggerHaptic('selection');
             }}
             onOpenMap={() => {
+              isPullingRef.current = false;
               setIsMapOpen(true);
               triggerHaptic('selection');
             }}
