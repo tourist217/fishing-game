@@ -29,7 +29,7 @@ export function useBaitState(
   spendCoins?: (amount: number) => boolean,
   triggerHaptic?: (type: 'impact' | 'notification' | 'selection') => void
 ) {
-  // 1. Состояние наживок
+  // 1. Состояние запаса наживок
   const [baits, setBaits] = useState<Record<string, number>>(() => {
     try {
       const saved = localStorage.getItem('fg_baits');
@@ -53,10 +53,10 @@ export function useBaitState(
     };
   });
 
-  // 2. Выбранная наживка
+  // 2. Выбранная на крючке наживка
   const [selectedBaitId, setSelectedBaitId] = useState<string>('worm');
 
-  // 3. Прокачки
+  // 3. Состояние улучшений
   const [upgrades, setUpgrades] = useState<UpgradesState>(() => {
     try {
       const saved = localStorage.getItem('fg_upgrades');
@@ -81,49 +81,48 @@ export function useBaitState(
     localStorage.setItem('fg_baits', JSON.stringify(baits));
   }, [baits]);
 
-  // Автосохранение прокачек
+  // Автосохранение улучшений
   useEffect(() => {
     localStorage.setItem('fg_upgrades', JSON.stringify(upgrades));
   }, [upgrades]);
 
-  // Вместимость наживок
+  // Расчёт текущей вместимости коробки для наживок
   const currentBaitCapacity = 20 + upgrades.baitCapacityLevel * 10;
 
-  // Покупка наживки со списанием монет и контролем вместимости
+  // Безопасная покупка наживки (с проверкой денег, вместимости и списанием)
   const buyBait = useCallback(
     (baitId: string, count: number = 5): boolean => {
       const item = AVAILABLE_BAITS.find((b) => b.id === baitId);
       if (!item) return false;
 
-      const totalCost = item.price; // стоимость порции наживок
+      const totalCost = item.price;
 
-      // Проверка баланса
+      // Проверяем баланс игрока
       if (typeof coins === 'number' && coins < totalCost) {
         triggerHaptic?.('notification');
         return false;
       }
 
-      // Проверка общей вместимости
+      // Проверяем вместимость коробки
       const totalBaitsCount = Object.values(baits).reduce((sum, val) => sum + val, 0);
       if (totalBaitsCount + count > currentBaitCapacity) {
         triggerHaptic?.('notification');
         return false;
       }
 
-      // Списание монет
+      // Списываем монеты
       if (spendCoins) {
         const success = spendCoins(totalCost);
-        if (!success) return false;
+        if (!success) {
+          return false;
+        }
       }
 
-      // Начисление наживки
-      setBaits((prevBaits) => {
-        const currentCount = prevBaits[baitId] || 0;
-        return {
-          ...prevBaits,
-          [baitId]: currentCount + count,
-        };
-      });
+      // Начисляем наживку
+      setBaits((prevBaits) => ({
+        ...prevBaits,
+        [baitId]: (prevBaits[baitId] || 0) + count,
+      }));
 
       triggerHaptic?.('impact');
       return true;
@@ -131,29 +130,30 @@ export function useBaitState(
     [coins, currentBaitCapacity, baits, spendCoins, triggerHaptic]
   );
 
-  // Расход наживки при забросе
-  const consumeBait = useCallback((baitId: string): boolean => {
-    let success = false;
-    setBaits((prevBaits) => {
-      const currentCount = prevBaits[baitId] || 0;
-      if (currentCount > 0) {
-        success = true;
-        return {
-          ...prevBaits,
-          [baitId]: currentCount - 1,
-        };
+  // Синхронный расход наживки при забросе удочки
+  const consumeBait = useCallback(
+    (baitId: string): boolean => {
+      const currentCount = baits[baitId] || 0;
+      if (currentCount <= 0) {
+        return false;
       }
-      return prevBaits;
-    });
-    return success;
-  }, []);
 
-  // Выбор наживки
+      setBaits((prevBaits) => ({
+        ...prevBaits,
+        [baitId]: Math.max(0, (prevBaits[baitId] || 0) - 1),
+      }));
+
+      return true;
+    },
+    [baits]
+  );
+
+  // Выбор активной наживки
   const selectBait = useCallback((baitId: string) => {
     setSelectedBaitId(baitId);
   }, []);
 
-  // Покупка улучшений
+  // Покупка улучшений (коробка, заточка, масло)
   const buyUpgrade = useCallback(
     (type: keyof UpgradesState, cost: number): boolean => {
       if (typeof coins === 'number' && coins < cost) {
