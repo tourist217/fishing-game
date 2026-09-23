@@ -1,5 +1,6 @@
-import type { CaughtFishItem } from './InventoryScreen';
+import { useEffect } from 'react';
 import { BAITS } from '../baitData';
+import type { CaughtFishItem } from './InventoryScreen';
 import type { FishingLocation } from '../locationsData';
 
 export type GameState = 'idle' | 'waiting' | 'hooked' | 'reeling' | 'caught' | 'lost';
@@ -48,7 +49,25 @@ export const FishingScreen = ({
   onDismissModal,
 }: FishingScreenProps) => {
   const currentBaitCount = baits[selectedBaitId] || 0;
-  const inSweetSpot = tension >= sweetSpotStart && tension <= sweetSpotEnd;
+
+  // Глобальная защита от залипания тяги
+  useEffect(() => {
+    const handleGlobalRelease = () => {
+      onPullEnd();
+    };
+
+    window.addEventListener('pointerup', handleGlobalRelease);
+    window.addEventListener('touchend', handleGlobalRelease);
+    window.addEventListener('touchcancel', handleGlobalRelease);
+    window.addEventListener('blur', handleGlobalRelease);
+
+    return () => {
+      window.removeEventListener('pointerup', handleGlobalRelease);
+      window.removeEventListener('touchend', handleGlobalRelease);
+      window.removeEventListener('touchcancel', handleGlobalRelease);
+      window.removeEventListener('blur', handleGlobalRelease);
+    };
+  }, [onPullEnd]);
 
   return (
     <div
@@ -58,142 +77,144 @@ export const FishingScreen = ({
         flexDirection: 'column',
         justifyContent: 'space-between',
         alignItems: 'center',
-        margin: '12px 0',
-        width: '100%',
+        margin: '10px 0',
         position: 'relative',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
       }}
     >
-      {/* Верхняя панель локации с кнопкой выхода в меню */}
+      {/* Верхняя панель локации */}
       <div
         style={{
           width: '100%',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          background: 'rgba(255, 255, 255, 0.06)',
-          borderRadius: '14px',
+          background: 'rgba(0, 0, 0, 0.3)',
           padding: '8px 12px',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '12px',
+          backdropFilter: 'blur(8px)',
         }}
       >
         <button
           onClick={onBackToHub}
-          disabled={gameState !== 'idle'}
           style={{
-            padding: '6px 10px',
-            background: gameState === 'idle' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.04)',
+            background: 'rgba(255, 255, 255, 0.1)',
             border: 'none',
+            color: '#fff',
             borderRadius: '8px',
-            color: gameState === 'idle' ? '#fff' : '#64748b',
-            fontSize: '11px',
+            padding: '6px 12px',
+            fontSize: '12px',
             fontWeight: 'bold',
-            cursor: gameState === 'idle' ? 'pointer' : 'not-allowed',
+            cursor: 'pointer',
           }}
         >
-          ← База
+          ← На базу
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', textAlign: 'center' }}>
-          <span style={{ fontSize: '20px' }}>{currentLocation.icon}</span>
-          <div>
-            <div style={{ fontWeight: 'bold', fontSize: '13px', color: currentLocation.accentColor }}>
-              {currentLocation.name}
-            </div>
-            <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-              Вес: x{currentLocation.weightModifier}
-            </div>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span>{currentLocation.icon}</span>
+          <span style={{ fontWeight: 'bold', fontSize: '13px', color: currentLocation.accentColor }}>
+            {currentLocation.name}
+          </span>
         </div>
 
         <button
           onClick={onOpenMap}
-          disabled={gameState !== 'idle'}
           style={{
-            padding: '6px 10px',
-            background: gameState === 'idle' ? '#2563eb' : 'rgba(255, 255, 255, 0.04)',
-            border: 'none',
+            background: 'rgba(56, 189, 248, 0.2)',
+            border: '1px solid rgba(56, 189, 248, 0.4)',
+            color: '#38bdf8',
             borderRadius: '8px',
-            color: gameState === 'idle' ? '#fff' : '#64748b',
-            fontSize: '11px',
+            padding: '6px 10px',
+            fontSize: '12px',
             fontWeight: 'bold',
-            cursor: gameState === 'idle' ? 'pointer' : 'not-allowed',
+            cursor: 'pointer',
           }}
         >
           Карта 🗺️
         </button>
       </div>
 
-      {/* Центральная игровая зона */}
+      {/* Центральная зона анимации и шкал вываживания */}
       <div
         style={{
           flex: 1,
           display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
           justifyContent: 'center',
-          gap: '12px',
+          alignItems: 'center',
+          position: 'relative',
           width: '100%',
         }}
       >
         {gameState === 'idle' && (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '8px' }}>🪣</div>
-            <div style={{ color: '#94a3b8', fontSize: '13px' }}>Выберите наживку и забросьте снасть</div>
+          <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '14px' }}>
+            Насадите наживку и забросьте удочку
           </div>
         )}
 
         {gameState === 'waiting' && (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '56px', animation: 'bounce 1.5s infinite' }}>🌊</div>
-            <div style={{ color: '#38bdf8', fontSize: '14px', fontWeight: 'bold', marginTop: '8px' }}>
-              Поплавок на воде... ждём поклёвку
+            <div style={{ fontSize: '48px', animation: 'bounce 1.5s infinite ease-in-out' }}>
+              🪱
+            </div>
+            <div style={{ color: '#38bdf8', marginTop: '10px', fontWeight: 'bold', fontSize: '15px' }}>
+              Ожидание поклёвки...
             </div>
           </div>
         )}
 
         {gameState === 'hooked' && (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '64px' }}>❗</div>
-            <div style={{ color: '#fbbf24', fontSize: '16px', fontWeight: 'bold' }}>КЛЮЁТ! ПОДСЕКАЙ!</div>
+            <div style={{ fontSize: '56px', animation: 'pulse 0.6s infinite alternate' }}>
+              ❗
+            </div>
+            <div style={{ color: '#fbbf24', marginTop: '6px', fontWeight: 'bold', fontSize: '18px' }}>
+              КЛЮЁТ! ПОДСЕКАЙ!
+            </div>
           </div>
         )}
 
         {gameState === 'reeling' && (
-          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ width: '85%', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {/* Шкала прогресса вываживания */}
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
-                <span style={{ color: '#94a3b8' }}>Смотка лески:</span>
-                <span style={{ fontWeight: 'bold', color: '#38bdf8' }}>{Math.round(catchProgress)}%</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px', color: '#94a3b8' }}>
+                <span>Вываживание</span>
+                <span>{Math.round(catchProgress)}%</span>
               </div>
               <div style={{ width: '100%', height: '10px', background: 'rgba(255,255,255,0.1)', borderRadius: '5px', overflow: 'hidden' }}>
                 <div
                   style={{
                     width: `${catchProgress}%`,
                     height: '100%',
-                    background: 'linear-gradient(90deg, #38bdf8, #22c55e)',
+                    background: '#22c55e',
                     transition: 'width 0.1s linear',
                   }}
                 />
               </div>
             </div>
 
+            {/* Шкала натяжения с динамической зелёной зоной */}
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
-                <span style={{ color: '#94a3b8' }}>Натяжение лески:</span>
-                <span style={{ fontWeight: 'bold', color: inSweetSpot ? '#4ade80' : '#ef4444' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px', color: '#94a3b8' }}>
+                <span>Натяжение лески</span>
+                <span style={{ color: tension > 80 ? '#ef4444' : tension < 20 ? '#fbbf24' : '#22c55e' }}>
                   {Math.round(tension)}%
                 </span>
               </div>
               <div
                 style={{
                   width: '100%',
-                  height: '16px',
-                  background: 'rgba(255,255,255,0.1)',
-                  borderRadius: '8px',
+                  height: '24px',
+                  background: 'rgba(255,255,255,0.08)',
+                  borderRadius: '12px',
                   position: 'relative',
                   overflow: 'hidden',
+                  border: '1px solid rgba(255,255,255,0.1)',
                 }}
               >
+                {/* Динамическая зелёная зона (плавно перемещается при рывках рыбы) */}
                 <div
                   style={{
                     position: 'absolute',
@@ -201,22 +222,24 @@ export const FishingScreen = ({
                     width: `${sweetSpotEnd - sweetSpotStart}%`,
                     height: '100%',
                     background: 'rgba(34, 197, 94, 0.4)',
-                    borderLeft: '1px solid #22c55e',
-                    borderRight: '1px solid #22c55e',
+                    borderLeft: '2px solid #22c55e',
+                    borderRight: '2px solid #22c55e',
+                    transition: 'left 0.4s ease, width 0.3s ease',
                   }}
                 />
+                {/* Бегунок натяжения */}
                 <div
                   style={{
                     position: 'absolute',
                     left: `${tension}%`,
-                    top: '0',
-                    width: '6px',
-                    height: '100%',
+                    top: '2px',
+                    width: '8px',
+                    height: '20px',
+                    borderRadius: '4px',
                     background: '#ffffff',
                     transform: 'translateX(-50%)',
-                    borderRadius: '3px',
-                    boxShadow: '0 0 6px rgba(255,255,255,0.8)',
-                    transition: 'left 0.05s linear',
+                    boxShadow: '0 0 8px #ffffff',
+                    transition: 'left 0.04s linear',
                   }}
                 />
               </div>
@@ -225,36 +248,36 @@ export const FishingScreen = ({
         )}
       </div>
 
-      {/* Выбор насадки */}
+      {/* Выбор наживки */}
       {gameState === 'idle' && (
-        <div style={{ width: '100%', marginBottom: '12px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>Наживка:</div>
-          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
-            {BAITS.map((bait) => {
-              const count = baits[bait.id] || 0;
-              const isSelected = selectedBaitId === bait.id;
+        <div style={{ width: '100%', marginBottom: '10px' }}>
+          <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '6px', textAlign: 'center' }}>
+            Выберите наживку:
+          </div>
+          <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+            {BAITS.map((b) => {
+              const count = baits[b.id] || 0;
+              const isSelected = selectedBaitId === b.id;
               return (
                 <button
-                  key={bait.id}
-                  onClick={() => onSelectBait(bait.id)}
+                  key={b.id}
+                  onClick={() => onSelectBait(b.id)}
                   style={{
                     flex: '0 0 auto',
-                    padding: '8px 10px',
+                    padding: '6px 10px',
                     borderRadius: '10px',
-                    background: isSelected ? 'rgba(37, 99, 235, 0.3)' : 'rgba(255,255,255,0.05)',
-                    border: isSelected ? '1.5px solid #3b82f6' : '1px solid rgba(255,255,255,0.08)',
+                    border: isSelected ? '1.5px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)',
+                    background: isSelected ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255,255,255,0.05)',
                     color: '#fff',
                     display: 'flex',
-                    flexDirection: 'column',
                     alignItems: 'center',
-                    gap: '2px',
+                    gap: '6px',
                     cursor: 'pointer',
                   }}
                 >
-                  <span style={{ fontSize: '18px' }}>{bait.icon}</span>
-                  <span style={{ fontSize: '10px', fontWeight: 'bold' }}>{bait.name}</span>
-                  <span style={{ fontSize: '10px', color: count > 0 ? '#38bdf8' : '#ef4444' }}>
-                    {count} шт.
+                  <span style={{ fontSize: '16px' }}>{b.icon}</span>
+                  <span style={{ fontSize: '12px', fontWeight: isSelected ? 'bold' : 'normal' }}>
+                    {b.name} ({count})
                   </span>
                 </button>
               );
@@ -263,32 +286,45 @@ export const FishingScreen = ({
         </div>
       )}
 
-      {/* Интерактивная кнопка */}
-      <div style={{ width: '100%' }}>
+      {/* Кнопки действия */}
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
         {gameState === 'idle' && (
           <button
             disabled={currentBaitCount <= 0}
             onClick={onStartFishing}
             style={{
               width: '100%',
-              padding: '14px',
-              borderRadius: '12px',
+              padding: '16px',
+              borderRadius: '16px',
               border: 'none',
-              background: currentBaitCount > 0 ? '#2563eb' : '#334155',
+              background: currentBaitCount > 0 ? 'linear-gradient(135deg, #2563eb, #1d4ed8)' : '#334155',
               color: currentBaitCount > 0 ? '#fff' : '#64748b',
               fontWeight: 'bold',
-              fontSize: '15px',
+              fontSize: '16px',
               cursor: currentBaitCount > 0 ? 'pointer' : 'not-allowed',
+              boxShadow: currentBaitCount > 0 ? '0 4px 15px rgba(37,99,235,0.4)' : 'none',
             }}
           >
-            {currentBaitCount > 0 ? 'Забросить удочку 🎣' : 'Нет выбранной наживки!'}
+            {currentBaitCount > 0 ? 'Забросить удочку 🎣' : 'Нет наживки (купите в магазине) 🪱'}
           </button>
         )}
 
         {gameState === 'waiting' && (
-          <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '13px', padding: '14px' }}>
-            Следим за поплавком...
-          </div>
+          <button
+            disabled
+            style={{
+              width: '100%',
+              padding: '16px',
+              borderRadius: '16px',
+              border: 'none',
+              background: 'rgba(255,255,255,0.05)',
+              color: '#94a3b8',
+              fontWeight: 'bold',
+              fontSize: '15px',
+            }}
+          >
+            Ждём поклёвку... ⏳
+          </button>
         )}
 
         {gameState === 'hooked' && (
@@ -297,14 +333,15 @@ export const FishingScreen = ({
             style={{
               width: '100%',
               padding: '16px',
-              borderRadius: '12px',
+              borderRadius: '16px',
               border: 'none',
-              background: '#eab308',
-              color: '#000',
+              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+              color: '#fff',
               fontWeight: 'bold',
-              fontSize: '16px',
+              fontSize: '18px',
               cursor: 'pointer',
-              animation: 'pulse 1s infinite',
+              boxShadow: '0 4px 20px rgba(245,158,11,0.5)',
+              animation: 'pulse 0.4s infinite alternate',
             }}
           >
             ПОДСЕЧЬ! ⚡
@@ -313,75 +350,116 @@ export const FishingScreen = ({
 
         {gameState === 'reeling' && (
           <button
-            onMouseDown={onPullStart}
-            onMouseUp={onPullEnd}
+            onPointerDown={onPullStart}
+            onPointerUp={onPullEnd}
+            onPointerCancel={onPullEnd}
             onTouchStart={onPullStart}
             onTouchEnd={onPullEnd}
+            onTouchCancel={onPullEnd}
+            onContextMenu={(e) => e.preventDefault()}
             style={{
               width: '100%',
-              padding: '18px',
-              borderRadius: '12px',
+              padding: '20px',
+              borderRadius: '16px',
               border: 'none',
-              background: inSweetSpot ? '#16a34a' : '#dc2626',
+              background: 'linear-gradient(135deg, #0284c7, #0369a1)',
               color: '#fff',
               fontWeight: 'bold',
-              fontSize: '16px',
+              fontSize: '18px',
               cursor: 'pointer',
-              touchAction: 'manipulation',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              touchAction: 'none',
+              boxShadow: '0 4px 20px rgba(2,132,199,0.4)',
             }}
           >
-            ТЯНУТЬ (ДЕРЖИ В ЗЕЛЁНОЙ ЗОНЕ!)
+            ТЯНУТЬ (УДЕРЖИВАЙТЕ) 🎣
           </button>
         )}
       </div>
 
-      {/* Модальное окно результата */}
-      {(gameState === 'caught' || gameState === 'lost') && (
+      {/* Модалка пойманной рыбы */}
+      {gameState === 'caught' && currentFish && (
         <div
           onClick={onDismissModal}
           style={{
             position: 'absolute',
             inset: 0,
             background: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '20px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
-            borderRadius: '16px',
             padding: '20px',
             zIndex: 50,
+            cursor: canDismissModal ? 'pointer' : 'default',
           }}
         >
-          {gameState === 'caught' && currentFish && (
-            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ fontSize: '56px' }}>{currentFish.fish.icon}</div>
-              <div style={{ fontSize: '12px', fontWeight: 'bold', color: getRarityLabel(currentFish.fish.rarity).color }}>
-                {getRarityLabel(currentFish.fish.rarity).text}
-              </div>
-              <div style={{ fontSize: '20px', fontWeight: 'bold' }}>{currentFish.fish.name}</div>
-              <div style={{ fontSize: '14px', color: '#94a3b8' }}>Вес: {currentFish.weight} кг</div>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '6px' }}>
-                <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>+{currentFish.price} 🪙</span>
-                <span style={{ color: '#a78bfa', fontWeight: 'bold' }}>+{currentFish.exp} ⭐</span>
-              </div>
-            </div>
-          )}
+          <div style={{ fontSize: '64px', marginBottom: '8px' }}>{currentFish.fish.icon}</div>
+          <div
+            style={{
+              fontSize: '11px',
+              fontWeight: 'bold',
+              color: getRarityLabel(currentFish.fish.rarity).color,
+              marginBottom: '4px',
+              letterSpacing: '0.1em',
+            }}
+          >
+            {getRarityLabel(currentFish.fish.rarity).text}
+          </div>
+          <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff', marginBottom: '6px' }}>
+            {currentFish.fish.name}
+          </div>
+          <div style={{ fontSize: '15px', color: '#38bdf8', marginBottom: '14px' }}>
+            Вес: <strong>{currentFish.weight} кг</strong>
+          </div>
 
-          {gameState === 'lost' && (
-            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ fontSize: '56px' }}>💥</div>
-              <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#ef4444' }}>Срыв или обрыв снасти!</div>
-              <div style={{ fontSize: '12px', color: '#94a3b8' }}>
-                Рыба оказалась сильнее, или леска вышла за пределы шкалы.
-              </div>
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.08)', padding: '6px 14px', borderRadius: '10px', fontSize: '13px' }}>
+              +{currentFish.price} 🪙
             </div>
-          )}
+            <div style={{ background: 'rgba(255,255,255,0.08)', padding: '6px 14px', borderRadius: '10px', fontSize: '13px' }}>
+              +{currentFish.exp} XP
+            </div>
+          </div>
 
-          {canDismissModal && (
-            <div style={{ marginTop: '16px', fontSize: '12px', color: '#64748b' }}>
-              Нажмите в любом месте, чтобы продолжить
-            </div>
-          )}
+          <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+            {canDismissModal ? 'Нажмите в любом месте, чтобы забрать' : 'Рыба отправляется в садок...'}
+          </div>
+        </div>
+      )}
+
+      {/* Модалка срыва */}
+      {gameState === 'lost' && (
+        <div
+          onClick={onDismissModal}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '20px',
+            zIndex: 50,
+            cursor: canDismissModal ? 'pointer' : 'default',
+          }}
+        >
+          <div style={{ fontSize: '56px', marginBottom: '12px' }}>💨</div>
+          <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#f87171', marginBottom: '6px' }}>
+            Рыба сорвалась!
+          </div>
+          <div style={{ fontSize: '13px', color: '#94a3b8', textAlign: 'center', marginBottom: '20px' }}>
+            Натяжение вышло из-под контроля. Удерживайте бегунок в зелёной зоне.
+          </div>
+          <div style={{ fontSize: '12px', color: '#64748b' }}>
+            {canDismissModal ? 'Нажмите в любом месте' : 'Подготовка снасти...'}
+          </div>
         </div>
       )}
     </div>

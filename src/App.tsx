@@ -47,18 +47,14 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Защищенная загрузка снаряжения: сбрасываем старые несуществующие ID
   const [gear, setGear] = useState<PlayerGearState>(() => {
     try {
       const saved = localStorage.getItem('fg_gear');
       if (!saved) return INITIAL_PLAYER_GEAR;
       const parsed = JSON.parse(saved);
-      // Проверяем, существует ли удилище в новой базе
       const rodExists = ROD_TIERS.some((r) => r.id === parsed.equippedRodId);
       const lineExists = LINE_TIERS.some((l) => l.id === parsed.equippedLineId);
-      if (!rodExists || !lineExists) {
-        return INITIAL_PLAYER_GEAR;
-      }
+      if (!rodExists || !lineExists) return INITIAL_PLAYER_GEAR;
       return parsed;
     } catch {
       return INITIAL_PLAYER_GEAR;
@@ -91,6 +87,9 @@ export default function App() {
   const [catchProgress, setCatchProgress] = useState<number>(0);
   const isPullingRef = useRef<boolean>(false);
 
+  // Динамическое положение и ширина зелёной зоны
+  const [sweetZoneCenter, setSweetZoneCenter] = useState<number>(50);
+
   const currentLocation: FishingLocation =
     LOCATIONS.find((l) => l.id === selectedLocationId) || LOCATIONS[0];
 
@@ -111,7 +110,27 @@ export default function App() {
   const currentBaitCapacity = BAIT_CAPACITY_MAP[upgrades.baitCapacityLevel] || 10;
   const expToNextLevel = level * 100;
 
-  // Черви: пассивное восстановление раз в час
+  // Расчёт ширины зелёной зоны по соотношению веса рыбы к тесту снасти
+  const calculateZoneWidth = () => {
+    if (!currentFish) return 36;
+    const effectiveLimit = Math.min(currentRodStrength, currentLine.maxTensileKg);
+    const weightRatio = currentFish.weight / effectiveLimit;
+
+    // Базовая ширина с учётом прокачки заточки крючков
+    let width = 36 + upgrades.hookSharpenLevel * 3;
+
+    if (weightRatio >= 0.4) {
+      // От 40% веса зона сужается в 2 раза
+      width = width / 2;
+    }
+    return Math.max(14, Math.round(width));
+  };
+
+  const zoneWidth = calculateZoneWidth();
+  const sweetSpotStart = Math.max(5, sweetZoneCenter - zoneWidth / 2);
+  const sweetSpotEnd = Math.min(95, sweetZoneCenter + zoneWidth / 2);
+
+  // Черви: пассивный доход
   useEffect(() => {
     const now = Date.now();
     const lastRegenTime = Number(localStorage.getItem('fg_last_worm_time')) || now;
@@ -180,15 +199,12 @@ export default function App() {
     }
   };
 
-  const baseZoneWidth = 35 + upgrades.hookSharpenLevel * 5;
-  const sweetSpotStart = Math.max(10, 50 - baseZoneWidth / 2);
-  const sweetSpotEnd = Math.min(90, 50 + baseZoneWidth / 2);
-
   const startFishing = () => {
     const availableBait = baits[selectedBaitId] || 0;
     if (availableBait <= 0) return;
 
     isPullingRef.current = false;
+    setSweetZoneCenter(50);
 
     setBaits((prev) => ({
       ...prev,
@@ -221,10 +237,36 @@ export default function App() {
     isPullingRef.current = false;
     setTension(50);
     setCatchProgress(15);
+    setSweetZoneCenter(50);
     setGameState('reeling');
     triggerHaptic('impact');
   };
 
+  // Таймер перемещения зелёной зоны для крупной рыбы (весом от 80% теста снасти)
+  useEffect(() => {
+    if (gameState !== 'reeling' || !currentFish) return;
+
+    const effectiveLimit = Math.min(currentRodStrength, currentLine.maxTensileKg);
+    const weightRatio = currentFish.weight / effectiveLimit;
+
+    // Если рыба меньше 80% теста — зона статично держится по центру
+    if (weightRatio < 0.8) {
+      setSweetZoneCenter(50);
+      return;
+    }
+
+    // Крупная рыба: каждые 2.4 секунды зона прыгает в случайную точку (25%..75%)
+    const moveInterval = setInterval(() => {
+      const possiblePositions = [25, 38, 50, 62, 75];
+      const nextPos = possiblePositions[Math.floor(Math.random() * possiblePositions.length)];
+      setSweetZoneCenter(nextPos);
+      triggerHaptic('selection');
+    }, 2400);
+
+    return () => clearInterval(moveInterval);
+  }, [gameState, currentFish, currentRodStrength, currentLine.maxTensileKg]);
+
+  // Основной цикл физики вываживания
   useEffect(() => {
     if (gameState !== 'reeling') {
       isPullingRef.current = false;
@@ -239,15 +281,13 @@ export default function App() {
     const speedMultiplier = reelPullSpeed * (1 + upgrades.reelOilLevel * 0.12);
 
     const interval = setInterval(() => {
-      // КРИТИЧЕСКИЙ ФИКС: строгая физика тяги
-      // Если кнопка зажата -> растёт (+2.0). Если отпущена -> ВСЕГДА ПАДАЕТ ВНИЗ (-2.2)
+      // Строгая физика: нажато = растёт (+2.0), отпущено = падает (-2.2)
       if (isPullingRef.current) {
         localTension += 2.0;
       } else {
         localTension -= 2.2;
       }
 
-      // Безопасные границы натяжения
       const inSweetSpot = localTension >= sweetSpotStart && localTension <= sweetSpotEnd;
       localProgress += inSweetSpot ? 1.0 * speedMultiplier : -0.4;
 
