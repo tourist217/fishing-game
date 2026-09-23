@@ -40,23 +40,24 @@ export function useFishingSimulation({
   const [canDismissModal, setCanDismissModal] = useState<boolean>(false);
 
   const [tension, setTension] = useState<number>(50);
-  const [catchProgress, setCatchProgress] = useState<number>(0);
+  const [catchProgress, setCatchProgress] = useState<number>(15);
+
   const isPullingRef = useRef<boolean>(false);
+  const tensionRef = useRef<number>(50);
+  const progressRef = useRef<number>(15);
 
   // Динамический центр зелёной зоны
   const [sweetZoneCenter, setSweetZoneCenter] = useState<number>(50);
+  const sweetZoneCenterRef = useRef<number>(50);
 
-  // Расчёт ширины зелёной зоны по соотношению веса рыбы к тесту снасти
+  // Расчёт ширины безопасной зоны
   const calculateZoneWidth = () => {
     if (!currentFish) return 36;
     const effectiveLimit = Math.min(currentRodStrength, currentLineTensileKg);
     const weightRatio = currentFish.weight / effectiveLimit;
 
-    // Базовая ширина с бонусом заточки крючков
     let width = 36 + hookSharpenLevel * 3;
-
     if (weightRatio >= 0.4) {
-      // От 40% веса зона сужается в 2 раза
       width = width / 2;
     }
     return Math.max(14, Math.round(width));
@@ -66,15 +67,20 @@ export function useFishingSimulation({
   const sweetSpotStart = Math.max(5, sweetZoneCenter - zoneWidth / 2);
   const sweetSpotEnd = Math.min(95, sweetZoneCenter + zoneWidth / 2);
 
-  // Старт заброса удочки
+  // Синхронизируем рефы для чистого доступа внутри игрового цикла
+  useEffect(() => {
+    sweetZoneCenterRef.current = sweetZoneCenter;
+  }, [sweetZoneCenter]);
+
+  // Заброс удочки
   const startFishing = () => {
     const availableBait = baits[selectedBaitId] || 0;
     if (availableBait <= 0) return;
-
     if (!consumeBait(selectedBaitId)) return;
 
     isPullingRef.current = false;
     setSweetZoneCenter(50);
+    sweetZoneCenterRef.current = 50;
     setGameState('waiting');
     triggerHaptic?.('selection');
 
@@ -97,17 +103,20 @@ export function useFishingSimulation({
     }, Math.random() * 2000 + 1500);
   };
 
-  // Переход к фазе вываживания
+  // Переход к вываживанию
   const startReeling = () => {
     isPullingRef.current = false;
+    tensionRef.current = 50;
+    progressRef.current = 15;
     setTension(50);
     setCatchProgress(15);
     setSweetZoneCenter(50);
+    sweetZoneCenterRef.current = 50;
     setGameState('reeling');
     triggerHaptic?.('impact');
   };
 
-  // Таймер случайного смещения зоны при вываживании крупной рыбы (от 80% теста снасти)
+  // Перемещение зоны для крупной рыбы
   useEffect(() => {
     if (gameState !== 'reeling' || !currentFish) return;
 
@@ -116,6 +125,7 @@ export function useFishingSimulation({
 
     if (weightRatio < 0.8) {
       setSweetZoneCenter(50);
+      sweetZoneCenterRef.current = 50;
       return;
     }
 
@@ -123,38 +133,45 @@ export function useFishingSimulation({
       const possiblePositions = [25, 38, 50, 62, 75];
       const nextPos = possiblePositions[Math.floor(Math.random() * possiblePositions.length)];
       setSweetZoneCenter(nextPos);
+      sweetZoneCenterRef.current = nextPos;
       triggerHaptic?.('selection');
     }, 2400);
 
     return () => clearInterval(moveInterval);
   }, [gameState, currentFish, currentRodStrength, currentLineTensileKg, triggerHaptic]);
 
-  // Физический тик вываживания (интервал 40 мс)
+  // ГЛАВНЫЙ ФИЗИЧЕСКИЙ ЦИКЛ ВЫВАЖИВАНИЯ
   useEffect(() => {
     if (gameState !== 'reeling') {
       isPullingRef.current = false;
       return;
     }
 
-    let localTension = 50;
-    let localProgress = 15;
+    tensionRef.current = 50;
+    progressRef.current = 15;
     setTension(50);
     setCatchProgress(15);
 
     const speedMultiplier = reelPullSpeed * (1 + reelOilLevel * 0.12);
 
     const interval = setInterval(() => {
-      // Кнопка зажата -> рост натяжения, отпущена -> гарантированное падение
+      // 1. Физика натяжения
       if (isPullingRef.current) {
-        localTension += 2.0;
+        tensionRef.current += 2.0;
       } else {
-        localTension -= 2.2;
+        tensionRef.current -= 2.2;
       }
 
-      const inSweetSpot = localTension >= sweetSpotStart && localTension <= sweetSpotEnd;
-      localProgress += inSweetSpot ? 1.0 * speedMultiplier : -0.4;
+      // 2. Расчёт попадания в зелёную зону
+      const currentWidth = calculateZoneWidth();
+      const currentStart = Math.max(5, sweetZoneCenterRef.current - currentWidth / 2);
+      const currentEnd = Math.min(95, sweetZoneCenterRef.current + currentWidth / 2);
 
-      if (localTension >= 100 || localTension <= 0 || localProgress <= 0) {
+      const inZone = tensionRef.current >= currentStart && tensionRef.current <= currentEnd;
+      progressRef.current += inZone ? 1.0 * speedMultiplier : -0.4;
+
+      // 3. Проверка поражения
+      if (tensionRef.current >= 100 || tensionRef.current <= 0 || progressRef.current <= 0) {
         clearInterval(interval);
         isPullingRef.current = false;
         setGameState('lost');
@@ -164,7 +181,8 @@ export function useFishingSimulation({
         return;
       }
 
-      if (localProgress >= 100) {
+      // 4. Проверка победы (рыба поймана)
+      if (progressRef.current >= 100) {
         clearInterval(interval);
         isPullingRef.current = false;
         if (currentFish) {
@@ -178,24 +196,19 @@ export function useFishingSimulation({
         return;
       }
 
-      setTension(Math.max(0, Math.min(100, localTension)));
-      setCatchProgress(Math.max(0, Math.min(100, localProgress)));
+      // 5. ГАРАНТИРОВАННО ОБНОВЛЯЕМ РЕАКТ-СОСТОЯНИЕ ДЛЯ АНИМАЦИИ
+      const clampedTension = Math.max(0, Math.min(100, tensionRef.current));
+      const clampedProgress = Math.max(0, Math.min(100, progressRef.current));
+
+      setTension(clampedTension);
+      setCatchProgress(clampedProgress);
     }, 40);
 
     return () => {
       clearInterval(interval);
       isPullingRef.current = false;
     };
-  }, [
-    gameState,
-    currentFish,
-    sweetSpotStart,
-    sweetSpotEnd,
-    reelPullSpeed,
-    reelOilLevel,
-    onFishCaught,
-    triggerHaptic,
-  ]);
+  }, [gameState, currentFish, reelPullSpeed, reelOilLevel, onFishCaught, triggerHaptic]);
 
   const handlePullStart = () => {
     isPullingRef.current = true;
