@@ -3,9 +3,18 @@ import type { CaughtFishItem } from '../components/InventoryScreen';
 
 export function usePlayerState() {
   const [userName, setUserName] = useState<string>('Рыбак');
-  const [coins, setCoins] = useState<number>(() => Number(localStorage.getItem('fg_coins')) || 0);
-  const [exp, setExp] = useState<number>(() => Number(localStorage.getItem('fg_exp')) || 0);
-  const [level, setLevel] = useState<number>(() => Number(localStorage.getItem('fg_level')) || 1);
+  const [coins, setCoins] = useState<number>(() => {
+    const val = localStorage.getItem('fg_coins');
+    return val ? Math.max(0, Number(val)) : 0;
+  });
+  const [exp, setExp] = useState<number>(() => {
+    const val = localStorage.getItem('fg_exp');
+    return val ? Math.max(0, Number(val)) : 0;
+  });
+  const [level, setLevel] = useState<number>(() => {
+    const val = localStorage.getItem('fg_level');
+    return val ? Math.max(1, Number(val)) : 1;
+  });
   const [inventory, setInventory] = useState<CaughtFishItem[]>(() => {
     try {
       const saved = localStorage.getItem('fg_inventory');
@@ -29,7 +38,7 @@ export function usePlayerState() {
     }
   }, []);
 
-  // Синхронизация localStorage
+  // Синхронизация с localStorage
   useEffect(() => {
     localStorage.setItem('fg_coins', coins.toString());
   }, [coins]);
@@ -46,7 +55,7 @@ export function usePlayerState() {
     localStorage.setItem('fg_inventory', JSON.stringify(inventory));
   }, [inventory]);
 
-  // Добавление пойманной рыбы (стабильный колбэк)
+  // Добавление пойманной рыбы и опыта
   const addCaughtFish = useCallback((fish: CaughtFishItem, gainedExp: number) => {
     setInventory((prev) => [fish, ...prev]);
 
@@ -62,19 +71,24 @@ export function usePlayerState() {
 
   // Продажа одной рыбы
   const sellFish = useCallback((uid: string, price: number) => {
-    setCoins((c) => c + price);
-    setInventory((inv) => inv.filter((item) => item.uid !== uid));
+    if (price <= 0) return;
+    setCoins((prevCoins) => prevCoins + price);
+    setInventory((prevInv) => prevInv.filter((item) => item.uid !== uid));
   }, []);
 
   // Продажа всего садка
   const sellAllFish = useCallback((): number => {
-    let totalEarned = 0;
-    setInventory((inv) => {
-      totalEarned = inv.reduce((sum, item) => sum + item.price, 0);
+    // Вычисляем точную сумму прямо из текущего массива
+    let earned = 0;
+    setInventory((prevInv) => {
+      earned = prevInv.reduce((sum, item) => sum + (item.price || 0), 0);
       return [];
     });
-    setCoins((c) => c + totalEarned);
-    return totalEarned;
+    
+    if (earned > 0) {
+      setCoins((prevCoins) => prevCoins + earned);
+    }
+    return earned;
   }, []);
 
   // Списание монет
@@ -92,7 +106,9 @@ export function usePlayerState() {
 
   // Прямое начисление
   const addCoins = useCallback((amount: number) => {
-    setCoins((c) => c + amount);
+    if (amount > 0) {
+      setCoins((prev) => prev + amount);
+    }
   }, []);
 
   return {
