@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { CaughtFishItem } from '../components/InventoryScreen';
 
 export function usePlayerState() {
@@ -17,7 +17,7 @@ export function usePlayerState() {
 
   const expToNextLevel = level * 100;
 
-  // Инициализация Telegram данных игрока
+  // Инициализация Telegram
   useEffect(() => {
     const tg = (window as any).Telegram?.WebApp;
     if (tg) {
@@ -29,7 +29,7 @@ export function usePlayerState() {
     }
   }, []);
 
-  // Синхронизация с localStorage
+  // Синхронизация localStorage
   useEffect(() => {
     localStorage.setItem('fg_coins', coins.toString());
   }, [coins]);
@@ -46,8 +46,8 @@ export function usePlayerState() {
     localStorage.setItem('fg_inventory', JSON.stringify(inventory));
   }, [inventory]);
 
-  // Добавление пойманной рыбы и опыта в профиль
-  const addCaughtFish = (fish: CaughtFishItem, gainedExp: number) => {
+  // Добавление пойманной рыбы (стабильный колбэк)
+  const addCaughtFish = useCallback((fish: CaughtFishItem, gainedExp: number) => {
     setInventory((prev) => [fish, ...prev]);
 
     setExp((prev) => {
@@ -58,33 +58,42 @@ export function usePlayerState() {
       }
       return nextExp;
     });
-  };
+  }, [expToNextLevel]);
 
   // Продажа одной рыбы
-  const sellFish = (uid: string, price: number) => {
+  const sellFish = useCallback((uid: string, price: number) => {
     setCoins((c) => c + price);
     setInventory((inv) => inv.filter((item) => item.uid !== uid));
-  };
+  }, []);
 
   // Продажа всего садка
-  const sellAllFish = (): number => {
-    const total = inventory.reduce((sum, item) => sum + item.price, 0);
-    setCoins((c) => c + total);
-    setInventory([]);
-    return total;
-  };
+  const sellAllFish = useCallback((): number => {
+    let totalEarned = 0;
+    setInventory((inv) => {
+      totalEarned = inv.reduce((sum, item) => sum + item.price, 0);
+      return [];
+    });
+    setCoins((c) => c + totalEarned);
+    return totalEarned;
+  }, []);
 
-  // Списание монет (для покупок снастей, наживок, улучшений)
-  const spendCoins = (amount: number): boolean => {
-    if (coins < amount) return false;
-    setCoins((c) => c - amount);
-    return true;
-  };
+  // Списание монет
+  const spendCoins = useCallback((amount: number): boolean => {
+    let success = false;
+    setCoins((prev) => {
+      if (prev >= amount) {
+        success = true;
+        return prev - amount;
+      }
+      return prev;
+    });
+    return success;
+  }, []);
 
-  // Прямое начисление монет (награды, бонусы)
-  const addCoins = (amount: number) => {
+  // Прямое начисление
+  const addCoins = useCallback((amount: number) => {
     setCoins((c) => c + amount);
-  };
+  }, []);
 
   return {
     userName,
