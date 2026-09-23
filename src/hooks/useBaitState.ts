@@ -1,144 +1,160 @@
-import { useState, useEffect } from 'react';
-import { INITIAL_BAIT_INVENTORY } from '../baitData';
-import type { UpgradesState } from '../components/ShopScreen';
+import { useState, useEffect, useCallback } from 'react';
 
-const DEFAULT_UPGRADES: UpgradesState = {
-  baitCapacityLevel: 0,
-  hookSharpenLevel: 0,
-  reelOilLevel: 0,
-};
+export interface BaitItem {
+  id: string;
+  name: string;
+  price: number;
+  icon: string;
+  description: string;
+}
 
-const BAIT_CAPACITY_MAP = [10, 20, 30, 50];
-const WORM_REGEN_INTERVAL_MS = 60 * 60 * 1000; // 1 час
+export const AVAILABLE_BAITS: BaitItem[] = [
+  { id: 'worm', name: 'Червь', price: 5, icon: '🪱', description: 'Универсальная наживка для любой рыбы' },
+  { id: 'bread', name: 'Хлеб', price: 3, icon: '🍞', description: 'Отлично подходит для белой рыбы' },
+  { id: 'dough', name: 'Тесто', price: 4, icon: '🥟', description: 'Любимое лакомство карася и плотвы' },
+  { id: 'corn', name: 'Кукуруза', price: 8, icon: '🌽', description: 'Привлекает карпа, сазана и амура' },
+  { id: 'maggot', name: 'Опарыш', price: 6, icon: '🐛', description: 'Бойкая личинка для плотвы и леща' },
+  { id: 'bloodworm', name: 'Мотыль', price: 7, icon: '🦟', description: 'Деликатес для пескаря и мелкой рыбы' },
+  { id: 'livebait', name: 'Живец', price: 15, icon: '🐟', description: 'Наживка для хищников: щука, окунь, судак, сом' },
+];
+
+export interface UpgradesState {
+  baitCapacityLevel: number;
+  hookSharpenLevel: number;
+  reelOilLevel: number;
+}
 
 export function useBaitState(
-  coins: number,
-  spendCoins: (amount: number) => boolean,
+  coins?: number,
+  spendCoins?: (amount: number) => boolean,
   triggerHaptic?: (type: 'impact' | 'notification' | 'selection') => void
 ) {
+  // 1. Состояние наживок
   const [baits, setBaits] = useState<Record<string, number>>(() => {
     try {
       const saved = localStorage.getItem('fg_baits');
-      return saved ? JSON.parse(saved) : INITIAL_BAIT_INVENTORY;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed === 'object' && parsed !== null) {
+          return parsed;
+        }
+      }
     } catch {
-      return INITIAL_BAIT_INVENTORY;
+      // fallback
     }
+    return {
+      worm: 10,
+      bread: 5,
+      dough: 5,
+      corn: 0,
+      maggot: 0,
+      bloodworm: 0,
+      livebait: 0,
+    };
   });
 
+  // 2. Выбранная наживка
   const [selectedBaitId, setSelectedBaitId] = useState<string>('worm');
 
+  // 3. Прокачки
   const [upgrades, setUpgrades] = useState<UpgradesState>(() => {
     try {
       const saved = localStorage.getItem('fg_upgrades');
-      return saved ? JSON.parse(saved) : DEFAULT_UPGRADES;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed === 'object' && parsed !== null) {
+          return parsed;
+        }
+      }
     } catch {
-      return DEFAULT_UPGRADES;
+      // fallback
     }
+    return {
+      baitCapacityLevel: 0,
+      hookSharpenLevel: 0,
+      reelOilLevel: 0,
+    };
   });
 
-  const currentBaitCapacity = BAIT_CAPACITY_MAP[upgrades.baitCapacityLevel] || 10;
-
-  // Автосохранение в localStorage
+  // Автосохранение наживок
   useEffect(() => {
     localStorage.setItem('fg_baits', JSON.stringify(baits));
   }, [baits]);
 
+  // Автосохранение прокачек
   useEffect(() => {
     localStorage.setItem('fg_upgrades', JSON.stringify(upgrades));
   }, [upgrades]);
 
-  // Пассивный доход червей раз в час
-  useEffect(() => {
-    const now = Date.now();
-    const lastRegenTime = Number(localStorage.getItem('fg_last_worm_time')) || now;
-    const diffMs = now - lastRegenTime;
+  // Вместимость наживок
+  const currentBaitCapacity = 20 + upgrades.baitCapacityLevel * 10;
 
-    if (diffMs >= WORM_REGEN_INTERVAL_MS) {
-      const generatedWorms = Math.floor(diffMs / WORM_REGEN_INTERVAL_MS);
-      const remainingMs = diffMs % WORM_REGEN_INTERVAL_MS;
+  // Безопасная покупка наживки
+  const buyBait = useCallback((baitId: string, count: number = 5): boolean => {
+    setBaits((prevBaits) => {
+      const currentCount = prevBaits[baitId] || 0;
+      return {
+        ...prevBaits,
+        [baitId]: currentCount + count,
+      };
+    });
+    return true;
+  }, []);
 
-      setBaits((prev) => {
-        const currentWorms = prev.worm || 0;
-        const newWorms = Math.min(currentBaitCapacity, currentWorms + generatedWorms);
-        return { ...prev, worm: newWorms };
-      });
-
-      localStorage.setItem('fg_last_worm_time', (now - remainingMs).toString());
-    } else if (!localStorage.getItem('fg_last_worm_time')) {
-      localStorage.setItem('fg_last_worm_time', now.toString());
-    }
-
-    const interval = setInterval(() => {
-      const checkNow = Date.now();
-      const lastCheck = Number(localStorage.getItem('fg_last_worm_time')) || checkNow;
-      if (checkNow - lastCheck >= WORM_REGEN_INTERVAL_MS) {
-        setBaits((prev) => {
-          const currentWorms = prev.worm || 0;
-          if (currentWorms < currentBaitCapacity) {
-            return { ...prev, worm: currentWorms + 1 };
-          }
-          return prev;
-        });
-        localStorage.setItem('fg_last_worm_time', checkNow.toString());
+  // Расход наживки при забросе
+  const consumeBait = useCallback((baitId: string): boolean => {
+    let success = false;
+    setBaits((prevBaits) => {
+      const currentCount = prevBaits[baitId] || 0;
+      if (currentCount > 0) {
+        success = true;
+        return {
+          ...prevBaits,
+          [baitId]: currentCount - 1,
+        };
       }
-    }, 60000);
+      return prevBaits;
+    });
+    return success;
+  }, []);
 
-    return () => clearInterval(interval);
-  }, [currentBaitCapacity]);
-
-  // Покупка наживки в магазине
-  const buyBait = (baitId: string, amount: number, totalCost: number): boolean => {
-    if (coins < totalCost) return false;
-    const currentCount = baits[baitId] || 0;
-    if (currentCount + amount > currentBaitCapacity) return false;
-    if (!spendCoins(totalCost)) return false;
-
-    setBaits((prev) => ({
-      ...prev,
-      [baitId]: (prev[baitId] || 0) + amount,
-    }));
-    triggerHaptic?.('impact');
-    return true;
-  };
-
-  // Покупка апгрейда в мастерской
-  const buyUpgrade = (type: keyof UpgradesState, cost: number): boolean => {
-    if (coins < cost) return false;
-    if (!spendCoins(cost)) return false;
-
-    setUpgrades((prev) => ({
-      ...prev,
-      [type]: prev[type] + 1,
-    }));
-    triggerHaptic?.('notification');
-    return true;
-  };
-
-  // Расход наживки при забросе удочки
-  const consumeBait = (baitId: string): boolean => {
-    const currentCount = baits[baitId] || 0;
-    if (currentCount <= 0) return false;
-
-    setBaits((prev) => ({
-      ...prev,
-      [baitId]: Math.max(0, (prev[baitId] || 0) - 1),
-    }));
-    return true;
-  };
-
-  const selectBait = (baitId: string) => {
+  // Выбор наживки
+  const selectBait = useCallback((baitId: string) => {
     setSelectedBaitId(baitId);
-    triggerHaptic?.('selection');
-  };
+  }, []);
+
+  // Покупка улучшений
+  const buyUpgrade = useCallback(
+    (type: keyof UpgradesState, cost: number): boolean => {
+      if (typeof coins === 'number' && coins < cost) {
+        return false;
+      }
+
+      if (spendCoins) {
+        const spent = spendCoins(cost);
+        if (!spent) return false;
+      }
+
+      setUpgrades((prev) => ({
+        ...prev,
+        [type]: prev[type] + 1,
+      }));
+
+      triggerHaptic?.('notification');
+      return true;
+    },
+    [coins, spendCoins, triggerHaptic]
+  );
 
   return {
     baits,
     selectedBaitId,
-    upgrades,
-    currentBaitCapacity,
+    setSelectedBaitId,
     selectBait,
     buyBait,
-    buyUpgrade,
     consumeBait,
+    upgrades,
+    currentBaitCapacity,
+    buyUpgrade,
   };
 }
