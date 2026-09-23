@@ -29,7 +29,7 @@ export function useBaitState(
   spendCoins?: (amount: number) => boolean,
   triggerHaptic?: (type: 'impact' | 'notification' | 'selection') => void
 ) {
-  // 1. Состояние запаса наживок
+  // 1. Количество каждой наживки
   const [baits, setBaits] = useState<Record<string, number>>(() => {
     try {
       const saved = localStorage.getItem('fg_baits');
@@ -53,10 +53,10 @@ export function useBaitState(
     };
   });
 
-  // 2. Выбранная на крючке наживка
+  // 2. Выбранная активная насадка
   const [selectedBaitId, setSelectedBaitId] = useState<string>('worm');
 
-  // 3. Состояние улучшений
+  // 3. Улучшения
   const [upgrades, setUpgrades] = useState<UpgradesState>(() => {
     try {
       const saved = localStorage.getItem('fg_upgrades');
@@ -86,48 +86,47 @@ export function useBaitState(
     localStorage.setItem('fg_upgrades', JSON.stringify(upgrades));
   }, [upgrades]);
 
-  // Расчёт текущей вместимости коробки для наживок
-  const currentBaitCapacity = 20 + upgrades.baitCapacityLevel * 10;
+  // Лимит вместимости одной банки (базово 30 + 15 за каждый уровень прокачки)
+  const currentBaitCapacity = 30 + upgrades.baitCapacityLevel * 15;
 
-  // Безопасная покупка наживки (с проверкой денег, вместимости и списанием)
+  // Покупка наживки (принимает baitId, count, price от ShopScreen)
   const buyBait = useCallback(
-    (baitId: string, count: number = 5): boolean => {
-      const item = AVAILABLE_BAITS.find((b) => b.id === baitId);
-      if (!item) return false;
+    (baitId: string, count: number = 5, passedPrice?: number): boolean => {
+      // Вычисляем цену: либо передана из UI, либо ищем в справочнике
+      let cost = passedPrice;
+      if (typeof cost !== 'number') {
+        const item = AVAILABLE_BAITS.find((b) => b.id === baitId);
+        cost = item ? item.price : 20;
+      }
 
-      const totalCost = item.price;
-
-      // Проверяем баланс игрока
-      if (typeof coins === 'number' && coins < totalCost) {
+      // Проверяем монеты
+      if (typeof coins === 'number' && coins < cost) {
         triggerHaptic?.('notification');
         return false;
       }
 
-      // Проверяем вместимость коробки
-      const totalBaitsCount = Object.values(baits).reduce((sum, val) => sum + val, 0);
-      if (totalBaitsCount + count > currentBaitCapacity) {
-        triggerHaptic?.('notification');
-        return false;
-      }
-
-      // Списываем монеты
+      // Списываем монеты через player.spendCoins
       if (spendCoins) {
-        const success = spendCoins(totalCost);
+        const success = spendCoins(cost);
         if (!success) {
+          triggerHaptic?.('notification');
           return false;
         }
       }
 
       // Начисляем наживку
-      setBaits((prevBaits) => ({
-        ...prevBaits,
-        [baitId]: (prevBaits[baitId] || 0) + count,
-      }));
+      setBaits((prevBaits) => {
+        const currentCount = prevBaits[baitId] || 0;
+        return {
+          ...prevBaits,
+          [baitId]: currentCount + count,
+        };
+      });
 
       triggerHaptic?.('impact');
       return true;
     },
-    [coins, currentBaitCapacity, baits, spendCoins, triggerHaptic]
+    [coins, spendCoins, triggerHaptic]
   );
 
   // Синхронный расход наживки при забросе удочки
@@ -148,15 +147,16 @@ export function useBaitState(
     [baits]
   );
 
-  // Выбор активной наживки
+  // Выбор наживки
   const selectBait = useCallback((baitId: string) => {
     setSelectedBaitId(baitId);
   }, []);
 
-  // Покупка улучшений (коробка, заточка, масло)
+  // Покупка улучшений мастерской
   const buyUpgrade = useCallback(
     (type: keyof UpgradesState, cost: number): boolean => {
       if (typeof coins === 'number' && coins < cost) {
+        triggerHaptic?.('notification');
         return false;
       }
 
