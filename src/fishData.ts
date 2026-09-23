@@ -7,136 +7,194 @@ export interface Fish {
   baseExp: number;   // опыта за кг
   rarity: 'common' | 'rare' | 'epic' | 'legendary';
   icon: string;
-  minRodReq: number; // 1 - бамбук, 2 - стеклопластик, 3 - карбон, 4 - титан
 }
 
 export const FISH_DATABASE: Fish[] = [
-  // 1. Мелкая мирная рыба (доступна с 1 уровня)
+  // Мелкая прибрежная рыба (камыш и бамбук)
+  {
+    id: 'gudgeon',
+    name: 'Пескарь',
+    minWeight: 0.04,
+    maxWeight: 0.12,
+    basePrice: 22,
+    baseExp: 15,
+    rarity: 'common',
+    icon: '🐟',
+  },
   {
     id: 'crucian_small',
-    name: 'Карасик',
-    minWeight: 0.15,
-    maxWeight: 0.45,
-    basePrice: 16,
-    baseExp: 20,
+    name: 'Карасик серебряный',
+    minWeight: 0.1,
+    maxWeight: 0.35,
+    basePrice: 18,
+    baseExp: 18,
     rarity: 'common',
     icon: '🐠',
-    minRodReq: 1,
   },
   {
     id: 'roach_small',
     name: 'Плотвичка',
-    minWeight: 0.1,
-    maxWeight: 0.35,
-    basePrice: 18,
-    baseExp: 22,
+    minWeight: 0.08,
+    maxWeight: 0.3,
+    basePrice: 20,
+    baseExp: 20,
     rarity: 'common',
     icon: '🐟',
-    minRodReq: 1,
   },
   {
     id: 'perch_small',
-    name: 'Окушок',
+    name: 'Окушок полосатый',
     minWeight: 0.1,
     maxWeight: 0.4,
-    basePrice: 20,
-    baseExp: 24,
+    basePrice: 24,
+    baseExp: 22,
     rarity: 'common',
     icon: '🐟',
-    minRodReq: 1,
   },
 
-  // 2. Средняя рыба (подлещик доступен с 1 уровня, но крупнее)
+  // Средняя рыба (бамбук 3-5 ур., телескоп)
   {
     id: 'bream_small',
     name: 'Подлещик',
-    minWeight: 0.5,
-    maxWeight: 1.1,
+    minWeight: 0.4,
+    maxWeight: 0.95,
     basePrice: 28,
-    baseExp: 32,
+    baseExp: 30,
     rarity: 'rare',
     icon: '🐡',
-    minRodReq: 1,
   },
-
-  // 3. Крупная рыба (требует удочку от 2 уровня)
   {
     id: 'crucian_large',
-    name: 'Золотой Карась (крупный)',
-    minWeight: 1.2,
-    maxWeight: 2.2,
-    basePrice: 45,
-    baseExp: 50,
-    rarity: 'rare',
-    icon: '🐠',
-    minRodReq: 2,
-  },
-  {
-    id: 'roach_large',
-    name: 'Плотва крупная',
-    minWeight: 0.8,
+    name: 'Золотой Карась',
+    minWeight: 0.6,
     maxWeight: 1.8,
-    basePrice: 40,
+    basePrice: 42,
     baseExp: 45,
     rarity: 'rare',
+    icon: '🐠',
+  },
+  {
+    id: 'chub',
+    name: 'Голавль',
+    minWeight: 0.7,
+    maxWeight: 2.2,
+    basePrice: 38,
+    baseExp: 40,
+    rarity: 'rare',
     icon: '🐟',
-    minRodReq: 2,
+  },
+
+  // Крупная рыба (стеклопластик, композит, карбон)
+  {
+    id: 'carp_mirror',
+    name: 'Зеркальный Карп',
+    minWeight: 2.0,
+    maxWeight: 6.5,
+    basePrice: 55,
+    baseExp: 60,
+    rarity: 'epic',
+    icon: '🐡',
+  },
+  {
+    id: 'pike_river',
+    name: 'Щука речная',
+    minWeight: 1.5,
+    maxWeight: 8.0,
+    basePrice: 65,
+    baseExp: 75,
+    rarity: 'epic',
+    icon: '🐊',
+  },
+  {
+    id: 'catfish_giant',
+    name: 'Сом Озёрный',
+    minWeight: 8.0,
+    maxWeight: 35.0,
+    basePrice: 90,
+    baseExp: 110,
+    rarity: 'legendary',
+    icon: '🐋',
   },
 ];
 
 const BAIT_WEIGHTS: Record<string, Record<string, number>> = {
   bread: {
+    gudgeon: 40,
     crucian_small: 50,
-    roach_small: 50,
-    bream_small: 20,
+    roach_small: 45,
+    bream_small: 15,
     crucian_large: 5,
-    roach_large: 5,
+    chub: 0,
+    carp_mirror: 2,
+    pike_river: 0,
+    catfish_giant: 0,
     perch_small: 0,
   },
   dough: {
+    gudgeon: 30,
     crucian_small: 50,
-    roach_small: 50,
+    roach_small: 45,
     bream_small: 20,
-    crucian_large: 5,
-    roach_large: 5,
+    crucian_large: 10,
+    chub: 5,
+    carp_mirror: 5,
+    pike_river: 0,
+    catfish_giant: 0,
     perch_small: 0,
   },
   worm: {
-    perch_small: 40,
-    bream_small: 40,
-    crucian_small: 40,
-    roach_small: 15,
-    crucian_large: 5,
-    roach_large: 5,
+    gudgeon: 35,
+    perch_small: 45,
+    bream_small: 35,
+    crucian_small: 35,
+    roach_small: 20,
+    crucian_large: 15,
+    chub: 15,
+    carp_mirror: 10,
+    pike_river: 10,
+    catfish_giant: 2,
   },
   maggot: {
+    gudgeon: 30,
     perch_small: 40,
     bream_small: 40,
-    crucian_small: 40,
-    roach_small: 15,
-    crucian_large: 5,
-    roach_large: 5,
+    crucian_small: 30,
+    roach_small: 35,
+    crucian_large: 15,
+    chub: 15,
+    carp_mirror: 10,
+    pike_river: 5,
+    catfish_giant: 0,
   },
   bloodworm: {
-    perch_small: 40,
+    gudgeon: 40,
+    perch_small: 45,
     bream_small: 40,
-    crucian_small: 40,
-    roach_small: 15,
-    crucian_large: 5,
-    roach_large: 5,
+    crucian_small: 30,
+    roach_small: 40,
+    crucian_large: 10,
+    chub: 5,
+    carp_mirror: 5,
+    pike_river: 0,
+    catfish_giant: 0,
   },
   corn: {
+    gudgeon: 0,
     crucian_small: 0,
     roach_small: 0,
     perch_small: 0,
-    bream_small: 30,
+    bream_small: 25,
     crucian_large: 45,
-    roach_large: 45,
+    chub: 25,
+    carp_mirror: 50,
+    pike_river: 0,
+    catfish_giant: 5,
   },
 };
 
 export function getRandomFish(
-  playerRodLevel: number = 1,
+  rodStrengthKg: number = 0.45,
+  lineTensileKg: number = 0.4,
   baitId: string = 'worm',
   locationWeightModifier: number = 1.0
 ): {
@@ -144,38 +202,51 @@ export function getRandomFish(
   weight: number;
   price: number;
   exp: number;
-  rodBrokenRisk?: boolean;
+  rodBrokenRisk: boolean;
 } {
+  const safeGearLimit = Math.min(rodStrengthKg, lineTensileKg);
   const baitProfile = BAIT_WEIGHTS[baitId] || BAIT_WEIGHTS['worm'];
 
-  const candidates: { fish: Fish; weightChance: number }[] = [];
-  for (const fish of FISH_DATABASE) {
-    const chance = baitProfile[fish.id] || 0;
-    if (chance > 0) {
-      candidates.push({ fish, weightChance: chance });
-    }
+  // Шанс 0.5% (0.005) на поклёвку рыбы с перегрузом снасти
+  const isDangerousStrike = Math.random() < 0.005;
+
+  // Фильтруем пул рыб под текущий безопасный коридор снасти
+  let candidates = FISH_DATABASE.filter((f) => {
+    const chance = baitProfile[f.id] || 0;
+    if (chance <= 0) return false;
+    if (isDangerousStrike) return true; // При опасной поклёвке доступна любая рыба из наживки
+    return f.minWeight <= safeGearLimit * 1.1; // Рыба укладывается в тест снасти
+  });
+
+  if (candidates.length === 0) {
+    // Резервный фоллбек на пескаря или мелкого карасика
+    candidates = [FISH_DATABASE[0]];
   }
 
-  const totalWeight = candidates.reduce((sum, item) => sum + item.weightChance, 0);
-  let randomRoll = Math.random() * totalWeight;
-  let selectedFish = candidates[0].fish;
+  const totalChance = candidates.reduce((sum, f) => sum + (baitProfile[f.id] || 10), 0);
+  let roll = Math.random() * totalChance;
+  let selectedFish = candidates[0];
 
-  for (const item of candidates) {
-    if (randomRoll < item.weightChance) {
-      selectedFish = item.fish;
+  for (const f of candidates) {
+    const weightChance = baitProfile[f.id] || 10;
+    if (roll < weightChance) {
+      selectedFish = f;
       break;
     }
-    randomRoll -= item.weightChance;
+    roll -= weightChance;
   }
 
-  // Расчет веса с учётом модификатора водоёма
-  const rawBaseWeight = selectedFish.minWeight + Math.random() * (selectedFish.maxWeight - selectedFish.minWeight);
-  const modifiedWeight = rawBaseWeight * locationWeightModifier;
-  const weight = Math.round(modifiedWeight * 100) / 100;
+  // Генерация веса
+  let rawWeight = selectedFish.minWeight + Math.random() * (selectedFish.maxWeight - selectedFish.minWeight);
+  rawWeight *= locationWeightModifier;
 
-  // Если модификатор увеличил рыбу свыше 1.3 кг, бамбуковая удочка первого уровня рискует не выдержать
-  const isTooHeavyForBamboo = playerRodLevel === 1 && weight > 1.3;
-  const rodBrokenRisk = selectedFish.minRodReq > playerRodLevel || isTooHeavyForBamboo;
+  // Если не опасная поклёвка, аккуратно срезаем вес по тесту снасти
+  if (!isDangerousStrike && rawWeight > safeGearLimit) {
+    rawWeight = Math.max(selectedFish.minWeight, safeGearLimit * (0.7 + Math.random() * 0.28));
+  }
+
+  const weight = Math.round(rawWeight * 100) / 100;
+  const rodBrokenRisk = weight > safeGearLimit;
 
   const price = Math.max(1, Math.round(weight * selectedFish.basePrice));
   const exp = Math.max(5, Math.round(weight * selectedFish.baseExp));

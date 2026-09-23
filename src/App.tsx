@@ -1,6 +1,19 @@
 import { useEffect, useState, useRef } from 'react';
 import { getRandomFish } from './fishData';
-import { RODS, type Rod } from './shopData';
+import {
+  ROD_TIERS,
+  REEL_TIERS,
+  LINE_TIERS,
+  INITIAL_PLAYER_GEAR,
+  getRodStrength,
+  getReelPullSpeed,
+  getRodUpgradeCost,
+  getReelUpgradeCost,
+  type PlayerGearState,
+  type RodTier,
+  type ReelTier,
+  type LineTier,
+} from './gearData';
 import { INITIAL_BAIT_INVENTORY } from './baitData';
 import { LOCATIONS, DEFAULT_LOCATION_ID, type FishingLocation } from './locationsData';
 import { Header } from './components/Header';
@@ -34,6 +47,12 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  // Новая модульная система снаряжения (Удилища, Катушки, Лески)
+  const [gear, setGear] = useState<PlayerGearState>(() => {
+    const saved = localStorage.getItem('fg_gear');
+    return saved ? JSON.parse(saved) : INITIAL_PLAYER_GEAR;
+  });
+
   const [baits, setBaits] = useState<Record<string, number>>(() => {
     const saved = localStorage.getItem('fg_baits');
     return saved ? JSON.parse(saved) : INITIAL_BAIT_INVENTORY;
@@ -43,12 +62,6 @@ export default function App() {
   const [upgrades, setUpgrades] = useState<UpgradesState>(() => {
     const saved = localStorage.getItem('fg_upgrades');
     return saved ? JSON.parse(saved) : DEFAULT_UPGRADES;
-  });
-
-  const [equippedRodId, setEquippedRodId] = useState<string>(() => localStorage.getItem('fg_rod') || 'bamboo');
-  const [ownedRods, setOwnedRods] = useState<string[]>(() => {
-    const saved = localStorage.getItem('fg_owned_rods');
-    return saved ? JSON.parse(saved) : ['bamboo'];
   });
 
   const [selectedLocationId, setSelectedLocationId] = useState<string>(
@@ -69,9 +82,19 @@ export default function App() {
   const currentLocation: FishingLocation =
     LOCATIONS.find((l) => l.id === selectedLocationId) || LOCATIONS[0];
 
-  const currentRod: Rod = RODS.find((r) => r.id === equippedRodId) || RODS[0];
-  const rodIndex = RODS.findIndex((r) => r.id === equippedRodId);
-  const playerRodLevel = rodIndex >= 0 ? rodIndex + 1 : 1;
+  const currentRod: RodTier =
+    ROD_TIERS.find((r) => r.id === gear.equippedRodId) || ROD_TIERS[0];
+  const rodLevel = gear.rodLevels[gear.equippedRodId] || 1;
+  const currentRodStrength = getRodStrength(currentRod, rodLevel);
+
+  const currentReel: ReelTier | null = gear.equippedReelId
+    ? REEL_TIERS.find((r) => r.id === gear.equippedReelId) || null
+    : null;
+  const reelLevel = currentReel ? gear.reelLevels[currentReel.id] || 1 : 1;
+  const reelPullSpeed = currentReel ? getReelPullSpeed(currentReel, reelLevel) : 1.0;
+
+  const currentLine: LineTier =
+    LINE_TIERS.find((l) => l.id === gear.equippedLineId) || LINE_TIERS[0];
 
   const currentBaitCapacity = BAIT_CAPACITY_MAP[upgrades.baitCapacityLevel] || 10;
   const expToNextLevel = level * 100;
@@ -115,15 +138,14 @@ export default function App() {
     return () => clearInterval(interval);
   }, [currentBaitCapacity]);
 
-  // Сохранения в localStorage
+  // Синхронизация localStorage
   useEffect(() => { localStorage.setItem('fg_coins', coins.toString()); }, [coins]);
   useEffect(() => { localStorage.setItem('fg_exp', exp.toString()); }, [exp]);
   useEffect(() => { localStorage.setItem('fg_level', level.toString()); }, [level]);
   useEffect(() => { localStorage.setItem('fg_inventory', JSON.stringify(inventory)); }, [inventory]);
   useEffect(() => { localStorage.setItem('fg_baits', JSON.stringify(baits)); }, [baits]);
   useEffect(() => { localStorage.setItem('fg_upgrades', JSON.stringify(upgrades)); }, [upgrades]);
-  useEffect(() => { localStorage.setItem('fg_rod', equippedRodId); }, [equippedRodId]);
-  useEffect(() => { localStorage.setItem('fg_owned_rods', JSON.stringify(ownedRods)); }, [ownedRods]);
+  useEffect(() => { localStorage.setItem('fg_gear', JSON.stringify(gear)); }, [gear]);
   useEffect(() => { localStorage.setItem('fg_selected_location', selectedLocationId); }, [selectedLocationId]);
 
   useEffect(() => {
@@ -146,7 +168,7 @@ export default function App() {
     }
   };
 
-  const baseZoneWidth = 35 + currentRod.sweetSpotBonus + upgrades.hookSharpenLevel * 5;
+  const baseZoneWidth = 35 + upgrades.hookSharpenLevel * 5;
   const sweetSpotStart = Math.max(10, 50 - baseZoneWidth / 2);
   const sweetSpotEnd = Math.min(90, 50 + baseZoneWidth / 2);
 
@@ -163,11 +185,16 @@ export default function App() {
     triggerHaptic('selection');
 
     setTimeout(() => {
-      const generated = getRandomFish(playerRodLevel, selectedBaitId, currentLocation.weightModifier);
-      const finalPrice = Math.round(generated.price * currentRod.goldBonus);
+      const generated = getRandomFish(
+        currentRodStrength,
+        currentLine.maxTensileKg,
+        selectedBaitId,
+        currentLocation.weightModifier
+      );
+
       setCurrentFish({
         ...generated,
-        price: finalPrice,
+        price: generated.price,
         uid: Math.random().toString(36).substring(2, 9),
         caughtAt: Date.now(),
       });
@@ -189,17 +216,18 @@ export default function App() {
     let localProgress = catchProgress;
 
     const isOverweight = currentFish?.rodBrokenRisk;
-    const progressSpeedMultiplier = 1 + upgrades.reelOilLevel * 0.15;
+    // Множитель скорости смотки зависит от установленной катушки и апгрейда смазки
+    const speedMultiplier = reelPullSpeed * (1 + upgrades.reelOilLevel * 0.12);
 
     const interval = setInterval(() => {
-      const pullRate = isPullingRef.current ? (isOverweight ? 4.5 : 2.4) : (isOverweight ? -3.5 : -1.8);
+      const pullRate = isPullingRef.current ? (isOverweight ? 4.6 : 2.5) : (isOverweight ? -3.6 : -1.8);
       localTension += pullRate;
 
-      const randomJerk = (Math.random() - 0.5) * (isOverweight ? 25 : 12);
+      const randomJerk = (Math.random() - 0.5) * (isOverweight ? 26 : 12);
       if (Math.random() < (isOverweight ? 0.25 : 0.1)) localTension += randomJerk;
 
       const inSweetSpot = localTension >= sweetSpotStart && localTension <= sweetSpotEnd;
-      const baseProgressGain = (isOverweight ? 0.5 : 1.0) * progressSpeedMultiplier;
+      const baseProgressGain = (isOverweight ? 0.5 : 1.0) * speedMultiplier;
       localProgress += inSweetSpot ? baseProgressGain : (isOverweight ? -1.2 : -0.6);
 
       if (localTension >= 100 || localTension <= 0 || localProgress <= 0) {
@@ -238,7 +266,94 @@ export default function App() {
     }, 40);
 
     return () => clearInterval(interval);
-  }, [gameState, currentFish, level, expToNextLevel, sweetSpotStart, sweetSpotEnd, upgrades.reelOilLevel]);
+  }, [gameState, currentFish, level, expToNextLevel, sweetSpotStart, sweetSpotEnd, reelPullSpeed, upgrades.reelOilLevel]);
+
+  // Обработчики магазина снастей
+  const handleBuyRod = (rod: RodTier) => {
+    if (coins < rod.basePrice || level < rod.levelReq) return;
+    setCoins((c) => c - rod.basePrice);
+    setGear((prev) => ({
+      ...prev,
+      ownedRods: [...prev.ownedRods, rod.id],
+      rodLevels: { ...prev.rodLevels, [rod.id]: 1 },
+      equippedRodId: rod.id,
+      // Если удилище без катушкодержателя (камыш) — снимаем катушку
+      equippedReelId: rod.canMountReel ? prev.equippedReelId : null,
+    }));
+    triggerHaptic('notification');
+  };
+
+  const handleUpgradeRod = (rod: RodTier) => {
+    const currentLvl = gear.rodLevels[rod.id] || 1;
+    if (currentLvl >= 5) return;
+    const cost = getRodUpgradeCost(rod, currentLvl + 1);
+    if (coins < cost) return;
+
+    setCoins((c) => c - cost);
+    setGear((prev) => ({
+      ...prev,
+      rodLevels: { ...prev.rodLevels, [rod.id]: currentLvl + 1 },
+    }));
+    triggerHaptic('notification');
+  };
+
+  const handleEquipRod = (rodId: string) => {
+    const rod = ROD_TIERS.find((r) => r.id === rodId);
+    setGear((prev) => ({
+      ...prev,
+      equippedRodId: rodId,
+      equippedReelId: rod?.canMountReel ? prev.equippedReelId : null,
+    }));
+    triggerHaptic('selection');
+  };
+
+  const handleBuyReel = (reel: ReelTier) => {
+    if (coins < reel.basePrice || level < reel.levelReq) return;
+    setCoins((c) => c - reel.basePrice);
+    setGear((prev) => ({
+      ...prev,
+      ownedReels: [...prev.ownedReels, reel.id],
+      reelLevels: { ...prev.reelLevels, [reel.id]: 1 },
+      equippedReelId: currentRod.canMountReel ? reel.id : prev.equippedReelId,
+    }));
+    triggerHaptic('notification');
+  };
+
+  const handleUpgradeReel = (reel: ReelTier) => {
+    const currentLvl = gear.reelLevels[reel.id] || 1;
+    if (currentLvl >= 3) return;
+    const cost = getReelUpgradeCost(reel, currentLvl + 1);
+    if (coins < cost) return;
+
+    setCoins((c) => c - cost);
+    setGear((prev) => ({
+      ...prev,
+      reelLevels: { ...prev.reelLevels, [reel.id]: currentLvl + 1 },
+    }));
+    triggerHaptic('notification');
+  };
+
+  const handleEquipReel = (reelId: string | null) => {
+    if (reelId && !currentRod.canMountReel) return;
+    setGear((prev) => ({ ...prev, equippedReelId: reelId }));
+    triggerHaptic('selection');
+  };
+
+  const handleBuyLine = (line: LineTier) => {
+    if (coins < line.price || level < line.levelReq) return;
+    setCoins((c) => c - line.price);
+    setGear((prev) => ({
+      ...prev,
+      lineStock: { ...prev.lineStock, [line.id]: (prev.lineStock[line.id] || 0) + 1 },
+      equippedLineId: prev.equippedLineId || line.id,
+    }));
+    triggerHaptic('impact');
+  };
+
+  const handleEquipLine = (lineId: string) => {
+    setGear((prev) => ({ ...prev, equippedLineId: lineId }));
+    triggerHaptic('selection');
+  };
 
   const handleBuyBait = (baitId: string, amount: number, totalCost: number) => {
     if (coins < totalCost) return;
@@ -291,11 +406,10 @@ export default function App() {
         coins={coins}
         exp={exp}
         maxExp={expToNextLevel}
-        rodName={currentRod.name}
+        rodName={`${currentRod.name} [${rodLevel} ур.]`}
         rodIcon={currentRod.icon}
       />
 
-      {/* Экран карты водоёмов */}
       {isMapOpen && (
         <MapScreen
           playerLevel={level}
@@ -313,7 +427,6 @@ export default function App() {
         />
       )}
 
-      {/* Если карта закрыта */}
       {!isMapOpen && activeTab === 'fishing' && (
         isAtPond ? (
           <FishingScreen
@@ -349,7 +462,7 @@ export default function App() {
         ) : (
           <HomeScreen
             currentLocation={currentLocation}
-            currentRod={currentRod}
+            gear={gear}
             inventoryCount={inventory.length}
             onGoFishing={() => {
               setIsAtPond(true);
@@ -389,23 +502,18 @@ export default function App() {
         <ShopScreen
           coins={coins}
           level={level}
-          equippedRodId={equippedRodId}
-          ownedRods={ownedRods}
+          gear={gear}
           baits={baits}
           baitCapacity={currentBaitCapacity}
           upgrades={upgrades}
-          onBuyRod={(rod) => {
-            if (coins >= rod.price && level >= rod.levelReq) {
-              setCoins((c) => c - rod.price);
-              setOwnedRods((r) => [...r, rod.id]);
-              setEquippedRodId(rod.id);
-              triggerHaptic('notification');
-            }
-          }}
-          onEquipRod={(id) => {
-            setEquippedRodId(id);
-            triggerHaptic('selection');
-          }}
+          onBuyRod={handleBuyRod}
+          onUpgradeRod={handleUpgradeRod}
+          onEquipRod={handleEquipRod}
+          onBuyReel={handleBuyReel}
+          onUpgradeReel={handleUpgradeReel}
+          onEquipReel={handleEquipReel}
+          onBuyLine={handleBuyLine}
+          onEquipLine={handleEquipLine}
           onBuyBait={handleBuyBait}
           onBuyUpgrade={handleBuyUpgrade}
         />

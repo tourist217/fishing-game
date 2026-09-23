@@ -1,9 +1,16 @@
 import type { FishingLocation } from '../locationsData';
-import type { Rod } from '../shopData';
+import {
+  ROD_TIERS,
+  REEL_TIERS,
+  LINE_TIERS,
+  getRodStrength,
+  getReelPullSpeed,
+  type PlayerGearState,
+} from '../gearData';
 
 interface HomeScreenProps {
   currentLocation: FishingLocation;
-  currentRod: Rod;
+  gear: PlayerGearState;
   inventoryCount: number;
   onGoFishing: () => void;
   onOpenMap: () => void;
@@ -12,12 +19,22 @@ interface HomeScreenProps {
 
 export const HomeScreen = ({
   currentLocation,
-  currentRod,
+  gear,
   inventoryCount,
   onGoFishing,
   onOpenMap,
   onNavigateTab,
 }: HomeScreenProps) => {
+  const currentRod = ROD_TIERS.find((r) => r.id === gear.equippedRodId) || ROD_TIERS[0];
+  const rodLevel = gear.rodLevels[gear.equippedRodId] || 1;
+  const rodStrength = getRodStrength(currentRod, rodLevel);
+
+  const currentReel = gear.equippedReelId ? REEL_TIERS.find((r) => r.id === gear.equippedReelId) : null;
+  const reelLevel = currentReel ? gear.reelLevels[currentReel.id] || 1 : 1;
+  const reelSpeed = currentReel ? getReelPullSpeed(currentReel, reelLevel) : 1.0;
+
+  const currentLine = LINE_TIERS.find((l) => l.id === gear.equippedLineId) || LINE_TIERS[0];
+
   return (
     <div
       style={{
@@ -26,7 +43,7 @@ export const HomeScreen = ({
         flexDirection: 'column',
         justifyContent: 'space-between',
         margin: '14px 0',
-        gap: '14px',
+        gap: '12px',
       }}
     >
       {/* Карточка текущей локации */}
@@ -78,7 +95,6 @@ export const HomeScreen = ({
           {currentLocation.description}
         </p>
 
-        {/* Главная кнопка входа на локацию */}
         <button
           onClick={onGoFishing}
           style={{
@@ -105,7 +121,6 @@ export const HomeScreen = ({
 
       {/* Быстрое меню базы */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-        {/* Кнопка магазина */}
         <div
           onClick={() => onNavigateTab('shop')}
           style={{
@@ -124,7 +139,6 @@ export const HomeScreen = ({
           <div style={{ fontSize: '11px', color: '#94a3b8' }}>Снасти, наживки, бафы</div>
         </div>
 
-        {/* Кнопка садка */}
         <div
           onClick={() => onNavigateTab('inventory')}
           style={{
@@ -150,7 +164,6 @@ export const HomeScreen = ({
           <div style={{ fontSize: '11px', color: '#94a3b8' }}>Продажа рыбы на рынке</div>
         </div>
 
-        {/* Заглушка под турниры */}
         <div
           style={{
             background: 'rgba(255, 255, 255, 0.02)',
@@ -168,7 +181,6 @@ export const HomeScreen = ({
           <div style={{ fontSize: '11px', color: '#64748b' }}>Скоро: онлайн кубки</div>
         </div>
 
-        {/* Заглушка под настройки / статистику */}
         <div
           style={{
             background: 'rgba(255, 255, 255, 0.02)',
@@ -187,21 +199,32 @@ export const HomeScreen = ({
         </div>
       </div>
 
-      {/* Инфо текущего снаряжения */}
+      {/* Панель текущей сборки снастей */}
       <div
         style={{
           background: 'rgba(255, 255, 255, 0.03)',
-          borderRadius: '12px',
+          borderRadius: '14px',
           padding: '10px 14px',
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          fontSize: '12px',
+          flexDirection: 'column',
+          gap: '6px',
+          fontSize: '11px',
           color: '#94a3b8',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
         }}
       >
-        <span>В руках: <strong style={{ color: '#fff' }}>{currentRod.icon} {currentRod.name}</strong></span>
-        <span>Зона: <strong style={{ color: '#4ade80' }}>+{currentRod.sweetSpotBonus}%</strong></span>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span>Бланк: <strong style={{ color: '#fff' }}>{currentRod.icon} {currentRod.name} [{rodLevel} ур.]</strong></span>
+          <span style={{ color: '#4ade80' }}>до {rodStrength} кг</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span>Катушка: <strong style={{ color: '#fff' }}>{currentReel ? `${currentReel.icon} ${currentReel.name}` : 'Глухая снасть'}</strong></span>
+          <span style={{ color: '#38bdf8' }}>{currentReel ? `x${reelSpeed} смотка` : 'x1.0'}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span>Леска: <strong style={{ color: '#fff' }}>{currentLine.icon} {currentLine.name}</strong></span>
+          <span style={{ color: '#fbbf24' }}>разрыв: {currentLine.maxTensileKg} кг</span>
+        </div>
       </div>
     </div>
   );
