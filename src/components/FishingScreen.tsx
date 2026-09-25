@@ -441,9 +441,33 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                 : '0 10px 30px rgba(0, 0, 0, 0.5)',
             }}
           >
-            <div style={{ fontSize: '64px', marginBottom: '8px' }}>
-              {currentFish.fish.icon}
-            </div>
+            {currentFish.fish.image ? (
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginBottom: '12px',
+                }}
+              >
+                <img
+                  src={currentFish.fish.image}
+                  alt={currentFish.fish.name}
+                  style={{
+                    width: '180px',
+                    height: '120px',
+                    objectFit: 'cover',
+                    borderRadius: '16px',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    boxShadow: '0 8px 20px rgba(0, 0, 0, 0.6)',
+                  }}
+                />
+              </div>
+            ) : (
+              <div style={{ fontSize: '64px', marginBottom: '8px' }}>
+                {currentFish.fish.icon}
+              </div>
+            )}
 
             <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '8px' }}>
               {(() => {

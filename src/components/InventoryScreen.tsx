@@ -124,7 +124,21 @@ export const InventoryScreen = ({
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ fontSize: '28px' }}>{item.fish.icon}</div>
+                  {item.fish.image ? (
+                    <img
+                      src={item.fish.image}
+                      alt={item.fish.name}
+                      style={{
+                        width: '44px',
+                        height: '34px',
+                        objectFit: 'cover',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                      }}
+                    />
+                  ) : (
+                    <div style={{ fontSize: '28px' }}>{item.fish.icon}</div>
+                  )}
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                       <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>
