@@ -1,4 +1,5 @@
 import { LOCATIONS, type FishingLocation } from '../locationsData';
+import { FISH_DATABASE } from '../fishData';
 
 interface MapScreenProps {
   playerLevel: number;
@@ -44,6 +45,7 @@ export const MapScreen = ({
         {LOCATIONS.map((loc) => {
           const isUnlocked = playerLevel >= loc.levelReq;
           const isCurrent = currentLocationId === loc.id;
+          const locationFish = FISH_DATABASE.filter((f) => Boolean(f.habitats[loc.id]));
 
           return (
             <div
@@ -100,6 +102,34 @@ export const MapScreen = ({
               <p style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>
                 {loc.description}
               </p>
+
+              {/* Обитающие виды рыб */}
+              <div style={{ marginTop: '2px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>
+                  Обитающие рыбы:
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {locationFish.map((fish) => (
+                    <span
+                      key={fish.id}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.07)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        color: '#e2e8f0',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <span>{fish.icon}</span>
+                      <span>{fish.name}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
 
               {isUnlocked && isCurrent && (
                 <button

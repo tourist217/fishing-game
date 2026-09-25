@@ -1,8 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { CaughtFishItem } from '../components/InventoryScreen';
 
 export function usePlayerState() {
-  const [userName, setUserName] = useState<string>('Рыбак');
+  const [userName] = useState<string>(() => {
+    const tg = window.Telegram?.WebApp;
+    return tg?.initDataUnsafe?.user?.first_name || 'Рыбак';
+  });
   const [coins, setCoins] = useState<number>(() => {
     const val = localStorage.getItem('fg_coins');
     const parsed = Number(val);
@@ -28,23 +31,20 @@ export function usePlayerState() {
         ...item,
         uid: item.uid || `fish_${Date.now()}_${idx}`,
         price: Number(item.price) > 0 ? Number(item.price) : 5,
-      }));
+      })) as CaughtFishItem[];
     } catch {
       return [];
     }
   });
 
-  const expToNextLevel = level * 100;
+  const expToNextLevel = Math.round(150 * Math.pow(1.25, level - 1));
 
-  // Инициализация Telegram данных
+  // Инициализация Telegram WebApp
   useEffect(() => {
-    const tg = (window as any).Telegram?.WebApp;
+    const tg = window.Telegram?.WebApp;
     if (tg) {
       tg.ready();
       tg.expand();
-      if (tg.initDataUnsafe?.user?.first_name) {
-        setUserName(tg.initDataUnsafe.user.first_name);
-      }
     }
   }, []);
 
@@ -112,23 +112,28 @@ export function usePlayerState() {
     return totalEarned;
   }, [inventory]);
 
+  const coinsRef = useRef(coins);
+  useEffect(() => {
+    coinsRef.current = coins;
+  }, [coins]);
+
   // Списание монет
   const spendCoins = useCallback((amount: number): boolean => {
-    let success = false;
-    setCoins((prev) => {
-      if (prev >= amount) {
-        success = true;
-        return prev - amount;
-      }
-      return prev;
-    });
-    return success;
+    if (coinsRef.current >= amount) {
+      const nextCoins = coinsRef.current - amount;
+      coinsRef.current = nextCoins;
+      setCoins(nextCoins);
+      return true;
+    }
+    return false;
   }, []);
 
   // Прямое начисление монет
   const addCoins = useCallback((amount: number) => {
     if (amount > 0) {
-      setCoins((prev) => prev + amount);
+      const nextCoins = coinsRef.current + amount;
+      coinsRef.current = nextCoins;
+      setCoins(nextCoins);
     }
   }, []);
 

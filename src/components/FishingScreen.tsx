@@ -1,7 +1,7 @@
 import React from 'react';
 import type { FishingLocation } from '../locationsData';
 import type { ActiveFishState } from '../hooks/useFishingSimulation';
-import { formatWeight, getCategoryBadgeStyle } from './InventoryScreen';
+import { formatWeight, getCategoryBadgeStyle } from '../utils/fishUtils';
 
 export type GameState = 'idle' | 'waiting' | 'hooked' | 'reeling' | 'caught' | 'lost';
 
@@ -280,7 +280,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                     background: 'rgba(16, 185, 129, 0.35)',
                     borderLeft: '2px solid #10b981',
                     borderRight: '2px solid #10b981',
-                    transition: 'left 0.2s ease-out, width 0.2s ease-out',
+                    transition: 'left 0.12s ease-out, width 0.12s ease-out',
                   }}
                 />
 

@@ -1,3 +1,5 @@
+import { APP_VERSION } from '../version';
+
 interface HeaderProps {
   userName: string;
   level: number;
@@ -42,7 +44,10 @@ export const Header = ({
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <div style={{ fontWeight: 'bold', fontSize: '15px' }}>{userName}</div>
+          <div style={{ fontWeight: 'bold', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>{userName}</span>
+            <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 'normal' }}>{APP_VERSION}</span>
+          </div>
           <div style={{ fontSize: '12px', color: '#38bdf8' }}>
             Уровень {level} • {rodIcon} {rodName}
           </div>

@@ -1,67 +1,118 @@
-import { useState } from 'react';
-import { BAITS } from '../baitData';
-import {
-  ROD_TIERS,
-  REEL_TIERS,
-  LINE_TIERS,
-  getRodStrength,
-  getRodUpgradeCost,
-  getReelPullSpeed,
-  getReelUpgradeCost,
-  type RodTier,
-  type ReelTier,
-  type LineTier,
-  type PlayerGearState,
-} from '../gearData';
+import React, { useState } from 'react';
+import * as GearData from '../gearData';
+import type { RodTier, ReelTier, LineTier } from '../gearData';
+import { AVAILABLE_BAITS, type UpgradesState } from '../hooks/useBaitState';
 
-export interface UpgradesState {
-  baitCapacityLevel: number;
-  hookSharpenLevel: number;
-  reelOilLevel: number;
+interface GearState {
+  ownedRods: string[];
+  equippedRodId: string;
+  ownedReels: string[];
+  equippedReelId: string | null;
+  ownedLines?: string[];
+  equippedLineId: string;
+  buyRod?: (item: RodTier) => boolean | void;
+  buyReel?: (item: ReelTier) => boolean | void;
+  buyLine?: (item: LineTier) => boolean | void;
+  upgradeRod?: (item: RodTier) => boolean | void;
+  upgradeReel?: (item: ReelTier) => boolean | void;
+  equipRod?: (id: string) => void;
+  equipReel?: (id: string | null) => void;
+  equipLine?: (id: string) => void;
+  gear?: GearData.PlayerGearState;
+  rodLevel?: number;
+  reelLevel?: number;
+  rodLevels?: Record<string, number>;
+  reelLevels?: Record<string, number>;
 }
 
-interface ShopScreenProps {
+export interface ShopScreenProps {
   coins: number;
   level: number;
-  gear: PlayerGearState;
+  gear: GearState;
   baits: Record<string, number>;
   baitCapacity: number;
+  onBuyBait: (baitId: string, count: number, price: number) => boolean | void;
   upgrades: UpgradesState;
-  onBuyRod: (rod: RodTier) => void;
-  onUpgradeRod: (rod: RodTier) => void;
-  onEquipRod: (rodId: string) => void;
-  onBuyReel: (reel: ReelTier) => void;
-  onUpgradeReel: (reel: ReelTier) => void;
-  onEquipReel: (reelId: string | null) => void;
-  onBuyLine: (line: LineTier) => void;
-  onEquipLine: (lineId: string) => void;
-  onBuyBait: (baitId: string, amount: number, totalCost: number) => void;
-  onBuyUpgrade: (type: keyof UpgradesState, cost: number) => void;
+  onBuyUpgrade: (type: keyof UpgradesState, cost: number) => boolean | void;
+  onBuyRod?: (rod: RodTier) => boolean | void;
+  onUpgradeRod?: (rod: RodTier) => boolean | void;
+  onEquipRod?: (id: string) => void;
+  onBuyReel?: (reel: ReelTier) => boolean | void;
+  onUpgradeReel?: (reel: ReelTier) => boolean | void;
+  onEquipReel?: (id: string | null) => void;
+  onBuyLine?: (line: LineTier) => boolean | void;
+  onEquipLine?: (id: string) => void;
 }
 
-type ShopTab = 'rods' | 'reels' | 'lines' | 'baits' | 'workshop';
+import { APP_VERSION } from '../version';
 
-export const ShopScreen = ({
-  coins,
-  level,
-  gear,
-  baits,
-  baitCapacity,
-  upgrades,
-  onBuyRod,
-  onUpgradeRod,
-  onEquipRod,
-  onBuyReel,
-  onUpgradeReel,
-  onEquipReel,
-  onBuyLine,
-  onEquipLine,
-  onBuyBait,
-  onBuyUpgrade,
-}: ShopScreenProps) => {
+type ShopTab = 'rods' | 'reels' | 'lines' | 'baits' | 'upgrades';
+
+export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
+  const {
+    coins,
+    level,
+    gear,
+    baits,
+    baitCapacity,
+    onBuyBait,
+    upgrades,
+    onBuyUpgrade,
+    onBuyRod,
+    onEquipRod,
+    onBuyReel,
+    onEquipReel,
+    onBuyLine,
+    onEquipLine,
+  } = props;
+
   const [shopTab, setShopTab] = useState<ShopTab>('rods');
 
-  const currentRod = ROD_TIERS.find((r) => r.id === gear.equippedRodId) || ROD_TIERS[0];
+  // Берём списки снастей из gearData напрямую
+  const rods: RodTier[] = GearData.ROD_TIERS || [];
+  const reels: ReelTier[] = GearData.REEL_TIERS || [];
+  const lines: LineTier[] = GearData.LINE_TIERS || [];
+
+  // Достаем методы и состояния экипировки из gear
+  const ownedRods: string[] = gear?.ownedRods || [];
+  const equippedRodId: string = gear?.equippedRodId || '';
+  const ownedReels: string[] = gear?.ownedReels || [];
+  const equippedReelId: string = gear?.equippedReelId || '';
+  const ownedLines: string[] = gear?.ownedLines || [];
+  const equippedLineId: string = gear?.equippedLineId || '';
+
+  const handleBuyRod = (item: RodTier) => {
+    if (onBuyRod) onBuyRod(item);
+    else if (gear?.buyRod) gear.buyRod(item);
+  };
+
+  const handleEquipRod = (id: string) => {
+    if (onEquipRod) onEquipRod(id);
+    else if (gear?.equipRod) gear.equipRod(id);
+  };
+
+  const handleBuyReel = (item: ReelTier) => {
+    if (onBuyReel) onBuyReel(item);
+    else if (gear?.buyReel) gear.buyReel(item);
+  };
+
+  const handleEquipReel = (id: string) => {
+    if (onEquipReel) onEquipReel(id);
+    else if (gear?.equipReel) gear.equipReel(id);
+  };
+
+  const handleBuyLine = (item: LineTier) => {
+    if (onBuyLine) onBuyLine(item);
+    else if (gear?.buyLine) gear.buyLine(item);
+  };
+
+  const handleEquipLine = (id: string) => {
+    if (onEquipLine) onEquipLine(id);
+    else if (gear?.equipLine) gear.equipLine(id);
+  };
+
+  // Стоимость улучшений мастерской
+  const getUpgradeCost = (currentLvl: number) => Math.round(50 * Math.pow(1.8, currentLvl));
 
   return (
     <div
@@ -69,48 +120,82 @@ export const ShopScreen = ({
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
+        gap: '12px',
         overflow: 'hidden',
-        margin: '12px 0',
       }}
     >
-      {/* Меню категорий магазина */}
+      {/* Шапка магазина */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          background: 'rgba(255, 255, 255, 0.05)',
+          padding: '12px 16px',
+          borderRadius: '16px',
+        }}
+      >
+        <div>
+          <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+            Рыболовный магазин <span style={{ color: '#64748b', fontSize: '10px' }}>({APP_VERSION})</span>
+          </div>
+          <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#fff' }}>Товары и снасти</div>
+        </div>
+        <div
+          style={{
+            background: 'rgba(251, 191, 36, 0.15)',
+            border: '1px solid rgba(251, 191, 36, 0.4)',
+            borderRadius: '12px',
+            padding: '6px 12px',
+            color: '#fbbf24',
+            fontWeight: 'bold',
+            fontSize: '14px',
+          }}
+        >
+          {coins} 🪙
+        </div>
+      </div>
+
+      {/* Вкладки магазина */}
       <div
         style={{
           display: 'flex',
           gap: '6px',
           overflowX: 'auto',
-          paddingBottom: '8px',
-          marginBottom: '8px',
+          paddingBottom: '2px',
         }}
       >
         {[
-          { id: 'rods', label: 'Удилища 🎋' },
-          { id: 'reels', label: 'Катушки ⚙️' },
-          { id: 'lines', label: 'Леска 🧵' },
-          { id: 'baits', label: 'Наживки 🪱' },
-          { id: 'workshop', label: 'Цех 🛠️' },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setShopTab(tab.id as ShopTab)}
-            style={{
-              padding: '8px 12px',
-              borderRadius: '10px',
-              border: 'none',
-              background: shopTab === tab.id ? '#2563eb' : 'rgba(255,255,255,0.06)',
-              color: shopTab === tab.id ? '#fff' : '#94a3b8',
-              fontWeight: 'bold',
-              fontSize: '12px',
-              whiteSpace: 'nowrap',
-              cursor: 'pointer',
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
+          { id: 'rods' as ShopTab, label: 'Удочки 🎣' },
+          { id: 'reels' as ShopTab, label: 'Катушки ⚙️' },
+          { id: 'lines' as ShopTab, label: 'Лески 🧵' },
+          { id: 'baits' as ShopTab, label: 'Наживки 🪱' },
+          { id: 'upgrades' as ShopTab, label: 'Мастерская 🛠️' },
+        ].map((tab) => {
+          const isActive = shopTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setShopTab(tab.id)}
+              style={{
+                flex: '0 0 auto',
+                background: isActive ? '#0284c7' : 'rgba(255, 255, 255, 0.06)',
+                border: 'none',
+                borderRadius: '10px',
+                padding: '8px 12px',
+                color: isActive ? '#fff' : '#94a3b8',
+                fontWeight: 'bold',
+                fontSize: '12px',
+                cursor: 'pointer',
+              }}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Список товаров */}
+      {/* Контент магазина */}
       <div
         style={{
           flex: 1,
@@ -121,59 +206,52 @@ export const ShopScreen = ({
           paddingRight: '4px',
         }}
       >
-        {/* --- ВКЛАДКА 1: УДИЛИЩА --- */}
+        {/* --- ВКЛАДКА 1: УДОЧКИ --- */}
         {shopTab === 'rods' &&
-          ROD_TIERS.map((rod) => {
-            const isOwned = gear.ownedRods.includes(rod.id);
-            const isEquipped = gear.equippedRodId === rod.id;
-            const currentLvl = gear.rodLevels[rod.id] || 1;
-            const strength = getRodStrength(rod, currentLvl);
-            const upgradeCost = getRodUpgradeCost(rod, currentLvl + 1);
-            const canAfford = coins >= rod.basePrice;
-            const canAffordUpgrade = coins >= upgradeCost;
-            const isLevelUnlocked = level >= rod.levelReq;
+          rods.map((rod) => {
+            const isOwned = ownedRods.includes(rod.id);
+            const isEquipped = equippedRodId === rod.id;
+            const price = (rod as any).basePrice ?? (rod as any).price ?? 50;
+            const lvlReq = (rod as any).levelReq ?? (rod as any).minLevel ?? 1;
+            const isLevelUnlocked = level >= lvlReq;
+            const canAfford = coins >= price;
+            const strength = (rod as any).maxFishWeightKg ?? (rod as any).strength ?? (rod as any).maxWeight ?? rod.maxStrengthKg;
 
             return (
               <div
                 key={rod.id}
                 style={{
-                  background: isEquipped ? 'rgba(37, 99, 235, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                  background: 'rgba(255, 255, 255, 0.05)',
                   borderRadius: '14px',
                   padding: '12px',
-                  border: isEquipped ? '1.5px solid #3b82f6' : '1px solid rgba(255, 255, 255, 0.08)',
+                  border: isEquipped ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.08)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '8px',
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    <span style={{ fontSize: '28px' }}>{rod.icon}</span>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '24px' }}>🎣</span>
                     <div>
-                      <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
-                        {rod.name} {isOwned && <span style={{ color: '#38bdf8' }}>[{currentLvl}/5 ур.]</span>}
-                      </div>
+                      <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>{rod.name}</div>
                       <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                        Тест: <strong style={{ color: '#4ade80' }}>до {strength} кг</strong>
-                        {!rod.canMountReel && ' (без катушки)'}
+                        Прочность: <span style={{ color: '#38bdf8' }}>{strength} кг</span> • Ур. {lvlReq}
                       </div>
                     </div>
                   </div>
-
                   {!isOwned && (
-                    <div style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '13px' }}>
-                      {rod.basePrice} 🪙
-                    </div>
+                    <span style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '13px' }}>
+                      {price} 🪙
+                    </span>
                   )}
                 </div>
-
-                <div style={{ fontSize: '11px', color: '#cbd5e1' }}>{rod.description}</div>
 
                 <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
                   {!isOwned && (
                     <button
                       disabled={!canAfford || !isLevelUnlocked}
-                      onClick={() => onBuyRod(rod)}
+                      onClick={() => handleBuyRod(rod)}
                       style={{
                         flex: 1,
                         padding: '10px',
@@ -186,13 +264,13 @@ export const ShopScreen = ({
                         cursor: canAfford && isLevelUnlocked ? 'pointer' : 'not-allowed',
                       }}
                     >
-                      {!isLevelUnlocked ? `Требуется ${rod.levelReq} ур. 🔒` : `Купить за ${rod.basePrice} 🪙`}
+                      {!isLevelUnlocked ? `Требуется ${lvlReq} ур. 🔒` : `Купить за ${price} 🪙`}
                     </button>
                   )}
 
                   {isOwned && !isEquipped && (
                     <button
-                      onClick={() => onEquipRod(rod.id)}
+                      onClick={() => handleEquipRod(rod.id)}
                       style={{
                         flex: 1,
                         padding: '10px',
@@ -215,35 +293,15 @@ export const ShopScreen = ({
                         flex: 1,
                         padding: '10px',
                         borderRadius: '8px',
-                        background: 'rgba(34, 197, 94, 0.2)',
-                        color: '#4ade80',
+                        background: 'rgba(16, 185, 129, 0.2)',
+                        color: '#34d399',
                         fontWeight: 'bold',
                         fontSize: '12px',
                         textAlign: 'center',
                       }}
                     >
-                      В руках ✓
+                      ✓ Экипировано
                     </div>
-                  )}
-
-                  {isOwned && currentLvl < 5 && (
-                    <button
-                      disabled={!canAffordUpgrade}
-                      onClick={() => onUpgradeRod(rod)}
-                      style={{
-                        flex: 1,
-                        padding: '10px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: canAffordUpgrade ? '#16a34a' : '#1e293b',
-                        color: canAffordUpgrade ? '#fff' : '#64748b',
-                        fontWeight: 'bold',
-                        fontSize: '12px',
-                        cursor: canAffordUpgrade ? 'pointer' : 'not-allowed',
-                      }}
-                    >
-                      +Прочность: {upgradeCost} 🪙
-                    </button>
                   )}
                 </div>
               </div>
@@ -251,219 +309,73 @@ export const ShopScreen = ({
           })}
 
         {/* --- ВКЛАДКА 2: КАТУШКИ --- */}
-        {shopTab === 'reels' && (
-          <>
-            {!currentRod.canMountReel && (
-              <div
-                style={{
-                  background: 'rgba(239, 68, 68, 0.15)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  padding: '10px 14px',
-                  borderRadius: '12px',
-                  color: '#f87171',
-                  fontSize: '12px',
-                  textAlign: 'center',
-                }}
-              >
-                На текущем удилище ({currentRod.name}) нет катушкодержателя. Купите бамбуковую удочку или выше!
-              </div>
-            )}
-
-            {REEL_TIERS.map((reel) => {
-              const isOwned = gear.ownedReels.includes(reel.id);
-              const isEquipped = gear.equippedReelId === reel.id;
-              const currentLvl = gear.reelLevels[reel.id] || 1;
-              const pullSpeed = getReelPullSpeed(reel, currentLvl);
-              const upgradeCost = getReelUpgradeCost(reel, currentLvl + 1);
-              const canAfford = coins >= reel.basePrice;
-              const canAffordUpgrade = coins >= upgradeCost;
-              const isLevelUnlocked = level >= reel.levelReq;
-              const canEquipOnCurrentRod = currentRod.canMountReel;
-
-              return (
-                <div
-                  key={reel.id}
-                  style={{
-                    background: isEquipped ? 'rgba(37, 99, 235, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                    borderRadius: '14px',
-                    padding: '12px',
-                    border: isEquipped ? '1.5px solid #3b82f6' : '1px solid rgba(255, 255, 255, 0.08)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                      <span style={{ fontSize: '28px' }}>{reel.icon}</span>
-                      <div>
-                        <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
-                          {reel.name} {isOwned && <span style={{ color: '#38bdf8' }}>[{currentLvl}/3 ур.]</span>}
-                        </div>
-                        <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                          Скорость смотки: <strong style={{ color: '#38bdf8' }}>x{pullSpeed}</strong>
-                        </div>
-                      </div>
-                    </div>
-
-                    {!isOwned && (
-                      <div style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '13px' }}>
-                        {reel.basePrice} 🪙
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ fontSize: '11px', color: '#cbd5e1' }}>{reel.description}</div>
-
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-                    {!isOwned && (
-                      <button
-                        disabled={!canAfford || !isLevelUnlocked}
-                        onClick={() => onBuyReel(reel)}
-                        style={{
-                          flex: 1,
-                          padding: '10px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          background: canAfford && isLevelUnlocked ? '#2563eb' : '#334155',
-                          color: canAfford && isLevelUnlocked ? '#fff' : '#64748b',
-                          fontWeight: 'bold',
-                          fontSize: '12px',
-                          cursor: canAfford && isLevelUnlocked ? 'pointer' : 'not-allowed',
-                        }}
-                      >
-                        {!isLevelUnlocked ? `Требуется ${reel.levelReq} ур. 🔒` : `Купить за ${reel.basePrice} 🪙`}
-                      </button>
-                    )}
-
-                    {isOwned && !isEquipped && (
-                      <button
-                        disabled={!canEquipOnCurrentRod}
-                        onClick={() => onEquipReel(reel.id)}
-                        style={{
-                          flex: 1,
-                          padding: '10px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          background: canEquipOnCurrentRod ? '#334155' : '#1e293b',
-                          color: canEquipOnCurrentRod ? '#fff' : '#64748b',
-                          fontWeight: 'bold',
-                          fontSize: '12px',
-                          cursor: canEquipOnCurrentRod ? 'pointer' : 'not-allowed',
-                        }}
-                      >
-                        Установить
-                      </button>
-                    )}
-
-                    {isOwned && isEquipped && (
-                      <button
-                        onClick={() => onEquipReel(null)}
-                        style={{
-                          flex: 1,
-                          padding: '10px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          background: 'rgba(34, 197, 94, 0.2)',
-                          color: '#4ade80',
-                          fontWeight: 'bold',
-                          fontSize: '12px',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Установлена ✓ (Снять)
-                      </button>
-                    )}
-
-                    {isOwned && currentLvl < 3 && (
-                      <button
-                        disabled={!canAffordUpgrade}
-                        onClick={() => onUpgradeReel(reel)}
-                        style={{
-                          flex: 1,
-                          padding: '10px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          background: canAffordUpgrade ? '#16a34a' : '#1e293b',
-                          color: canAffordUpgrade ? '#fff' : '#64748b',
-                          fontWeight: 'bold',
-                          fontSize: '12px',
-                          cursor: canAffordUpgrade ? 'pointer' : 'not-allowed',
-                        }}
-                      >
-                        +Скорость: {upgradeCost} 🪙
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </>
-        )}
-
-        {/* --- ВКЛАДКА 3: ЛЕСКА --- */}
-        {shopTab === 'lines' &&
-          LINE_TIERS.map((line) => {
-            const isEquipped = gear.equippedLineId === line.id;
-            const stockCount = gear.lineStock[line.id] || 0;
-            const isLevelUnlocked = level >= line.levelReq;
-            const canAfford = coins >= line.price;
+        {shopTab === 'reels' &&
+          reels.map((reel) => {
+            const isOwned = ownedReels.includes(reel.id);
+            const isEquipped = equippedReelId === reel.id;
+            const price = (reel as any).basePrice ?? (reel as any).price ?? 50;
+            const lvlReq = (reel as any).levelReq ?? (reel as any).minLevel ?? 1;
+            const isLevelUnlocked = level >= lvlReq;
+            const canAfford = coins >= price;
+            const speed = (reel as any).pullSpeedMultiplier ?? (reel as any).speed ?? reel.maxPullSpeed;
 
             return (
               <div
-                key={line.id}
+                key={reel.id}
                 style={{
-                  background: isEquipped ? 'rgba(37, 99, 235, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                  background: 'rgba(255, 255, 255, 0.05)',
                   borderRadius: '14px',
                   padding: '12px',
-                  border: isEquipped ? '1.5px solid #3b82f6' : '1px solid rgba(255, 255, 255, 0.08)',
+                  border: isEquipped ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.08)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '8px',
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    <span style={{ fontSize: '28px' }}>{line.icon}</span>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '24px' }}>⚙️</span>
                     <div>
-                      <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{line.name}</div>
+                      <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>{reel.name}</div>
                       <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                        Разрыв: <strong style={{ color: '#4ade80' }}>до {line.maxTensileKg} кг</strong> | В запасе: {stockCount} шт.
+                        Скорость подмотки: <span style={{ color: '#38bdf8' }}>x{Number(speed).toFixed(2)}</span> • Ур. {lvlReq}
                       </div>
                     </div>
                   </div>
-
-                  <div style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '13px' }}>
-                    {line.price} 🪙
-                  </div>
+                  {!isOwned && (
+                    <span style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '13px' }}>
+                      {price} 🪙
+                    </span>
+                  )}
                 </div>
 
-                <div style={{ fontSize: '11px', color: '#cbd5e1' }}>{line.description}</div>
-
                 <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-                  <button
-                    disabled={!canAfford || !isLevelUnlocked}
-                    onClick={() => onBuyLine(line)}
-                    style={{
-                      flex: 1,
-                      padding: '10px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      background: canAfford && isLevelUnlocked ? '#2563eb' : '#334155',
-                      color: canAfford && isLevelUnlocked ? '#fff' : '#64748b',
-                      fontWeight: 'bold',
-                      fontSize: '12px',
-                      cursor: canAfford && isLevelUnlocked ? 'pointer' : 'not-allowed',
-                    }}
-                  >
-                    {!isLevelUnlocked ? `Требуется ${line.levelReq} ур. 🔒` : `Купить бобину (+1)`}
-                  </button>
-
-                  {stockCount > 0 && !isEquipped && (
+                  {!isOwned && (
                     <button
-                      onClick={() => onEquipLine(line.id)}
+                      disabled={!canAfford || !isLevelUnlocked}
+                      onClick={() => handleBuyReel(reel)}
                       style={{
-                        padding: '10px 14px',
+                        flex: 1,
+                        padding: '10px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: canAfford && isLevelUnlocked ? '#2563eb' : '#334155',
+                        color: canAfford && isLevelUnlocked ? '#fff' : '#64748b',
+                        fontWeight: 'bold',
+                        fontSize: '12px',
+                        cursor: canAfford && isLevelUnlocked ? 'pointer' : 'not-allowed',
+                      }}
+                    >
+                      {!isLevelUnlocked ? `Требуется ${lvlReq} ур. 🔒` : `Купить за ${price} 🪙`}
+                    </button>
+                  )}
+
+                  {isOwned && !isEquipped && (
+                    <button
+                      onClick={() => handleEquipReel(reel.id)}
+                      style={{
+                        flex: 1,
+                        padding: '10px',
                         borderRadius: '8px',
                         border: 'none',
                         background: '#334155',
@@ -473,22 +385,126 @@ export const ShopScreen = ({
                         cursor: 'pointer',
                       }}
                     >
-                      Намотать
+                      Экипировать
                     </button>
                   )}
 
-                  {isEquipped && (
+                  {isOwned && isEquipped && (
                     <div
                       style={{
-                        padding: '10px 14px',
+                        flex: 1,
+                        padding: '10px',
                         borderRadius: '8px',
-                        background: 'rgba(34, 197, 94, 0.2)',
-                        color: '#4ade80',
+                        background: 'rgba(16, 185, 129, 0.2)',
+                        color: '#34d399',
                         fontWeight: 'bold',
                         fontSize: '12px',
+                        textAlign: 'center',
                       }}
                     >
-                      Намотана ✓
+                      ✓ Экипировано
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+        {/* --- ВКЛАДКА 3: ЛЕСКИ --- */}
+        {shopTab === 'lines' &&
+          lines.map((line) => {
+            const isOwned = ownedLines.includes(line.id);
+            const isEquipped = equippedLineId === line.id;
+            const price = (line as any).basePrice ?? (line as any).price ?? 50;
+            const lvlReq = (line as any).levelReq ?? (line as any).minLevel ?? 1;
+            const isLevelUnlocked = level >= lvlReq;
+            const canAfford = coins >= price;
+            const tensile = (line as any).maxTensileKg ?? (line as any).tensile ?? (line as any).strength ?? 1;
+
+            return (
+              <div
+                key={line.id}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: '14px',
+                  padding: '12px',
+                  border: isEquipped ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.08)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '24px' }}>🧵</span>
+                    <div>
+                      <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>{line.name}</div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                        Разрыв: <span style={{ color: '#38bdf8' }}>{tensile} кг</span> • Ур. {lvlReq}
+                      </div>
+                    </div>
+                  </div>
+                  {!isOwned && (
+                    <span style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '13px' }}>
+                      {price} 🪙
+                    </span>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                  {!isOwned && (
+                    <button
+                      disabled={!canAfford || !isLevelUnlocked}
+                      onClick={() => handleBuyLine(line)}
+                      style={{
+                        flex: 1,
+                        padding: '10px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: canAfford && isLevelUnlocked ? '#2563eb' : '#334155',
+                        color: canAfford && isLevelUnlocked ? '#fff' : '#64748b',
+                        fontWeight: 'bold',
+                        fontSize: '12px',
+                        cursor: canAfford && isLevelUnlocked ? 'pointer' : 'not-allowed',
+                      }}
+                    >
+                      {!isLevelUnlocked ? `Требуется ${lvlReq} ур. 🔒` : `Купить за ${price} 🪙`}
+                    </button>
+                  )}
+
+                  {isOwned && !isEquipped && (
+                    <button
+                      onClick={() => handleEquipLine(line.id)}
+                      style={{
+                        flex: 1,
+                        padding: '10px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: '#334155',
+                        color: '#fff',
+                        fontWeight: 'bold',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Экипировать
+                    </button>
+                  )}
+
+                  {isOwned && isEquipped && (
+                    <div
+                      style={{
+                        flex: 1,
+                        padding: '10px',
+                        borderRadius: '8px',
+                        background: 'rgba(16, 185, 129, 0.2)',
+                        color: '#34d399',
+                        fontWeight: 'bold',
+                        fontSize: '12px',
+                        textAlign: 'center',
+                      }}
+                    >
+                      ✓ Экипировано
                     </div>
                   )}
                 </div>
@@ -498,12 +514,18 @@ export const ShopScreen = ({
 
         {/* --- ВКЛАДКА 4: НАЖИВКИ --- */}
         {shopTab === 'baits' &&
-          BAITS.map((bait) => {
+          AVAILABLE_BAITS.map((bait) => {
             const currentCount = baits[bait.id] || 0;
-            const isFull = currentCount >= baitCapacity;
-            // Безопасно получаем цену наживки независимо от имени поля в типе Bait
-            const baitPrice = (bait as any).price ?? (bait as any).cost ?? 20;
-            const canAfford = coins >= baitPrice;
+            const spaceLeft = Math.max(0, baitCapacity - currentCount);
+            const isFull = spaceLeft <= 0;
+
+            const basePackPrice = bait.price;
+            const countToBuy = Math.min(5, spaceLeft);
+            const pricePerUnit = basePackPrice / 5;
+            const actualPrice =
+              countToBuy > 0 ? Math.max(1, Math.round(countToBuy * pricePerUnit)) : basePackPrice;
+
+            const canAfford = coins >= actualPrice;
 
             return (
               <div
@@ -521,20 +543,32 @@ export const ShopScreen = ({
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                   <span style={{ fontSize: '28px' }}>{bait.icon}</span>
                   <div>
-                    <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{bait.name}</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>
+                      {bait.name}
+                    </div>
                     <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                      В банке: {currentCount}/{baitCapacity} шт.
+                      В банке:{' '}
+                      <span style={{ color: isFull ? '#ef4444' : '#38bdf8', fontWeight: 'bold' }}>
+                        {currentCount}
+                      </span>
+                      /{baitCapacity} шт.
                     </div>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '13px' }}>
-                    {baitPrice} 🪙
+                  <span
+                    style={{
+                      fontWeight: 'bold',
+                      color: isFull ? '#64748b' : '#fbbf24',
+                      fontSize: '13px',
+                    }}
+                  >
+                    {isFull ? '—' : `${actualPrice} 🪙`}
                   </span>
                   <button
                     disabled={!canAfford || isFull}
-                    onClick={() => onBuyBait(bait.id, 5, baitPrice)}
+                    onClick={() => onBuyBait(bait.id, 5, basePackPrice)}
                     style={{
                       padding: '8px 12px',
                       borderRadius: '8px',
@@ -544,9 +578,10 @@ export const ShopScreen = ({
                       fontWeight: 'bold',
                       fontSize: '12px',
                       cursor: canAfford && !isFull ? 'pointer' : 'not-allowed',
+                      minWidth: '75px',
                     }}
                   >
-                    {isFull ? 'Полно' : '+5 шт.'}
+                    {isFull ? 'Полно' : `+${countToBuy} шт.`}
                   </button>
                 </div>
               </div>
@@ -554,78 +589,155 @@ export const ShopScreen = ({
           })}
 
         {/* --- ВКЛАДКА 5: МАСТЕРСКАЯ --- */}
-        {shopTab === 'workshop' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div
-              style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                borderRadius: '14px',
-                padding: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <div>
-                <div style={{ fontWeight: 'bold', fontSize: '14px' }}>Вместимость банки наживок 🪣</div>
-                <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                  Текущий лимит: {baitCapacity} шт.
-                </div>
-              </div>
-              <button
-                disabled={upgrades.baitCapacityLevel >= 3 || coins < 250 * (upgrades.baitCapacityLevel + 1)}
-                onClick={() => onBuyUpgrade('baitCapacityLevel', 250 * (upgrades.baitCapacityLevel + 1))}
-                style={{
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: upgrades.baitCapacityLevel < 3 ? '#2563eb' : '#334155',
-                  color: upgrades.baitCapacityLevel < 3 ? '#fff' : '#64748b',
-                  fontWeight: 'bold',
-                  fontSize: '12px',
-                  cursor: upgrades.baitCapacityLevel < 3 ? 'pointer' : 'not-allowed',
-                }}
-              >
-                {upgrades.baitCapacityLevel >= 3 ? 'МАКС' : `+10 мест (${250 * (upgrades.baitCapacityLevel + 1)} 🪙)`}
-              </button>
-            </div>
+        {shopTab === 'upgrades' && (
+          <>
+            {/* 1. Вместимость банок */}
+            {(() => {
+              const lvl = upgrades?.baitCapacityLevel || 0;
+              const cost = getUpgradeCost(lvl);
+              const canAfford = coins >= cost;
+              return (
+                <div
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: '14px',
+                    padding: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '28px' }}>🧰</span>
+                    <div>
+                      <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>
+                        Вместимость банок
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                        Ур. {lvl} • Лимит: <span style={{ color: '#38bdf8' }}>{baitCapacity} шт.</span> (+15 к банке)
+                      </div>
+                    </div>
+                  </div>
 
-            <div
-              style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                borderRadius: '14px',
-                padding: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <div>
-                <div style={{ fontWeight: 'bold', fontSize: '14px' }}>Заточка крючков 🪝</div>
-                <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                  Расширяет зелёную зону подсечки (+5% за ур.)
+                  <button
+                    disabled={!canAfford}
+                    onClick={() => onBuyUpgrade('baitCapacityLevel', cost)}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: canAfford ? '#10b981' : '#334155',
+                      color: canAfford ? '#fff' : '#64748b',
+                      fontWeight: 'bold',
+                      fontSize: '12px',
+                      cursor: canAfford ? 'pointer' : 'not-allowed',
+                    }}
+                  >
+                    {cost} 🪙
+                  </button>
                 </div>
-              </div>
-              <button
-                disabled={upgrades.hookSharpenLevel >= 5 || coins < 180 * (upgrades.hookSharpenLevel + 1)}
-                onClick={() => onBuyUpgrade('hookSharpenLevel', 180 * (upgrades.hookSharpenLevel + 1))}
-                style={{
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: upgrades.hookSharpenLevel < 5 ? '#2563eb' : '#334155',
-                  color: upgrades.hookSharpenLevel < 5 ? '#fff' : '#64748b',
-                  fontWeight: 'bold',
-                  fontSize: '12px',
-                  cursor: upgrades.hookSharpenLevel < 5 ? 'pointer' : 'not-allowed',
-                }}
-              >
-                {upgrades.hookSharpenLevel >= 5 ? 'МАКС' : `Улучшить (${180 * (upgrades.hookSharpenLevel + 1)} 🪙)`}
-              </button>
-            </div>
-          </div>
+              );
+            })()}
+
+            {/* 2. Заточка крючков */}
+            {(() => {
+              const lvl = upgrades?.hookSharpenLevel || 0;
+              const cost = getUpgradeCost(lvl);
+              const canAfford = coins >= cost;
+              return (
+                <div
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: '14px',
+                    padding: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '28px' }}>🪝</span>
+                    <div>
+                      <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>
+                        Заточка крючков
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                        Ур. {lvl} • Расширяет зелёную зону (+10%)
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    disabled={!canAfford}
+                    onClick={() => onBuyUpgrade('hookSharpenLevel', cost)}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: canAfford ? '#10b981' : '#334155',
+                      color: canAfford ? '#fff' : '#64748b',
+                      fontWeight: 'bold',
+                      fontSize: '12px',
+                      cursor: canAfford ? 'pointer' : 'not-allowed',
+                    }}
+                  >
+                    {cost} 🪙
+                  </button>
+                </div>
+              );
+            })()}
+
+            {/* 3. Смазка катушки */}
+            {(() => {
+              const lvl = upgrades?.reelOilLevel || 0;
+              const cost = getUpgradeCost(lvl);
+              const canAfford = coins >= cost;
+              return (
+                <div
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: '14px',
+                    padding: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '28px' }}>🧴</span>
+                    <div>
+                      <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>
+                        Смазка катушки
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                        Ур. {lvl} • Ускоряет подмотку (+12%)
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    disabled={!canAfford}
+                    onClick={() => onBuyUpgrade('reelOilLevel', cost)}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: canAfford ? '#10b981' : '#334155',
+                      color: canAfford ? '#fff' : '#64748b',
+                      fontWeight: 'bold',
+                      fontSize: '12px',
+                      cursor: canAfford ? 'pointer' : 'not-allowed',
+                    }}
+                  >
+                    {cost} 🪙
+                  </button>
+                </div>
+              );
+            })()}
+          </>
         )}
       </div>
     </div>

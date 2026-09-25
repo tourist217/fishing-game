@@ -56,6 +56,16 @@ export function useGearState(
 
   // Действия: покупка, апгрейд, экипировка удилища
   const buyRod = (rod: RodTier) => {
+    if (gear.ownedRods.includes(rod.id)) {
+      // Уже куплено — просто экипируем
+      setGear((prev) => ({
+        ...prev,
+        equippedRodId: rod.id,
+        equippedReelId: rod.canMountReel ? prev.equippedReelId : null,
+      }));
+      triggerHaptic?.('selection');
+      return true;
+    }
     if (coins < rod.basePrice || playerLevel < rod.levelReq) return false;
     if (!spendCoins(rod.basePrice)) return false;
 

@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { getRandomFish, type FishSizeCategory } from '../fishData';
 import type { GameState } from '../components/FishingScreen';
 import type { CaughtFishItem } from '../components/InventoryScreen';
 import type { FishingLocation } from '../locationsData';
+import { getFishDifficultyConfig } from '../utils/fishUtils';
+
 
 export interface ActiveFishState extends CaughtFishItem {
   sizeCategory?: FishSizeCategory;
@@ -108,25 +110,19 @@ export function useFishingSimulation({
   const [sweetZoneCenter, setSweetZoneCenter] = useState<number>(50);
   const sweetZoneCenterRef = useRef<number>(50);
 
-  // Расчёт ширины безопасной зоны
-  const calculateZoneWidth = () => {
-    const fish = currentFishRef.current;
-    let width = 42 + hookSharpenRef.current * 4;
-
-    if (fish) {
-      const effectiveLimit = Math.min(rodStrengthRef.current || 0.25, lineTensileRef.current || 0.4);
-      const ratio = fish.weight / effectiveLimit;
-
-      if (ratio >= 0.85) {
-        width = Math.round(width / 2.0);
-      } else if (ratio >= 0.65) {
-        width = Math.round(width / 1.5);
-      }
+  // Расчёт ширины безопасной зоны на основе веса рыбы и прочности снастей
+  const zoneWidth = useMemo(() => {
+    if (currentFish) {
+      return getFishDifficultyConfig(
+        currentFish.weight,
+        currentRodStrength,
+        currentLineTensileKg,
+        hookSharpenLevel
+      ).zoneWidth;
     }
-    return Math.max(18, Math.min(65, width));
-  };
+    return 45;
+  }, [currentFish, hookSharpenLevel, currentRodStrength, currentLineTensileKg]);
 
-  const zoneWidth = calculateZoneWidth();
   const sweetSpotStart = Math.max(5, sweetZoneCenter - zoneWidth / 2);
   const sweetSpotEnd = Math.min(95, sweetZoneCenter + zoneWidth / 2);
 
@@ -196,29 +192,30 @@ export function useFishingSimulation({
     triggerHapticRef.current?.('impact');
   };
 
-  // Анимация рывков рыбы
+  // Анимация рывков рыбы (динамическое смещение зеленой зоны по весу рыбы и нагрузке на снасть)
   useEffect(() => {
     if (gameState !== 'reeling' || !currentFish) return;
 
-    const jerkFreq = currentFish.fish.fightBehavior?.jerkFrequency || 0.5;
-    const effectiveLimit = Math.min(rodStrengthRef.current, lineTensileRef.current);
-    const weightRatio = currentFish.weight / effectiveLimit;
+    const config = getFishDifficultyConfig(
+      currentFish.weight,
+      rodStrengthRef.current,
+      lineTensileRef.current,
+      hookSharpenRef.current
+    );
 
-    const intervalMs = Math.max(1200, Math.round(3000 / jerkFreq));
+    if (config.jerkIntervalMs <= 0) {
+      setSweetZoneCenter(50);
+      sweetZoneCenterRef.current = 50;
+      return;
+    }
 
     const moveInterval = setInterval(() => {
-      if (weightRatio < 0.6 && jerkFreq < 1.0) {
-        setSweetZoneCenter(50);
-        sweetZoneCenterRef.current = 50;
-        return;
-      }
-
-      const possiblePositions = [28, 38, 50, 62, 72];
+      const possiblePositions = [25, 35, 45, 55, 65, 75];
       const nextPos = possiblePositions[Math.floor(Math.random() * possiblePositions.length)];
       setSweetZoneCenter(nextPos);
       sweetZoneCenterRef.current = nextPos;
       triggerHapticRef.current?.('selection');
-    }, intervalMs);
+    }, config.jerkIntervalMs);
 
     return () => clearInterval(moveInterval);
   }, [gameState, currentFish]);
@@ -232,8 +229,6 @@ export function useFishingSimulation({
 
     tensionRef.current = 50;
     progressRef.current = 15;
-    setTension(50);
-    setCatchProgress(15);
 
     const interval = setInterval(() => {
       const active = currentFishRef.current;
@@ -245,22 +240,32 @@ export function useFishingSimulation({
         tensionRef.current -= 1.8 * pullForce;
       }
 
-      const effectiveLimit = Math.min(rodStrengthRef.current || 0.25, lineTensileRef.current || 0.4);
-      const ratio = active ? active.weight / effectiveLimit : 0;
+      const diffConfig = active
+        ? getFishDifficultyConfig(
+            active.weight,
+            rodStrengthRef.current,
+            lineTensileRef.current,
+            hookSharpenRef.current
+          )
+        : { zoneWidth: 45, jerkIntervalMs: 0, loadRatio: 0.5 };
 
-      let width = 42 + hookSharpenRef.current * 4;
-      if (ratio >= 0.85) {
-        width = Math.round(width / 2.0);
-      } else if (ratio >= 0.65) {
-        width = Math.round(width / 1.5);
-      }
-      width = Math.max(18, Math.min(65, width));
+      const width = diffConfig.zoneWidth;
 
       const curStart = Math.max(5, sweetZoneCenterRef.current - width / 2);
       const curEnd = Math.min(95, sweetZoneCenterRef.current + width / 2);
 
+      // Замедление смотки лески в зависимости от категории размера рыбы
+      let sizeSpeedModifier = 1.0;
+      if (active?.sizeCategory === 'medium') {
+        sizeSpeedModifier = 0.83; // +20% дольше
+      } else if (active?.sizeCategory === 'large') {
+        sizeSpeedModifier = 0.71; // +40% дольше
+      } else if (active?.sizeCategory === 'trophy') {
+        sizeSpeedModifier = 0.625; // +60% дольше
+      }
+
       const inZone = tensionRef.current >= curStart && tensionRef.current <= curEnd;
-      progressRef.current += inZone ? 1.0 * reelSpeedRef.current : -0.4;
+      progressRef.current += inZone ? 1.0 * reelSpeedRef.current * sizeSpeedModifier : -0.4;
 
       if (tensionRef.current >= 100 || tensionRef.current <= 0 || progressRef.current <= 0) {
         clearInterval(interval);
@@ -268,7 +273,7 @@ export function useFishingSimulation({
         setGameState('lost');
         setCanDismissModal(false);
         setTimeout(() => setCanDismissModal(true), 1200);
-        (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error');
+        window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error');
         return;
       }
 

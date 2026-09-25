@@ -1,4 +1,5 @@
 import type { Fish, FishSizeCategory } from '../fishData';
+import { formatWeight, getCategoryBadgeStyle } from '../utils/fishUtils';
 
 export interface CaughtFishItem {
   fish: Fish;
@@ -18,46 +19,7 @@ interface InventoryScreenProps {
   onSellAll: () => void;
 }
 
-export const formatWeight = (kg: number): string => {
-  if (kg < 1) {
-    return `${Math.round(kg * 1000)} г`;
-  }
-  return `${kg.toFixed(2)} кг`;
-};
 
-export const getCategoryBadgeStyle = (category?: FishSizeCategory) => {
-  switch (category) {
-    case 'trophy':
-      return {
-        text: '🏆 ТРОФЕЙ',
-        color: '#fbbf24',
-        bg: 'rgba(251, 191, 36, 0.15)',
-        border: '1px solid rgba(251, 191, 36, 0.5)',
-      };
-    case 'large':
-      return {
-        text: 'Крупная',
-        color: '#a855f7',
-        bg: 'rgba(168, 85, 247, 0.12)',
-        border: '1px solid rgba(168, 85, 247, 0.35)',
-      };
-    case 'medium':
-      return {
-        text: 'Средняя',
-        color: '#38bdf8',
-        bg: 'rgba(56, 189, 248, 0.1)',
-        border: '1px solid rgba(56, 189, 248, 0.25)',
-      };
-    case 'small':
-    default:
-      return {
-        text: 'Мелкая',
-        color: '#94a3b8',
-        bg: 'rgba(148, 163, 184, 0.1)',
-        border: '1px solid rgba(148, 163, 184, 0.2)',
-      };
-  }
-};
 
 export const InventoryScreen = ({
   inventory,

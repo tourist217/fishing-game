@@ -16,7 +16,7 @@ import { useFishingSimulation } from './hooks/useFishingSimulation';
 export default function App() {
   // Виброотклик Telegram WebApp
   const triggerHaptic = (type: 'impact' | 'notification' | 'selection') => {
-    const tg = (window as any).Telegram?.WebApp;
+    const tg = window.Telegram?.WebApp;
     if (tg?.HapticFeedback) {
       if (type === 'impact') tg.HapticFeedback.impactOccurred('medium');
       if (type === 'notification') tg.HapticFeedback.notificationOccurred('success');

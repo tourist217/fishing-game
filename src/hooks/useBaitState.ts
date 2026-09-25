@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export interface BaitItem {
   id: string;
@@ -86,47 +86,67 @@ export function useBaitState(
     localStorage.setItem('fg_upgrades', JSON.stringify(upgrades));
   }, [upgrades]);
 
-  // Лимит вместимости одной банки (базово 30 + 15 за каждый уровень прокачки)
+  // Вместимость одной банки (30 базово + 15 за каждый уровень прокачки)
   const currentBaitCapacity = 30 + upgrades.baitCapacityLevel * 15;
 
-  // Покупка наживки (принимает baitId, count, price от ShopScreen)
-  const buyBait = useCallback(
-    (baitId: string, count: number = 5, passedPrice?: number): boolean => {
-      // Вычисляем цену: либо передана из UI, либо ищем в справочнике
-      let cost = passedPrice;
-      if (typeof cost !== 'number') {
-        const item = AVAILABLE_BAITS.find((b) => b.id === baitId);
-        cost = item ? item.price : 20;
-      }
+  const baitsRef = useRef(baits);
+  baitsRef.current = baits;
 
-      // Проверяем монеты
-      if (typeof coins === 'number' && coins < cost) {
+  // Умная покупка наживки (с частичным добором до лимита)
+  const buyBait = useCallback(
+    (baitId: string, requestedCount: number = 5, packPrice?: number): boolean => {
+      const currentCount = baitsRef.current[baitId] || 0;
+      const spaceLeft = Math.max(0, currentBaitCapacity - currentCount);
+
+      // Если банка уже полная — покупка блокируется
+      if (spaceLeft <= 0) {
         triggerHaptic?.('notification');
         return false;
       }
 
-      // Списываем монеты через player.spendCoins
+      // Определяем, сколько реально покупаем (не больше свободного места)
+      const countToAdd = Math.min(requestedCount, spaceLeft);
+
+      // Рассчитываем базовую цену за пачку
+      let fullPackCost = packPrice;
+      if (typeof fullPackCost !== 'number') {
+        const item = AVAILABLE_BAITS.find((b) => b.id === baitId);
+        fullPackCost = item ? item.price : 20;
+      }
+
+      // Пропорциональный расчёт цены: (цена пачки / размер пачки) * реальное количество
+      const pricePerUnit = fullPackCost / requestedCount;
+      const actualCost = Math.max(1, Math.round(countToAdd * pricePerUnit));
+
+      // Проверяем баланс
+      if (typeof coins === 'number' && coins < actualCost) {
+        triggerHaptic?.('notification');
+        return false;
+      }
+
+      // Списываем точную сумму
       if (spendCoins) {
-        const success = spendCoins(cost);
+        const success = spendCoins(actualCost);
         if (!success) {
           triggerHaptic?.('notification');
           return false;
         }
       }
 
-      // Начисляем наживку
+      // Начисляем купленное количество
       setBaits((prevBaits) => {
-        const currentCount = prevBaits[baitId] || 0;
-        return {
+        const next = {
           ...prevBaits,
-          [baitId]: currentCount + count,
+          [baitId]: (prevBaits[baitId] || 0) + countToAdd,
         };
+        baitsRef.current = next;
+        return next;
       });
 
       triggerHaptic?.('impact');
       return true;
     },
-    [coins, spendCoins, triggerHaptic]
+    [currentBaitCapacity, coins, spendCoins, triggerHaptic]
   );
 
   // Синхронный расход наживки при забросе удочки

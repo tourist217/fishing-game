@@ -397,7 +397,7 @@ export const FISH_DATABASE: Fish[] = [
     baitPreferences: { corn: 1.0, dough: 0.8, bread: 0.7 },
     fightBehavior: { pullForce: 1.8, jerkFrequency: 1.5 },
     habitats: {
-      loc_old_oxbow: ['small'],
+      loc_quiet_river: ['small'],
       loc_reservoir: ['medium', 'large'],
       loc_lower_volga: ['large', 'trophy'],
       loc_caspian_delta: ['trophy'],
@@ -442,7 +442,7 @@ export const FISH_DATABASE: Fish[] = [
       large: { minKg: 6.500, maxKg: 14.000, priceMultiplier: 2.5, expMultiplier: 2.2, label: 'Крупный' },
       trophy: { minKg: 14.000, maxKg: 28.000, priceMultiplier: 6.0, expMultiplier: 5.0, label: 'ТРОФЕЙ' },
     },
-    baitPreferences: { corn: 1.0, worm: 0.8, livebait: 0.3 },
+    baitPreferences: { corn: 1.0, worm: 0.8, dough: 0.6 },
     fightBehavior: { pullForce: 2.3, jerkFrequency: 1.2 },
     habitats: {
       loc_oka_river: ['small', 'medium'],
@@ -477,14 +477,85 @@ export const FISH_DATABASE: Fish[] = [
   },
 ];
 
+export const JUNK_ITEMS: Fish[] = [
+  {
+    id: 'junk_can',
+    name: 'Консервная банка',
+    rarity: 'common',
+    icon: '🥫',
+    basePricePerKg: 1,
+    baseExpPerKg: 1,
+    weightTiers: {
+      small: { minKg: 0.1, maxKg: 0.2, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Мусор' },
+      medium: { minKg: 0.2, maxKg: 0.3, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Мусор' },
+      large: { minKg: 0.3, maxKg: 0.4, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Мусор' },
+      trophy: { minKg: 0.4, maxKg: 0.5, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Мусор' },
+    },
+    baitPreferences: { worm: 1.0, bread: 1.0, dough: 1.0, corn: 1.0, maggot: 1.0, bloodworm: 1.0, livebait: 1.0 },
+    fightBehavior: { pullForce: 0.5, jerkFrequency: 0.1 },
+    habitats: {},
+  },
+  {
+    id: 'junk_branch',
+    name: 'Озёрная ветка',
+    rarity: 'common',
+    icon: '🪵',
+    basePricePerKg: 1,
+    baseExpPerKg: 1,
+    weightTiers: {
+      small: { minKg: 0.3, maxKg: 0.6, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Коряга' },
+      medium: { minKg: 0.6, maxKg: 1.2, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Коряга' },
+      large: { minKg: 1.2, maxKg: 2.5, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Коряга' },
+      trophy: { minKg: 2.5, maxKg: 4.0, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Коряга' },
+    },
+    baitPreferences: { worm: 1.0, bread: 1.0, dough: 1.0, corn: 1.0, maggot: 1.0, bloodworm: 1.0, livebait: 1.0 },
+    fightBehavior: { pullForce: 1.2, jerkFrequency: 0.1 },
+    habitats: {},
+  },
+  {
+    id: 'junk_boot',
+    name: 'Старый сапог',
+    rarity: 'common',
+    icon: '👢',
+    basePricePerKg: 1,
+    baseExpPerKg: 1,
+    weightTiers: {
+      small: { minKg: 0.4, maxKg: 0.8, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Мусор' },
+      medium: { minKg: 0.8, maxKg: 1.5, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Мусор' },
+      large: { minKg: 1.5, maxKg: 2.2, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Мусор' },
+      trophy: { minKg: 2.2, maxKg: 3.0, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Мусор' },
+    },
+    baitPreferences: { worm: 1.0, bread: 1.0, dough: 1.0, corn: 1.0, maggot: 1.0, bloodworm: 1.0, livebait: 1.0 },
+    fightBehavior: { pullForce: 0.8, jerkFrequency: 0.1 },
+    habitats: {},
+  },
+];
+
+let lastCaughtWasTrophy = false;
+
 // Функция подбора рыбы по водоёму, насадке и снастям
 export function getRandomFish(
   rodStrengthKg: number,
   lineTensileKg: number,
   baitId: string = 'worm',
   locationId: string = 'loc_village_pond',
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _locationWeightModifier: number = 1.0
 ): GeneratedFishResult {
+  // 0. Шанс 5% поймать мусор / ветку / банку
+  if (Math.random() < 0.05) {
+    const junk = JUNK_ITEMS[Math.floor(Math.random() * JUNK_ITEMS.length)];
+    return {
+      fish: junk,
+      weight: 0.35,
+      sizeCategory: 'small',
+      categoryLabel: 'Мусор ♻️',
+      price: 1,
+      exp: 1,
+      rodBrokenRisk: false,
+    };
+  }
+
   // 1. Ищем всех рыб, которые водятся в этом водоёме
   let candidates = FISH_DATABASE.filter((f) => Boolean(f.habitats[locationId]));
 
@@ -502,7 +573,7 @@ export function getRandomFish(
     }
   }
 
-  // Если на выбранную наживку в этом водоёме никто не клюёт, fallback на любую доступную рыбу с минимальным шансом
+  // Если на выбранную наживку в этом водоёме никто не клюёт, fallback на любую доступную рыбу
   let selectedFish: Fish;
   if (weightedList.length > 0) {
     const totalWeight = weightedList.reduce((sum, item) => sum + item.weight, 0);
@@ -521,7 +592,19 @@ export function getRandomFish(
 
   // 3. Выбираем весовую категорию, доступную строго в этом водоёме
   const availableCategories = selectedFish.habitats[locationId] || ['small'];
-  const sizeCategory = availableCategories[Math.floor(Math.random() * availableCategories.length)];
+  let sizeCategory = availableCategories[Math.floor(Math.random() * availableCategories.length)];
+
+  // Трофейная рыба: защита от повтора подряд + шанс < 1% (0.8%)
+  if (sizeCategory === 'trophy') {
+    if (lastCaughtWasTrophy || Math.random() > 0.008) {
+      sizeCategory = availableCategories.includes('large') ? 'large' : 'medium';
+    } else {
+      lastCaughtWasTrophy = true;
+    }
+  } else {
+    lastCaughtWasTrophy = false;
+  }
+
   const tier = selectedFish.weightTiers[sizeCategory] || selectedFish.weightTiers.small;
 
   // 4. Генерируем вес особи в пределах её категории
@@ -533,7 +616,7 @@ export function getRandomFish(
   const price = Math.max(1, Math.round(baseFishCost));
 
   const baseFishExp = weight * selectedFish.baseExpPerKg * tier.expMultiplier;
-  const exp = Math.max(5, Math.round(baseFishExp));
+  const exp = Math.max(2, Math.round(baseFishExp));
 
   // 6. Проверка на риск поломки снасти
   const effectiveGearLimit = Math.min(rodStrengthKg || 0.25, lineTensileKg || 0.4);
