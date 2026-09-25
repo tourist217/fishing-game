@@ -131,9 +131,8 @@ export const InventoryScreen = ({
                       style={{
                         width: '44px',
                         height: '34px',
-                        objectFit: 'cover',
-                        borderRadius: '8px',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        objectFit: 'contain',
+                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
                       }}
                     />
                   ) : (

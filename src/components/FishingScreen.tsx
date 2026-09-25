@@ -454,12 +454,10 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                   src={currentFish.fish.image}
                   alt={currentFish.fish.name}
                   style={{
-                    width: '180px',
-                    height: '120px',
-                    objectFit: 'cover',
-                    borderRadius: '16px',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    boxShadow: '0 8px 20px rgba(0, 0, 0, 0.6)',
+                    width: '200px',
+                    height: '130px',
+                    objectFit: 'contain',
+                    filter: 'drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6))',
                   }}
                 />
               </div>

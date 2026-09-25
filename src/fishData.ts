@@ -114,7 +114,7 @@ export const FISH_DATABASE: Fish[] = [
     name: 'Карась',
     rarity: 'common',
     icon: '🐠',
-    image: '/fish/crucian_carp.jpg',
+    image: '/fish/crucian_carp.png',
     basePricePerKg: 20,
     baseExpPerKg: 65,
     weightTiers: {
@@ -190,7 +190,7 @@ export const FISH_DATABASE: Fish[] = [
     name: 'Окунь',
     rarity: 'rare',
     icon: '🐡',
-    image: '/fish/perch.jpg',
+    image: '/fish/perch.png',
     basePricePerKg: 30,
     baseExpPerKg: 95,
     weightTiers: {
@@ -287,7 +287,7 @@ export const FISH_DATABASE: Fish[] = [
     name: 'Щука',
     rarity: 'epic',
     icon: '🐊',
-    image: '/fish/pike.jpg',
+    image: '/fish/pike.png',
     basePricePerKg: 38,
     baseExpPerKg: 130,
     weightTiers: {

@@ -13,7 +13,18 @@ import { useGearState } from './hooks/useGearState';
 import { useBaitState } from './hooks/useBaitState';
 import { useFishingSimulation } from './hooks/useFishingSimulation';
 
+import { FISH_DATABASE } from './fishData';
+
 export default function App() {
+  // Предварительная загрузка всех картинок рыб в кэш браузера при старте
+  useEffect(() => {
+    FISH_DATABASE.forEach((fish) => {
+      if (fish.image) {
+        const img = new Image();
+        img.src = fish.image;
+      }
+    });
+  }, []);
   // Виброотклик Telegram WebApp
   const triggerHaptic = (type: 'impact' | 'notification' | 'selection') => {
     const tg = window.Telegram?.WebApp;
