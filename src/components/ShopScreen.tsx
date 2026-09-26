@@ -9,7 +9,8 @@ interface GearState {
   ownedReels: string[];
   equippedReelId: string | null;
   ownedLines?: string[];
-  equippedLineId: string;
+  equippedLineId: string | null;
+  lineStock?: Record<string, number>;
   buyRod?: (item: RodTier) => boolean | void;
   buyReel?: (item: ReelTier) => boolean | void;
   buyLine?: (item: LineTier) => boolean | void;
@@ -78,8 +79,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
   const equippedRodId: string = gear?.equippedRodId || '';
   const ownedReels: string[] = gear?.ownedReels || [];
   const equippedReelId: string = gear?.equippedReelId || '';
-  const ownedLines: string[] = gear?.ownedLines || [];
-  const equippedLineId: string = gear?.equippedLineId || '';
+  const equippedLineId: string | null = gear?.equippedLineId || null;
 
   const handleBuyRod = (item: RodTier) => {
     if (onBuyRod) onBuyRod(item);
@@ -413,8 +413,8 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
         {/* --- ВКЛАДКА 3: ЛЕСКИ --- */}
         {shopTab === 'lines' &&
           lines.map((line) => {
-            const isOwned = ownedLines.includes(line.id);
-            const isEquipped = equippedLineId === line.id;
+            const stockCount = gear?.lineStock?.[line.id] || 0;
+            const isEquipped = equippedLineId === line.id && stockCount > 0;
             const price = (line as any).basePrice ?? (line as any).price ?? 50;
             const lvlReq = (line as any).levelReq ?? (line as any).minLevel ?? 1;
             const isLevelUnlocked = level >= lvlReq;
@@ -444,43 +444,43 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                       </div>
                     </div>
                   </div>
-                  {!isOwned && (
-                    <span style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '13px' }}>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '13px' }}>
                       {price} 🪙
-                    </span>
-                  )}
+                    </div>
+                    <div style={{ fontSize: '11px', color: stockCount > 0 ? '#34d399' : '#94a3b8', marginTop: '2px' }}>
+                      В наличии: {stockCount} шт.
+                    </div>
+                  </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-                  {!isOwned && (
-                    <button
-                      disabled={!canAfford || !isLevelUnlocked}
-                      onClick={() => handleBuyLine(line)}
-                      style={{
-                        flex: 1,
-                        padding: '10px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: canAfford && isLevelUnlocked ? '#2563eb' : '#334155',
-                        color: canAfford && isLevelUnlocked ? '#fff' : '#64748b',
-                        fontWeight: 'bold',
-                        fontSize: '12px',
-                        cursor: canAfford && isLevelUnlocked ? 'pointer' : 'not-allowed',
-                      }}
-                    >
-                      {!isLevelUnlocked ? `Требуется ${lvlReq} ур. 🔒` : `Купить за ${price} 🪙`}
-                    </button>
-                  )}
+                  <button
+                    disabled={!canAfford || !isLevelUnlocked}
+                    onClick={() => handleBuyLine(line)}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: canAfford && isLevelUnlocked ? '#2563eb' : '#334155',
+                      color: canAfford && isLevelUnlocked ? '#fff' : '#64748b',
+                      fontWeight: 'bold',
+                      fontSize: '12px',
+                      cursor: canAfford && isLevelUnlocked ? 'pointer' : 'not-allowed',
+                    }}
+                  >
+                    {!isLevelUnlocked ? `Требуется ${lvlReq} ур. 🔒` : `Купить (+1 шт)`}
+                  </button>
 
-                  {isOwned && !isEquipped && (
+                  {stockCount > 0 && !isEquipped && (
                     <button
                       onClick={() => handleEquipLine(line.id)}
                       style={{
-                        flex: 1,
-                        padding: '10px',
+                        padding: '10px 14px',
                         borderRadius: '8px',
                         border: 'none',
-                        background: '#334155',
+                        background: '#059669',
                         color: '#fff',
                         fontWeight: 'bold',
                         fontSize: '12px',
@@ -491,11 +491,10 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                     </button>
                   )}
 
-                  {isOwned && isEquipped && (
+                  {isEquipped && (
                     <div
                       style={{
-                        flex: 1,
-                        padding: '10px',
+                        padding: '10px 14px',
                         borderRadius: '8px',
                         background: 'rgba(16, 185, 129, 0.2)',
                         color: '#34d399',
@@ -504,7 +503,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                         textAlign: 'center',
                       }}
                     >
-                      ✓ Экипировано
+                      ✓ На удочке
                     </div>
                   )}
                 </div>

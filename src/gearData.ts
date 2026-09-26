@@ -228,6 +228,17 @@ export interface LineTier {
   description: string;
 }
 
+export const REED_FREE_LINE: LineTier = {
+  id: 'line_reed_free',
+  name: 'Камышовая леска (до 0.35 кг)',
+  icon: '🪢',
+  maxTensileKg: 0.35,
+  levelReq: 1,
+  price: 0,
+  currency: 'coins',
+  description: 'Бесплатная встроенная леска для камышового удилища. Выдерживает максимум 350 г.',
+};
+
 export const LINE_TIERS: LineTier[] = [
   {
     id: 'line_010',
@@ -311,7 +322,7 @@ export interface PlayerGearState {
   reelLevels: Record<string, number>;   // id катушки -> уровень (1..3)
   ownedReels: string[];
   
-  equippedLineId: string;
+  equippedLineId: string | null;
   lineStock: Record<string, number>;    // запас катушек лески в инвентаре
 }
 

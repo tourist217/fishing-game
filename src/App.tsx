@@ -62,7 +62,7 @@ export default function App() {
   // 4. Физика рыбалки и игровой цикл
   const fishing = useFishingSimulation({
     currentRodStrength: gear.currentRodStrength,
-    currentLineTensileKg: gear.currentLine.maxTensileKg,
+    currentLineTensileKg: gear.currentLineTensileKg,
     reelPullSpeed: gear.reelPullSpeed,
     hookSharpenLevel: baits.upgrades.hookSharpenLevel,
     reelOilLevel: baits.upgrades.reelOilLevel,
@@ -71,6 +71,7 @@ export default function App() {
     currentLocation,
     consumeBait: baits.consumeBait,
     onFishCaught: player.addCaughtFish,
+    onLineBreak: gear.breakLine,
     triggerHaptic,
   });
 
@@ -135,6 +136,7 @@ export default function App() {
             canDismissModal={fishing.canDismissModal}
             selectedBaitId={baits.selectedBaitId}
             baits={baits.baits}
+            hasLineOnRod={gear.hasLineOnRod}
             currentLocation={currentLocation}
             onBackToHub={() => {
               fishing.resetToIdle();
@@ -144,6 +146,12 @@ export default function App() {
             onOpenMap={() => {
               fishing.resetToIdle();
               setIsMapOpen(true);
+              triggerHaptic('selection');
+            }}
+            onOpenShop={() => {
+              fishing.resetToIdle();
+              setIsAtPond(false);
+              setActiveTab('shop');
               triggerHaptic('selection');
             }}
             onSelectBait={baits.selectBait}

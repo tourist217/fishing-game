@@ -23,6 +23,7 @@ interface UseFishingSimulationProps {
   currentLocation: FishingLocation;
   consumeBait: (baitId: string) => boolean;
   onFishCaught: (fish: CaughtFishItem, exp: number) => void;
+  onLineBreak?: () => void;
   triggerHaptic?: (type: 'impact' | 'notification' | 'selection') => void;
 }
 
@@ -37,6 +38,7 @@ export function useFishingSimulation({
   currentLocation,
   consumeBait,
   onFishCaught,
+  onLineBreak,
   triggerHaptic,
 }: UseFishingSimulationProps) {
   const [gameState, setGameState] = useState<GameState>('idle');
@@ -49,6 +51,11 @@ export function useFishingSimulation({
   const isPullingRef = useRef<boolean>(false);
   const tensionRef = useRef<number>(50);
   const progressRef = useRef<number>(15);
+
+  const onLineBreakRef = useRef(onLineBreak);
+  useEffect(() => {
+    onLineBreakRef.current = onLineBreak;
+  }, [onLineBreak]);
 
   // Рефы для изоляции замыканий от жизненного цикла React
   const consumeBaitRef = useRef(consumeBait);
@@ -132,6 +139,11 @@ export function useFishingSimulation({
 
   // Запуск процесса ловли
   const startFishing = () => {
+    if (lineTensileRef.current <= 0) {
+      triggerHapticRef.current?.('notification');
+      return;
+    }
+
     const currentBaitId = selectedBaitIdRef.current;
     const availableBait = baitsRef.current[currentBaitId] || 0;
 
@@ -233,9 +245,16 @@ export function useFishingSimulation({
     const interval = setInterval(() => {
       const active = currentFishRef.current;
       const pullForce = active?.fish.fightBehavior?.pullForce || 1.0;
+      const lineLimit = lineTensileRef.current;
+      const isLineOverloaded = Boolean(active && lineLimit > 0 && active.weight > lineLimit);
 
       if (isPullingRef.current) {
-        tensionRef.current += 1.9;
+        let pullSpeed = 1.9;
+        if (isLineOverloaded && lineLimit > 0 && active) {
+          const overload = active.weight / lineLimit;
+          pullSpeed += Math.min(22, (overload - 1) * 10.0);
+        }
+        tensionRef.current += pullSpeed;
       } else {
         tensionRef.current -= 1.8 * pullForce;
       }
@@ -270,7 +289,12 @@ export function useFishingSimulation({
       if (tensionRef.current >= 100 || tensionRef.current <= 0 || progressRef.current <= 0) {
         clearInterval(interval);
         isPullingRef.current = false;
-        setGameState('lost');
+        if (tensionRef.current >= 100 && isLineOverloaded) {
+          onLineBreakRef.current?.();
+          setGameState('line_broken');
+        } else {
+          setGameState('lost');
+        }
         setCanDismissModal(false);
         setTimeout(() => setCanDismissModal(true), 1200);
         window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error');

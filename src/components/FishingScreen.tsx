@@ -3,7 +3,7 @@ import type { FishingLocation } from '../locationsData';
 import type { ActiveFishState } from '../hooks/useFishingSimulation';
 import { formatWeight, getCategoryBadgeStyle } from '../utils/fishUtils';
 
-export type GameState = 'idle' | 'waiting' | 'hooked' | 'reeling' | 'caught' | 'lost';
+export type GameState = 'idle' | 'waiting' | 'hooked' | 'reeling' | 'caught' | 'lost' | 'line_broken';
 
 interface FishingScreenProps {
   currentLocation: FishingLocation;
@@ -16,6 +16,7 @@ interface FishingScreenProps {
   canDismissModal: boolean;
   selectedBaitId: string;
   baits: Record<string, number>;
+  hasLineOnRod?: boolean;
   onSelectBait: (baitId: string) => void;
   onStartFishing: () => void;
   onStartReeling: () => void;
@@ -23,6 +24,7 @@ interface FishingScreenProps {
   onPullEnd: () => void;
   onDismissModal: () => void;
   onOpenMap: () => void;
+  onOpenShop?: () => void;
   onBackToHub?: () => void;
   getRarityLabel: (rarity: string) => { text: string; color: string };
 }
@@ -38,6 +40,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
   canDismissModal,
   selectedBaitId,
   baits,
+  hasLineOnRod = true,
   onSelectBait,
   onStartFishing,
   onStartReeling,
@@ -45,10 +48,12 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
   onPullEnd,
   onDismissModal,
   onOpenMap,
+  onOpenShop,
   onBackToHub,
   getRarityLabel,
 }) => {
   const currentBaitCount = baits[selectedBaitId] || 0;
+  const canCast = currentBaitCount > 0 && hasLineOnRod;
 
   return (
     <div
@@ -357,23 +362,29 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
 
           {/* Кнопка заброса */}
           <button
-            onClick={onStartFishing}
-            disabled={currentBaitCount <= 0}
+            onClick={canCast ? onStartFishing : (!hasLineOnRod ? onOpenShop : undefined)}
+            disabled={!canCast && hasLineOnRod}
             style={{
-              background: currentBaitCount > 0
+              background: canCast
                 ? 'linear-gradient(135deg, #0284c7, #0369a1)'
+                : !hasLineOnRod
+                ? 'linear-gradient(135deg, #ef4444, #b91c1c)'
                 : 'rgba(255, 255, 255, 0.1)',
               border: 'none',
               borderRadius: '16px',
-              color: currentBaitCount > 0 ? '#fff' : '#64748b',
+              color: canCast || !hasLineOnRod ? '#fff' : '#64748b',
               fontSize: '16px',
               fontWeight: 'bold',
               padding: '14px',
-              cursor: currentBaitCount > 0 ? 'pointer' : 'not-allowed',
-              boxShadow: currentBaitCount > 0 ? '0 4px 16px rgba(2, 132, 199, 0.4)' : 'none',
+              cursor: canCast || !hasLineOnRod ? 'pointer' : 'not-allowed',
+              boxShadow: canCast ? '0 4px 16px rgba(2, 132, 199, 0.4)' : 'none',
             }}
           >
-            {currentBaitCount > 0 ? 'ЗАБРОСИТЬ УДОЧКУ 🎣' : 'НЕТ НАЖИВКИ 🚫'}
+            {canCast
+              ? 'ЗАБРОСИТЬ УДОЧКУ 🎣'
+              : !hasLineOnRod
+              ? 'НЕТ ЛЕСКИ (КУПИТЬ В МАГАЗИНЕ) 🛒'
+              : 'НЕТ НАЖИВКИ 🚫'}
           </button>
         </div>
       )}
@@ -573,6 +584,83 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
             <div style={{ marginTop: '16px', fontSize: '11px', color: canDismissModal ? '#cbd5e1' : '#64748b' }}>
               {canDismissModal ? 'Нажми, чтобы продолжить' : 'Рыба уплыла...'}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно обрыва лески */}
+      {gameState === 'line_broken' && (
+        <div
+          onClick={onDismissModal}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.8)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '24px',
+            zIndex: 10,
+            cursor: canDismissModal ? 'pointer' : 'default',
+          }}
+        >
+          <div
+            style={{
+              background: '#1e293b',
+              border: '1px solid rgba(239, 68, 68, 0.5)',
+              borderRadius: '24px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '290px',
+              textAlign: 'center',
+              boxShadow: '0 10px 30px rgba(239, 68, 68, 0.3)',
+            }}
+          >
+            <div style={{ fontSize: '56px', marginBottom: '8px' }}>💥</div>
+            <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#ef4444' }}>
+              ОБРЫВ ЛЕСКИ!
+            </div>
+            <div style={{ fontSize: '13px', color: '#e2e8f0', marginTop: '8px', lineHeight: '1.4' }}>
+              Рыба <b>{currentFish?.fish.name}</b> ({currentFish ? formatWeight(currentFish.weight) : ''}) оказалась слишком тяжелой! Леска порвана.
+            </div>
+            <div
+              style={{
+                marginTop: '14px',
+                fontSize: '12px',
+                color: hasLineOnRod ? '#34d399' : '#f87171',
+                background: 'rgba(0, 0, 0, 0.3)',
+                padding: '8px 12px',
+                borderRadius: '10px',
+              }}
+            >
+              {hasLineOnRod
+                ? '✓ Экипирована следующая леска из запаса'
+                : '❌ На удочке больше нет лески! Зайдите в Магазин.'}
+            </div>
+            {!hasLineOnRod && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenShop?.();
+                }}
+                style={{
+                  marginTop: '14px',
+                  width: '100%',
+                  padding: '12px',
+                  background: '#0284c7',
+                  border: 'none',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontWeight: 'bold',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                }}
+              >
+                Купить леску в Магазине 🛒
+              </button>
+            )}
           </div>
         </div>
       )}

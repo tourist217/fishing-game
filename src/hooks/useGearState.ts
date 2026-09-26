@@ -3,6 +3,7 @@ import {
   ROD_TIERS,
   REEL_TIERS,
   LINE_TIERS,
+  REED_FREE_LINE,
   INITIAL_PLAYER_GEAR,
   getRodStrength,
   getReelPullSpeed,
@@ -26,8 +27,7 @@ export function useGearState(
       if (!saved) return INITIAL_PLAYER_GEAR;
       const parsed = JSON.parse(saved);
       const rodExists = ROD_TIERS.some((r) => r.id === parsed.equippedRodId);
-      const lineExists = LINE_TIERS.some((l) => l.id === parsed.equippedLineId);
-      if (!rodExists || !lineExists) return INITIAL_PLAYER_GEAR;
+      if (!rodExists) return INITIAL_PLAYER_GEAR;
       return parsed;
     } catch {
       return INITIAL_PLAYER_GEAR;
@@ -51,13 +51,30 @@ export function useGearState(
   const reelLevel = (currentReel && gear.reelLevels && gear.reelLevels[currentReel.id]) || 1;
   const reelPullSpeed = currentReel ? getReelPullSpeed(currentReel, reelLevel) : 1.0;
 
-  const currentLine: LineTier =
-    LINE_TIERS.find((l) => l.id === gear.equippedLineId) || LINE_TIERS[0];
+  // Определение активности лески: если купленная леска экипирована и в наличии > 0 — используем её.
+  // Если на камышовом удилище нет лески в запасе — бесплатно ставим камышовую леску 0.35 кг.
+  // На остальных удочках без запаса лески — леска отсутствует (null).
+  const currentLine: LineTier | null = (() => {
+    if (gear.equippedLineId && (gear.lineStock?.[gear.equippedLineId] || 0) > 0) {
+      return LINE_TIERS.find((l) => l.id === gear.equippedLineId) || null;
+    }
+    if (currentRod.id === 'rod_reed') {
+      return REED_FREE_LINE;
+    }
+    return null;
+  })();
+
+  const currentLineTensileKg = currentLine
+    ? currentLine.maxTensileKg
+    : currentRod.id === 'rod_reed'
+    ? 0.35
+    : 0;
+
+  const hasLineOnRod = Boolean(currentLine);
 
   // Действия: покупка, апгрейд, экипировка удилища
   const buyRod = (rod: RodTier) => {
     if (gear.ownedRods.includes(rod.id)) {
-      // Уже куплено — просто экипируем
       setGear((prev) => ({
         ...prev,
         equippedRodId: rod.id,
@@ -146,21 +163,57 @@ export function useGearState(
     if (coins < line.price || playerLevel < line.levelReq) return false;
     if (!spendCoins(line.price)) return false;
 
-    setGear((prev) => ({
-      ...prev,
-      lineStock: {
-        ...(prev.lineStock || {}),
-        [line.id]: ((prev.lineStock && prev.lineStock[line.id]) || 0) + 1,
-      },
-      equippedLineId: prev.equippedLineId || line.id,
-    }));
+    setGear((prev) => {
+      const currentStock = (prev.lineStock && prev.lineStock[line.id]) || 0;
+      const newStock = currentStock + 1;
+      const updatedStock = { ...(prev.lineStock || {}), [line.id]: newStock };
+
+      // Если леска не была установлена или запасы старой лески исчерпаны — автоэкипируем купленную
+      const isCurrentActiveValid =
+        prev.equippedLineId && (updatedStock[prev.equippedLineId] || 0) > 0;
+
+      return {
+        ...prev,
+        lineStock: updatedStock,
+        equippedLineId: isCurrentActiveValid ? prev.equippedLineId : line.id,
+      };
+    });
     triggerHaptic?.('impact');
     return true;
   };
 
   const equipLine = (lineId: string) => {
+    const stock = gear.lineStock?.[lineId] || 0;
+    if (stock <= 0) return;
     setGear((prev) => ({ ...prev, equippedLineId: lineId }));
     triggerHaptic?.('selection');
+  };
+
+  // Обрыв лески — списание 1 штуки экипированной лески
+  const breakLine = () => {
+    if (!gear.equippedLineId) return;
+
+    setGear((prev) => {
+      const currentId = prev.equippedLineId;
+      if (!currentId) return prev;
+
+      const currentStock = (prev.lineStock && prev.lineStock[currentId]) || 0;
+      const newStock = Math.max(0, currentStock - 1);
+      const updatedStock = { ...(prev.lineStock || {}), [currentId]: newStock };
+
+      let nextEquipped: string | null = currentId;
+      if (newStock <= 0) {
+        // Ищем другую доступную леску в запасах
+        const altId = Object.keys(updatedStock).find((id) => updatedStock[id] > 0);
+        nextEquipped = altId || null;
+      }
+
+      return {
+        ...prev,
+        lineStock: updatedStock,
+        equippedLineId: nextEquipped,
+      };
+    });
   };
 
   return {
@@ -172,6 +225,9 @@ export function useGearState(
     reelLevel,
     reelPullSpeed,
     currentLine,
+    currentLineTensileKg,
+    hasLineOnRod,
+    breakLine,
     buyRod,
     upgradeRod,
     equipRod,
