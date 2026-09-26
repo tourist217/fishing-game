@@ -2,6 +2,7 @@ import React from 'react';
 import type { FishingLocation } from '../locationsData';
 import type { ActiveFishState } from '../hooks/useFishingSimulation';
 import { formatWeight, getCategoryBadgeStyle } from '../utils/fishUtils';
+import { FishingSceneCanvas } from './FishingSceneCanvas';
 
 export type GameState = 'idle' | 'waiting' | 'hooked' | 'reeling' | 'caught' | 'lost' | 'line_broken';
 
@@ -17,6 +18,7 @@ interface FishingScreenProps {
   selectedBaitId: string;
   baits: Record<string, number>;
   hasLineOnRod?: boolean;
+  rodMaterial?: string;
   onSelectBait: (baitId: string) => void;
   onStartFishing: () => void;
   onStartReeling: () => void;
@@ -41,6 +43,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
   selectedBaitId,
   baits,
   hasLineOnRod = true,
+  rodMaterial = 'bamboo',
   onSelectBait,
   onStartFishing,
   onStartReeling,
@@ -82,6 +85,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
           padding: '8px 14px',
           borderRadius: '16px',
           border: '1px solid rgba(255, 255, 255, 0.1)',
+          zIndex: 10,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -132,7 +136,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
         </div>
       </div>
 
-      {/* Центральная игровая зона */}
+      {/* Центральная игровая зона с 2D Canvas водоёма, удочки и поплавка */}
       <div
         style={{
           flex: 1,
@@ -141,11 +145,33 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
           justifyContent: 'center',
           alignItems: 'center',
           position: 'relative',
+          borderRadius: '16px',
+          overflow: 'hidden',
+          margin: '10px 0',
         }}
       >
+        <FishingSceneCanvas
+          location={currentLocation}
+          gameState={gameState}
+          tension={tension}
+          rodMaterial={rodMaterial}
+        />
+
         {gameState === 'idle' && (
-          <div style={{ textAlign: 'center', color: '#cbd5e1' }}>
-            <div style={{ fontSize: '48px', marginBottom: '8px' }}>🎣</div>
+          <div
+            style={{
+              position: 'relative',
+              zIndex: 5,
+              textAlign: 'center',
+              color: '#cbd5e1',
+              background: 'rgba(0, 0, 0, 0.45)',
+              backdropFilter: 'blur(6px)',
+              padding: '16px 24px',
+              borderRadius: '20px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+            }}
+          >
+            <div style={{ fontSize: '42px', marginBottom: '4px' }}>🎣</div>
             <div style={{ fontSize: '15px', fontWeight: 600 }}>Насади наживку и забрасывай!</div>
             <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
               В наличии: {currentBaitCount} шт.
@@ -154,32 +180,55 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
         )}
 
         {gameState === 'waiting' && (
-          <div style={{ textAlign: 'center', color: '#38bdf8' }}>
+          <div
+            style={{
+              position: 'relative',
+              zIndex: 5,
+              textAlign: 'center',
+              color: '#38bdf8',
+              background: 'rgba(0, 0, 0, 0.45)',
+              backdropFilter: 'blur(6px)',
+              padding: '14px 20px',
+              borderRadius: '20px',
+              border: '1px solid rgba(56, 189, 248, 0.2)',
+            }}
+          >
             <div
               style={{
-                fontSize: '44px',
-                marginBottom: '12px',
+                fontSize: '36px',
+                marginBottom: '4px',
                 display: 'inline-block',
                 animation: 'pulse 1.5s infinite',
               }}
             >
               🌊
             </div>
-            <div style={{ fontSize: '16px', fontWeight: 'bold' }}>Ждём поклёвку...</div>
-            <div style={{ fontSize: '12px', color: '#94a3b8' }}>Смотри на поплавок</div>
+            <div style={{ fontSize: '15px', fontWeight: 'bold' }}>Ждём поклёвку...</div>
+            <div style={{ fontSize: '11px', color: '#94a3b8' }}>Смотри на поплавок</div>
           </div>
         )}
 
         {gameState === 'hooked' && (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '50px', marginBottom: '8px' }}>⚡</div>
+          <div
+            style={{
+              position: 'relative',
+              zIndex: 5,
+              textAlign: 'center',
+              background: 'rgba(0, 0, 0, 0.65)',
+              backdropFilter: 'blur(8px)',
+              padding: '18px 26px',
+              borderRadius: '22px',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+            }}
+          >
+            <div style={{ fontSize: '44px', marginBottom: '4px' }}>⚡</div>
             <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#f59e0b' }}>
               КЛЮЁТ!
             </div>
             <button
               onClick={onStartReeling}
               style={{
-                marginTop: '16px',
+                marginTop: '12px',
                 background: 'linear-gradient(135deg, #f59e0b, #d97706)',
                 border: 'none',
                 borderRadius: '14px',
@@ -199,11 +248,21 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
         {gameState === 'reeling' && (
           <div
             style={{
-              width: '100%',
-              maxWidth: '300px',
+              position: 'absolute',
+              top: '12px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 'calc(100% - 32px)',
+              maxWidth: '320px',
+              zIndex: 5,
               display: 'flex',
               flexDirection: 'column',
-              gap: '14px',
+              gap: '10px',
+              background: 'rgba(0, 0, 0, 0.65)',
+              backdropFilter: 'blur(8px)',
+              padding: '12px 16px',
+              borderRadius: '16px',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
             }}
           >
             {/* Шкала вываживания (Прогресс) */}
@@ -266,9 +325,9 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
 
               <div
                 style={{
-                  height: '24px',
+                  height: '22px',
                   background: 'rgba(0, 0, 0, 0.6)',
-                  borderRadius: '12px',
+                  borderRadius: '11px',
                   position: 'relative',
                   overflow: 'hidden',
                   border: '1px solid rgba(255, 255, 255, 0.15)',

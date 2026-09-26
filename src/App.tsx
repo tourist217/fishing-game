@@ -137,6 +137,7 @@ export default function App() {
             selectedBaitId={baits.selectedBaitId}
             baits={baits.baits}
             hasLineOnRod={gear.hasLineOnRod}
+            rodMaterial={gear.currentRod.material}
             currentLocation={currentLocation}
             onBackToHub={() => {
               fishing.resetToIdle();
