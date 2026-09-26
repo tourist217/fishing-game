@@ -73,11 +73,15 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
       const width = canvas.width;
       const height = canvas.height;
 
+      const isVillagePond = location.id === 'loc_village_pond';
+
       // 1. Отрисовка Неба и Градиентов Времени Суток
       drawSky(ctx, width, height, timeOfDay, location);
 
-      // 2. Отрисовка Дальнего Плана (Горы / Деревья / Камыши)
-      drawBackgroundScenery(ctx, width, height, timeOfDay, location);
+      // 2. Отрисовка Дальнего Плана только для Деревенского Пруда (loc_village_pond)
+      if (isVillagePond) {
+        drawBackgroundScenery(ctx, width, height, timeOfDay, location);
+      }
 
       // 3. Отрисовка Водной Глади и Волновой Ряби
       const waterY = height * 0.48;
