@@ -97,15 +97,17 @@ export default function App() {
         transition: 'background 0.5s ease',
       }}
     >
-      <Header
-        userName={player.userName}
-        level={player.level}
-        coins={player.coins}
-        exp={player.exp}
-        maxExp={player.expToNextLevel}
-        rodName={`${gear.currentRod.name} [${gear.rodLevel} ур.]`}
-        rodIcon={gear.currentRod.icon}
-      />
+      {!isAtPond && (
+        <Header
+          userName={player.userName}
+          level={player.level}
+          coins={player.coins}
+          exp={player.exp}
+          maxExp={player.expToNextLevel}
+          rodName={`${gear.currentRod.name} [${gear.rodLevel} ур.]`}
+          rodIcon={gear.currentRod.icon}
+        />
+      )}
 
       {isMapOpen && (
         <MapScreen
@@ -138,6 +140,7 @@ export default function App() {
             baits={baits.baits}
             hasLineOnRod={gear.hasLineOnRod}
             rodMaterial={gear.currentRod.material}
+            coins={player.coins}
             currentLocation={currentLocation}
             onBackToHub={() => {
               fishing.resetToIdle();
