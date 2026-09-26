@@ -21,6 +21,17 @@ interface FishingSceneCanvasProps {
   onCastComplete?: () => void;
 }
 
+const bgImages: Record<string, HTMLImageElement> = {};
+
+function getPreloadedImage(src: string): HTMLImageElement | null {
+  if (!bgImages[src]) {
+    const img = new Image();
+    img.src = src;
+    bgImages[src] = img;
+  }
+  return bgImages[src].complete && bgImages[src].naturalWidth > 0 ? bgImages[src] : null;
+}
+
 export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
   location,
   gameState,
@@ -75,17 +86,43 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
 
       const isVillagePond = location.id === 'loc_village_pond';
 
-      // 1. Отрисовка Неба и Градиентов Времени Суток
-      drawSky(ctx, width, height, timeOfDay, location);
-
-      // 2. Отрисовка Дальнего Плана только для Деревенского Пруда (loc_village_pond)
       if (isVillagePond) {
-        drawBackgroundScenery(ctx, width, height, timeOfDay, location);
-      }
+        let bgSrc = '/assets/locations/loc_village_pond_day.jpg';
+        if (timeOfDay === 'dawn' || timeOfDay === 'morning') {
+          bgSrc = '/assets/locations/loc_village_pond_dawn.jpg';
+        } else if (timeOfDay === 'evening') {
+          bgSrc = '/assets/locations/loc_village_pond_evening.jpg';
+        } else if (timeOfDay === 'night') {
+          bgSrc = '/assets/locations/loc_village_pond_dawn.jpg';
+        }
 
-      // 3. Отрисовка Водной Глади и Волновой Ряби
-      const waterY = height * 0.48;
-      drawWaterSurface(ctx, width, height, waterY, timeOfDay, location, time);
+        const photoImg = getPreloadedImage(bgSrc);
+        if (photoImg) {
+          ctx.drawImage(photoImg, 0, 0, width, height);
+
+          if (timeOfDay === 'night') {
+            ctx.fillStyle = 'rgba(5, 12, 28, 0.78)';
+            ctx.fillRect(0, 0, width, height);
+
+            // Звезды и Луна ночью
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            for (let i = 0; i < 30; i++) {
+              const sx = (Math.sin(i * 99) * 0.5 + 0.5) * width;
+              const sy = (Math.cos(i * 33) * 0.5 + 0.5) * (height * 0.35);
+              ctx.beginPath();
+              ctx.arc(sx, sy, i % 3 === 0 ? 1.5 : 1, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        } else {
+          drawSky(ctx, width, height, timeOfDay, location);
+          drawBackgroundScenery(ctx, width, height, timeOfDay, location);
+          drawWaterSurface(ctx, width, height, height * 0.48, timeOfDay, location, time);
+        }
+      } else {
+        drawSky(ctx, width, height, timeOfDay, location);
+        drawWaterSurface(ctx, width, height, height * 0.48, timeOfDay, location, time);
+      }
 
       // 4. Позиция поплавка на экране
       const targetX = width * castTarget.x;
