@@ -280,7 +280,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                     background: 'rgba(16, 185, 129, 0.35)',
                     borderLeft: '2px solid #10b981',
                     borderRight: '2px solid #10b981',
-                    transition: 'left 0.12s ease-out, width 0.12s ease-out',
+                    transition: 'left 0.3s ease-in-out, width 0.3s ease-in-out',
                   }}
                 />
 
