@@ -32,6 +32,25 @@ function getPreloadedImage(src: string): HTMLImageElement | null {
   return bgImages[src].complete && bgImages[src].naturalWidth > 0 ? bgImages[src] : null;
 }
 
+function drawImageCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, width: number, height: number) {
+  const imgRatio = img.width / img.height;
+  const canvasRatio = width / height;
+  let renderW = width;
+  let renderH = height;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  if (imgRatio > canvasRatio) {
+    renderW = height * imgRatio;
+    offsetX = (width - renderW) / 2;
+  } else {
+    renderH = width / imgRatio;
+    offsetY = (height - renderH) / 2;
+  }
+
+  ctx.drawImage(img, offsetX, offsetY, renderW, renderH);
+}
+
 export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
   location,
   gameState,
@@ -87,25 +106,41 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
       const isVillagePond = location.id === 'loc_village_pond';
 
       if (isVillagePond) {
-        let bgSrc = '/assets/locations/loc_village_pond_day.jpg';
-        if (timeOfDay === 'dawn' || timeOfDay === 'morning') {
-          bgSrc = '/assets/locations/loc_village_pond_dawn.jpg';
-        } else if (timeOfDay === 'evening') {
-          bgSrc = '/assets/locations/loc_village_pond_evening.jpg';
-        } else if (timeOfDay === 'night') {
-          bgSrc = '/assets/locations/loc_village_pond_dawn.jpg';
+        // Единое базовое изображение фонового водоема
+        const bgSrc = '/assets/locations/loc_village_pond_base.jpg';
+        let photoImg = getPreloadedImage(bgSrc);
+        if (!photoImg) {
+          photoImg = getPreloadedImage('/assets/locations/loc_village_pond_dawn.jpg');
         }
 
-        const photoImg = getPreloadedImage(bgSrc);
         if (photoImg) {
-          ctx.drawImage(photoImg, 0, 0, width, height);
+          // Отрисовка без искажения пропорций (object-fit: cover)
+          drawImageCover(ctx, photoImg, width, height);
 
-          if (timeOfDay === 'night') {
-            ctx.fillStyle = 'rgba(5, 12, 28, 0.78)';
+          // Динамическое наложение освещения по времени суток на единое фоновое изображение
+          if (timeOfDay === 'dawn') {
+            // Зорька: теплая золотисто-розовая утренняя дымка
+            ctx.fillStyle = 'rgba(246, 189, 96, 0.22)';
+            ctx.fillRect(0, 0, width, height);
+            ctx.fillStyle = 'rgba(217, 119, 111, 0.15)';
+            ctx.fillRect(0, 0, width, height);
+          } else if (timeOfDay === 'morning') {
+            // Утро: нежный естественный свет
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+            ctx.fillRect(0, 0, width, height);
+          } else if (timeOfDay === 'evening') {
+            // Вечер: заходящий закатный пурпурно-оранжевый оттенок
+            ctx.fillStyle = 'rgba(168, 63, 81, 0.32)';
+            ctx.fillRect(0, 0, width, height);
+            ctx.fillStyle = 'rgba(242, 142, 43, 0.18)';
+            ctx.fillRect(0, 0, width, height);
+          } else if (timeOfDay === 'night') {
+            // Ночь: глубокое синее ночное освещение
+            ctx.fillStyle = 'rgba(5, 12, 28, 0.82)';
             ctx.fillRect(0, 0, width, height);
 
             // Звезды и Луна ночью
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
             for (let i = 0; i < 30; i++) {
               const sx = (Math.sin(i * 99) * 0.5 + 0.5) * width;
               const sy = (Math.cos(i * 33) * 0.5 + 0.5) * (height * 0.35);
