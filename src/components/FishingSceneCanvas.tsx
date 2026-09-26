@@ -328,11 +328,11 @@ function drawWaterSurface(
   ctx.fillStyle = waterGrad;
   ctx.fillRect(0, waterY, w, h - waterY);
 
-  // Анимированные волны и рябь
-  ctx.strokeStyle = timeOfDay === 'night' ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.12)';
+  // Анимированные солнечные/лунные блики и рябь на воде
+  ctx.strokeStyle = timeOfDay === 'night' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.16)';
   ctx.lineWidth = 1;
 
-  for (let y = waterY + 10; y < h; y += 14) {
+  for (let y = waterY + 12; y < h; y += 14) {
     const speed = (y - waterY) * 0.03 + 1.2;
     ctx.beginPath();
     for (let x = 0; x < w; x += 30) {
@@ -343,14 +343,78 @@ function drawWaterSurface(
     ctx.stroke();
   }
 
-  // Кувшинки / Тина у берега для пруда
-  if (location.id.includes('pond') || location.id.includes('oxbow')) {
-    ctx.fillStyle = 'rgba(22, 101, 52, 0.6)';
-    ctx.beginPath();
-    ctx.ellipse(w * 0.15, h * 0.75, 25, 12, 0.2, 0, Math.PI * 2);
-    ctx.ellipse(w * 0.22, h * 0.8, 18, 9, -0.1, 0, Math.PI * 2);
-    ctx.fill();
+  // Реалистичные кувшинки и камыши у берегов Деревенского Пруда
+  if (location.id === 'loc_village_pond') {
+    drawVillagePondFlora(ctx, w, h, waterY, time);
   }
+}
+
+// Отрисовка кувшинок, цветков и рогоза (камышей) у берега
+function drawVillagePondFlora(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  waterY: number,
+  time: number
+) {
+  // 1. Листья кувшинок слева
+  const lilyPads = [
+    { x: w * 0.12, y: waterY + 45, rx: 22, ry: 11, angle: 0.2 },
+    { x: w * 0.18, y: waterY + 60, rx: 18, ry: 9, angle: -0.1 },
+    { x: w * 0.25, y: waterY + 35, rx: 15, ry: 8, angle: 0.4 },
+    { x: w * 0.08, y: waterY + 80, rx: 26, ry: 13, angle: -0.3 },
+  ];
+
+  lilyPads.forEach((pad) => {
+    ctx.fillStyle = '#15803d';
+    ctx.beginPath();
+    ctx.ellipse(pad.x, pad.y, pad.rx, pad.ry, pad.angle, 0, Math.PI * 1.85);
+    ctx.lineTo(pad.x, pad.y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Прожилка листа кувшинки
+    ctx.strokeStyle = '#22c55e';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad.x, pad.y);
+    ctx.lineTo(pad.x + pad.rx * 0.6, pad.y - pad.ry * 0.4);
+    ctx.stroke();
+  });
+
+  // Желтый цветок кувшинки
+  ctx.fillStyle = '#facc15';
+  ctx.beginPath();
+  ctx.arc(w * 0.18 + Math.sin(time) * 0.5, waterY + 56, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(w * 0.18 + Math.sin(time) * 0.5, waterY + 56, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 2. Стелибья камышей и початков рогоза справа
+  const reeds = [
+    { x: w * 0.88, h: 75, sway: Math.sin(time * 1.2) * 3 },
+    { x: w * 0.91, h: 90, sway: Math.cos(time * 1.1) * 4 },
+    { x: w * 0.94, h: 65, sway: Math.sin(time * 1.4) * 2 },
+    { x: w * 0.97, h: 80, sway: Math.cos(time * 1.3) * 3 },
+  ];
+
+  reeds.forEach((r) => {
+    // Стебель
+    ctx.strokeStyle = '#166534';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(r.x, h);
+    ctx.quadraticCurveTo(r.x, h - r.h * 0.5, r.x + r.sway, h - r.h);
+    ctx.stroke();
+
+    // Коричневый початок рогоза (камыш)
+    ctx.fillStyle = '#451a03';
+    ctx.beginPath();
+    ctx.ellipse(r.x + r.sway, h - r.h + 12, 3.5, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+  });
 }
 
 function drawWaterRipples(
@@ -387,31 +451,57 @@ function drawFloat(
   const isDipped = gameState === 'hooked';
   const drawY = isDipped ? fy + 8 : fy;
 
-  // Низ поплавка (под водой)
+  // 1. Подводная тень поплавка
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+  ctx.beginPath();
+  ctx.ellipse(fx, drawY + 10, 7, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 2. Киль поплавка (градиентный темно-серый под водой)
+  ctx.fillStyle = '#1e293b';
+  ctx.beginPath();
+  ctx.rect(fx - 1.5, drawY, 3, 14);
+  ctx.fill();
+
+  // 3. Реалистичное тело бальзового поплавка (каплевидная форма с бликом)
+  const bodyGrad = ctx.createLinearGradient(fx - 6, drawY, fx + 6, drawY);
+  bodyGrad.addColorStop(0, '#e2e8f0');
+  bodyGrad.addColorStop(0.5, '#ffffff');
+  bodyGrad.addColorStop(1, '#94a3b8');
+
+  ctx.fillStyle = bodyGrad;
+  ctx.beginPath();
+  ctx.ellipse(fx, drawY - 4, 6, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Красный воротничок тела
+  ctx.fillStyle = '#dc2626';
+  ctx.beginPath();
+  ctx.rect(fx - 5.5, drawY - 9, 11, 5);
+  ctx.fill();
+
+  // 4. Реалистичная антенна поплавка (полосатая высокой видимости)
+  ctx.fillStyle = '#facc15'; // жёлтая полоса
+  ctx.beginPath();
+  ctx.rect(fx - 1.5, drawY - 20, 3, 11);
+  ctx.fill();
+
+  ctx.fillStyle = '#ef4444'; // красная верхушка
+  ctx.beginPath();
+  ctx.rect(fx - 1.5, drawY - 20, 3, 5);
+  ctx.fill();
+
+  // Черные разделительные кольца на антенне
   ctx.fillStyle = '#0f172a';
-  ctx.beginPath();
-  ctx.rect(fx - 2, drawY, 4, 12);
-  ctx.fill();
+  ctx.fillRect(fx - 1.5, drawY - 15, 3, 1.5);
 
-  // Тело поплавка (белая часть)
-  ctx.fillStyle = '#f8fafc';
-  ctx.beginPath();
-  ctx.ellipse(fx, drawY - 4, 5, 8, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Верх поплавка (антенна - яркая красная/оранжевая)
-  ctx.fillStyle = '#ef4444';
-  ctx.beginPath();
-  ctx.rect(fx - 1.5, drawY - 18, 3, 12);
-  ctx.fill();
-
-  // В ночное время: неоновое свечение антенны поплавка!
+  // В ночное время: неоновый святящийся химический светлячок!
   if (timeOfDay === 'night') {
     ctx.fillStyle = '#22c55e';
     ctx.shadowColor = '#22c55e';
-    ctx.shadowBlur = 12;
+    ctx.shadowBlur = 14;
     ctx.beginPath();
-    ctx.arc(fx, drawY - 18, 3, 0, Math.PI * 2);
+    ctx.arc(fx, drawY - 20, 4, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
   }
@@ -426,12 +516,12 @@ function drawFishingLine(
   bendFactor: number,
   gameState: GameState
 ) {
-  ctx.strokeStyle = gameState === 'reeling' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.4)';
+  ctx.strokeStyle = gameState === 'reeling' ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.45)';
   ctx.lineWidth = 1;
 
   // Прогиб лески под собственным весом или натяжением
   const midX = (tx + fx) / 2;
-  const midY = (ty + fy) / 2 + (1 - bendFactor) * 25;
+  const midY = (ty + fy) / 2 + (1 - bendFactor) * 22;
 
   ctx.beginPath();
   ctx.moveTo(tx, ty);
@@ -448,30 +538,78 @@ function drawRod(
   bendFactor: number,
   rodMaterial: string
 ) {
-  let rodColor = '#d4a373'; // reed
-  if (rodMaterial === 'bamboo') rodColor = '#e9c46a';
-  if (rodMaterial === 'plastic') rodColor = '#0284c7';
-  if (rodMaterial === 'fiberglass') rodColor = '#10b981';
-  if (rodMaterial === 'composite') rodColor = '#ef4444';
-  if (rodMaterial === 'carbon') rodColor = '#334155';
-  if (rodMaterial === 'gold') rodColor = '#fbbf24';
+  let mainColor = '#d4a373'; // reed / бамбук
+  let nodeColor = '#78350f'; // узлы бамбука
 
-  ctx.strokeStyle = rodColor;
-  ctx.lineWidth = 5;
-  ctx.lineCap = 'round';
+  if (rodMaterial === 'bamboo') {
+    mainColor = '#e9c46a';
+    nodeColor = '#92400e';
+  } else if (rodMaterial === 'plastic') {
+    mainColor = '#0284c7';
+    nodeColor = '#0369a1';
+  } else if (rodMaterial === 'fiberglass') {
+    mainColor = '#10b981';
+    nodeColor = '#047857';
+  } else if (rodMaterial === 'composite') {
+    mainColor = '#ef4444';
+    nodeColor = '#991b1b';
+  } else if (rodMaterial === 'carbon') {
+    mainColor = '#334155';
+    nodeColor = '#0f172a';
+  } else if (rodMaterial === 'gold') {
+    mainColor = '#fbbf24';
+    nodeColor = '#b45309';
+  }
 
-  // Динамическая контрольная точка кривой изгиба удилища (Bending Rod Bezier)
+  // Контрольная точка кривой изгиба удилища (Bending Rod Bezier)
   const ctrlX = bx - 60 - bendFactor * 40;
   const ctrlY = by - (by - ty) * 0.5;
 
+  // 1. Отрисовка бланка удочки (сужающаяся линия от комеля к верхушке)
+  ctx.strokeStyle = mainColor;
+  ctx.lineWidth = 6;
+  ctx.lineCap = 'round';
   ctx.beginPath();
   ctx.moveTo(bx, by);
   ctx.quadraticCurveTo(ctrlX, ctrlY, tx, ty);
   ctx.stroke();
 
-  // Кончик удилища (тюльпан / кольцо)
-  ctx.fillStyle = '#fff';
+  // 2. Прорисовка узлов/сочленений колен бамбука/удочки (Nodes/Rings)
+  ctx.strokeStyle = nodeColor;
+  ctx.lineWidth = 3;
+  for (let t = 0.2; t <= 0.8; t += 0.2) {
+    const nx = Math.pow(1 - t, 2) * bx + 2 * (1 - t) * t * ctrlX + t * t * tx;
+    const ny = Math.pow(1 - t, 2) * by + 2 * (1 - t) * t * ctrlY + t * t * ty;
+    ctx.beginPath();
+    ctx.arc(nx, ny, 4, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // 3. Пропускные кольца (Line Guides) вдоль бланка
+  for (let t = 0.3; t <= 0.9; t += 0.3) {
+    const gx = Math.pow(1 - t, 2) * bx + 2 * (1 - t) * t * ctrlX + t * t * tx;
+    const gy = Math.pow(1 - t, 2) * by + 2 * (1 - t) * t * ctrlY + t * t * ty;
+    ctx.fillStyle = '#94a3b8';
+    ctx.beginPath();
+    ctx.arc(gx - 2, gy - 2, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 4. Тюльпан (вершинное кольцо удочки)
+  ctx.fillStyle = '#f8fafc';
+  ctx.strokeStyle = '#64748b';
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.arc(tx, ty, 3, 0, Math.PI * 2);
+  ctx.arc(tx, ty, 3.5, 0, Math.PI * 2);
   ctx.fill();
+  ctx.stroke();
+
+  // 5. Пробковая рукоять (Cork Handle) у комеля внизу справа
+  ctx.fillStyle = '#d4a373';
+  ctx.strokeStyle = '#a16207';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(bx - 12, by - 40, 24, 50, 6);
+  ctx.fill();
+  ctx.stroke();
 }
