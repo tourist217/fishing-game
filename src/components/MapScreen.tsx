@@ -9,13 +9,13 @@ interface MapScreenProps {
   onGoFishing: () => void;
 }
 
-// Погодные условия для каждого водоёма
+// Погода и атмосфера на каждом водоёме
 const LOCATION_WEATHER: Record<string, { label: string; icon: string; temp: string }> = {
   loc_village_pond: { label: 'Ясно, штиль', icon: '☀️', temp: '+22°C' },
   loc_old_oxbow: { label: 'Утренняя дымка', icon: '🌫️', temp: '+19°C' },
   loc_forest_lake: { label: 'Солнечно, сосны', icon: '🌲', temp: '+20°C' },
   loc_quiet_river: { label: 'Лёгкий ветерок', icon: '🌤️', temp: '+21°C' },
-  loc_beaver_backwater: { label: 'Теплый дождик', icon: '🌦️', temp: '+18°C' },
+  loc_beaver_backwater: { label: 'Тёплый дождик', icon: '🌦️', temp: '+18°C' },
   loc_wide_reach: { label: 'Свежий бриз', icon: '💨', temp: '+19°C' },
   loc_reservoir: { label: 'Солнце и рябь', icon: '🌊', temp: '+23°C' },
   loc_oka_river: { label: 'Ясно, быстроток', icon: '☀️', temp: '+21°C' },
@@ -25,21 +25,28 @@ const LOCATION_WEATHER: Record<string, { label: string; icon: string; temp: stri
   loc_caspian_delta: { label: 'Золотой закат', icon: '👑', temp: '+26°C' },
 };
 
-// Точки привязаны точно к реальным географическим ориентирам на 3D-арте реки (снизу вверх)
-const MAP_TOTAL_HEIGHT = 1680;
+// Точные координаты точек на 2-секционной карте (в естественных пропорциях 9:16 без растяжения)
+// Секция 2 (Волга и Дельта): Y = 0 ... 680px
+// Секция 1 (Пруды и реки): Y = 680 ... 1360px
+const MAP_TOTAL_HEIGHT = 1360;
+const SECTION_HEIGHT = 680;
+
 const MAP_POINTS = [
-  { id: 'loc_village_pond', x: 48, y: 1470 }, // Уютный деревянный мостик с лодкой внизу
-  { id: 'loc_old_oxbow', x: 68, y: 1320 },    // Изгиб реки среди цветочного луга справа
-  { id: 'loc_forest_lake', x: 33, y: 1180 },  // Заводь у камышей слева
-  { id: 'loc_quiet_river', x: 52, y: 1040 },  // Плавное течение на выходе из леса
-  { id: 'loc_beaver_backwater', x: 68, y: 910 }, // Скалистый перешеек среди сосен
-  { id: 'loc_wide_reach', x: 50, y: 780 },    // Нижний срез лазурного горного озера
-  { id: 'loc_reservoir', x: 32, y: 650 },     // Центральная гладь горного озера слева
-  { id: 'loc_oka_river', x: 66, y: 530 },     // Бурный приток водопада справа
-  { id: 'loc_lower_volga', x: 46, y: 410 },   // Каскад водопада среди сосен
-  { id: 'loc_ladoga_lake', x: 30, y: 290 },   // Скалистый каньон
-  { id: 'loc_akhtuba_pits', x: 68, y: 180 },  // Верхнее горное ущелье
-  { id: 'loc_caspian_delta', x: 54, y: 80 },  // Ледники и исток главного водопада
+  // Секция 1: Родные просторы (низ)
+  { id: 'loc_village_pond', x: 52, y: 1250 },   // Деревянный пирс с лодкой у избы
+  { id: 'loc_old_oxbow', x: 72, y: 1140 },      // Заводь у песчаной косы
+  { id: 'loc_forest_lake', x: 35, y: 1040 },    // Речной изгиб у деревянного мостика
+  { id: 'loc_quiet_river', x: 64, y: 940 },     // Солнечный луг с берёзками
+  { id: 'loc_beaver_backwater', x: 38, y: 840 },// Вход в сосновый бор
+  { id: 'loc_wide_reach', x: 50, y: 740 },      // Глубокое лесное озеро
+
+  // Секция 2: Великая Волга и Дельта Каспия (верх)
+  { id: 'loc_reservoir', x: 48, y: 580 },       // Гранитный залив водохранилища
+  { id: 'loc_oka_river', x: 66, y: 480 },       // Быстроток у скалистого мыса
+  { id: 'loc_lower_volga', x: 32, y: 380 },     // Широкое русло Волги с песчаными косами
+  { id: 'loc_ladoga_lake', x: 65, y: 280 },     // Островная протока с ивами
+  { id: 'loc_akhtuba_pits', x: 38, y: 180 },    // Глубокий омут (Ахтубинские ямы)
+  { id: 'loc_caspian_delta', x: 52, y: 70 },    // Лотосовые поля Дельты Каспия на закате
 ];
 
 export const MapScreen: React.FC<MapScreenProps> = ({
@@ -72,7 +79,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({
     if (viewMode === 'map' && scrollContainerRef.current) {
       const point = MAP_POINTS.find((p) => p.id === currentLocationId);
       if (point) {
-        const targetScrollTop = Math.max(0, point.y - 280);
+        const targetScrollTop = Math.max(0, point.y - 260);
         scrollContainerRef.current.scrollTo({
           top: targetScrollTop,
           behavior: 'smooth',
@@ -85,7 +92,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({
     const point = MAP_POINTS.find((p) => p.id === locId);
     if (point && scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
-        top: Math.max(0, point.y - 260),
+        top: Math.max(0, point.y - 240),
         behavior: 'smooth',
       });
     }
@@ -105,19 +112,15 @@ export const MapScreen: React.FC<MapScreenProps> = ({
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.55)',
       }}
     >
-      {/* Стили анимаций для живой карты */}
+      {/* Стили анимаций */}
       <style>{`
         @keyframes rippleRing {
-          0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0.9; }
+          0% { transform: translate(-50%, -50%) scale(0.65); opacity: 0.95; }
           100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
         }
         @keyframes pinBob {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-4px); }
-        }
-        @keyframes goldGlow {
-          0%, 100% { filter: drop-shadow(0 0 4px #fde047) drop-shadow(0 0 10px rgba(250, 204, 21, 0.7)); }
-          50% { filter: drop-shadow(0 0 8px #fef08a) drop-shadow(0 0 16px rgba(250, 204, 21, 0.9)); }
+          50% { transform: translateY(-3.5px); }
         }
       `}</style>
 
@@ -132,7 +135,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: 'rgba(15, 23, 42, 0.85)',
+          background: 'rgba(15, 23, 42, 0.88)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           borderRadius: '18px',
@@ -200,7 +203,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({
         </div>
       </div>
 
-      {/* РЕЖИМ 1: НАСТОЯЩАЯ 3D-КАРТА (НАЛОЖЕНИЕ ИНТЕРАКТИВНЫХ ЭЛЕМЕНТОВ НА АРТ) */}
+      {/* РЕЖИМ 1: НАСТОЯЩАЯ 3D-КАРТА (БЕЗ РАСТЯЖЕНИЯ, 100% ЕСТЕСТВЕННЫЕ ПРОПОРЦИИ) */}
       {viewMode === 'map' && (
         <div
           ref={scrollContainerRef}
@@ -212,30 +215,60 @@ export const MapScreen: React.FC<MapScreenProps> = ({
             WebkitOverflowScrolling: 'touch',
           }}
         >
-          {/* Контейнер с фоновым артом высокого разрешения */}
+          {/* Контейнер полного мира карты */}
           <div
             style={{
               width: '100%',
               height: `${MAP_TOTAL_HEIGHT}px`,
               position: 'relative',
-              backgroundImage: "url('/assets/locations/river_world_map.jpg')",
-              backgroundSize: '100% 100%',
-              backgroundPosition: 'center top',
-              backgroundRepeat: 'no-repeat',
+              background: '#091520',
             }}
           >
-            {/* Тонкое атмосферное виньетирование для глубины */}
+            {/* СЕКЦИЯ 2: ВЕЛИКАЯ ВОЛГА И ДЕЛЬТА КАСПИЯ (ВЕРХ, Y = 0..680px) */}
             <div
               style={{
                 position: 'absolute',
-                inset: 0,
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: `${SECTION_HEIGHT}px`,
+                backgroundImage: "url('/assets/locations/map_section_volga.jpg')",
+                backgroundSize: '100% 100%',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+              }}
+            />
+
+            {/* СЕКЦИЯ 1: РОДНЫЕ ПРОСТОРЫ (НИЗ, Y = 680..1360px) */}
+            <div
+              style={{
+                position: 'absolute',
+                top: `${SECTION_HEIGHT}px`,
+                left: 0,
+                width: '100%',
+                height: `${SECTION_HEIGHT}px`,
+                backgroundImage: "url('/assets/locations/map_section_village.jpg')",
+                backgroundSize: '100% 100%',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+              }}
+            />
+
+            {/* Мягкий градиентный переход на стыке двух секций */}
+            <div
+              style={{
+                position: 'absolute',
+                top: `${SECTION_HEIGHT - 30}px`,
+                left: 0,
+                right: 0,
+                height: '60px',
                 background:
-                  'linear-gradient(180deg, rgba(10,22,34,0.3) 0%, transparent 12%, transparent 88%, rgba(10,22,34,0.4) 100%)',
+                  'linear-gradient(180deg, rgba(10,22,34,0) 0%, rgba(10,22,34,0.3) 50%, rgba(10,22,34,0) 100%)',
                 pointerEvents: 'none',
               }}
             />
 
-            {/* Золотая сияющая тропа, соединяющая водоёмы по руслу реки */}
+            {/* Единая золотая тропа рыбака, проходящая сквозь обе секции */}
             <svg
               width="100%"
               height={MAP_TOTAL_HEIGHT}
@@ -245,12 +278,12 @@ export const MapScreen: React.FC<MapScreenProps> = ({
             >
               <defs>
                 <filter id="goldPathGlow" x="-30%" y="-30%" width="160%" height="160%">
-                  <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="#fde047" floodOpacity="0.85" />
+                  <feDropShadow dx="0" dy="0" stdDeviation="3.5" floodColor="#fde047" floodOpacity="0.85" />
                   <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000000" floodOpacity="0.6" />
                 </filter>
               </defs>
 
-              {/* Соединительная тропа */}
+              {/* Линии между точками (снизу вверх) */}
               {MAP_POINTS.map((pt, idx) => {
                 if (idx === 0) return null;
                 const prev = MAP_POINTS[idx - 1];
@@ -259,7 +292,6 @@ export const MapScreen: React.FC<MapScreenProps> = ({
                 const x2 = (pt.x / 100) * 360;
                 const y2 = pt.y;
 
-                // Плавная кривая Безье вдоль русла
                 const cx1 = x1;
                 const cy1 = (y1 + y2) / 2;
                 const cx2 = x2;
@@ -270,7 +302,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({
                     key={`trail-${pt.id}`}
                     d={`M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`}
                     stroke="#fde047"
-                    strokeWidth="4"
+                    strokeWidth="3.8"
                     strokeDasharray="6 8"
                     strokeLinecap="round"
                     fill="none"
@@ -280,7 +312,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({
               })}
             </svg>
 
-            {/* Интерактивные точки (Nodes) поверх игрового арта */}
+            {/* Интерактивные точки водоёмов (Nodes) */}
             {MAP_POINTS.map((point) => {
               const loc = LOCATIONS.find((l) => l.id === point.id);
               if (!loc) return null;
@@ -309,7 +341,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({
                     transition: 'transform 0.18s ease',
                   }}
                 >
-                  {/* Водные круги ряби под точкой */}
+                  {/* Водные круги ряби под выбранной или текущей точкой */}
                   {(isSelected || isCurrent) && (
                     <>
                       <div
@@ -317,10 +349,10 @@ export const MapScreen: React.FC<MapScreenProps> = ({
                           position: 'absolute',
                           top: '50%',
                           left: '50%',
-                          width: '68px',
-                          height: '68px',
+                          width: '64px',
+                          height: '64px',
                           borderRadius: '50%',
-                          border: isSelected ? '3px solid #fde047' : '2.5px solid #38bdf8',
+                          border: isSelected ? '2.5px solid #fde047' : '2px solid #38bdf8',
                           animation: 'rippleRing 2s infinite ease-out',
                           pointerEvents: 'none',
                         }}
@@ -330,10 +362,10 @@ export const MapScreen: React.FC<MapScreenProps> = ({
                           position: 'absolute',
                           top: '50%',
                           left: '50%',
-                          width: '68px',
-                          height: '68px',
+                          width: '64px',
+                          height: '64px',
                           borderRadius: '50%',
-                          border: isSelected ? '2px solid #fde047' : '2px solid #38bdf8',
+                          border: isSelected ? '1.8px solid #fde047' : '1.8px solid #38bdf8',
                           animation: 'rippleRing 2s infinite ease-out 1s',
                           pointerEvents: 'none',
                         }}
@@ -344,8 +376,8 @@ export const MapScreen: React.FC<MapScreenProps> = ({
                   {/* 3D-кнопка пина водоёма */}
                   <div
                     style={{
-                      width: isSelected ? '56px' : '48px',
-                      height: isSelected ? '56px' : '48px',
+                      width: isSelected ? '54px' : '46px',
+                      height: isSelected ? '54px' : '46px',
                       borderRadius: '50%',
                       background: isUnlocked
                         ? isCurrent
@@ -355,23 +387,23 @@ export const MapScreen: React.FC<MapScreenProps> = ({
                           : 'linear-gradient(135deg, #38bdf8 0%, #0369a1 100%)'
                         : 'linear-gradient(135deg, #475569 0%, #1e293b 100%)',
                       border: isSelected
-                        ? '3.5px solid #ffffff'
+                        ? '3px solid #ffffff'
                         : isCurrent
-                        ? '3px solid #bbf7d0'
+                        ? '2.5px solid #bbf7d0'
                         : isUnlocked
-                        ? '2.5px solid #e0f2fe'
+                        ? '2.2px solid #e0f2fe'
                         : '2px solid #94a3b8',
                       boxShadow: isSelected
-                        ? '0 0 24px rgba(253, 224, 71, 0.95), 0 8px 18px rgba(0,0,0,0.6)'
+                        ? '0 0 22px rgba(253, 224, 71, 0.95), 0 6px 16px rgba(0,0,0,0.6)'
                         : isCurrent
-                        ? '0 0 20px rgba(74, 222, 128, 0.85), 0 6px 16px rgba(0,0,0,0.6)'
-                        : '0 6px 14px rgba(0,0,0,0.5)',
+                        ? '0 0 18px rgba(74, 222, 128, 0.85), 0 5px 14px rgba(0,0,0,0.6)'
+                        : '0 5px 12px rgba(0,0,0,0.5)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: isSelected ? '26px' : '22px',
+                      fontSize: isSelected ? '24px' : '20px',
                       position: 'relative',
-                      transform: isSelected ? 'scale(1.1)' : 'scale(1)',
+                      transform: isSelected ? 'scale(1.08)' : 'scale(1)',
                       animation: isSelected ? 'pinBob 2s infinite ease-in-out' : 'none',
                       transition: 'all 0.18s ease',
                     }}
@@ -379,25 +411,25 @@ export const MapScreen: React.FC<MapScreenProps> = ({
                     {isUnlocked ? (
                       loc.icon
                     ) : (
-                      <span style={{ fontSize: '18px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.8))' }}>
+                      <span style={{ fontSize: '17px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.8))' }}>
                         🔒
                       </span>
                     )}
 
-                    {/* Бейдж требуемого уровня на пине */}
+                    {/* Бейдж уровня */}
                     <span
                       style={{
                         position: 'absolute',
-                        bottom: '-4px',
-                        right: '-5px',
+                        bottom: '-3px',
+                        right: '-4px',
                         background: isUnlocked ? '#15803d' : '#1e293b',
                         border: '1.2px solid #ffffff',
                         color: '#ffffff',
                         fontSize: '9px',
                         fontWeight: 900,
-                        padding: '1px 5px',
-                        borderRadius: '7px',
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.6)',
+                        padding: '1px 4px',
+                        borderRadius: '6px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.6)',
                       }}
                     >
                       {loc.levelReq}
@@ -407,10 +439,10 @@ export const MapScreen: React.FC<MapScreenProps> = ({
                   {/* Плашка с названием водоёма */}
                   <div
                     style={{
-                      marginTop: '5px',
+                      marginTop: '4px',
                       background: isSelected
                         ? 'rgba(15, 23, 42, 0.95)'
-                        : 'rgba(15, 23, 42, 0.84)',
+                        : 'rgba(15, 23, 42, 0.85)',
                       backdropFilter: 'blur(12px)',
                       WebkitBackdropFilter: 'blur(12px)',
                       border: isSelected
@@ -419,18 +451,18 @@ export const MapScreen: React.FC<MapScreenProps> = ({
                         ? '1.8px solid #4ade80'
                         : '1px solid rgba(255, 255, 255, 0.2)',
                       borderRadius: '12px',
-                      padding: '3px 8px',
+                      padding: '2.5px 7px',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '4px',
-                      boxShadow: '0 4px 14px rgba(0,0,0,0.55)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.55)',
                       whiteSpace: 'nowrap',
-                      maxWidth: '140px',
+                      maxWidth: '135px',
                     }}
                   >
                     <span
                       style={{
-                        fontSize: '11px',
+                        fontSize: '10.5px',
                         fontWeight: 800,
                         color: isSelected
                           ? '#fde047'
@@ -446,7 +478,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({
                       {loc.name}
                     </span>
                     {isCurrent && (
-                      <span style={{ fontSize: '10px', color: '#4ade80' }}>●</span>
+                      <span style={{ fontSize: '9px', color: '#4ade80' }}>●</span>
                     )}
                   </div>
                 </div>
@@ -454,7 +486,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({
             })}
           </div>
 
-          {/* Плавающая кнопка быстрого возврата к текущей локации игрока */}
+          {/* Плавающая кнопка быстрого возврата к текущей локации */}
           <button
             onClick={() => scrollToLocation(currentLocationId)}
             style={{
