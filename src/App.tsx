@@ -241,21 +241,9 @@ export default function App() {
       <Navigation
         activeTab={activeTab}
         onTabChange={(tab) => {
-          if (tab === 'leaderboard') {
-            alert('🏆 Клуб и Лидерборд: соревнуйтесь с другими рыбаками за звание лучшего (Скоро в v1.3!)');
-            return;
-          }
-          if (tab === 'achievements') {
-            alert('⭐ Достижения: открывайте трофеи, медали и звания (Скоро в v1.3!)');
-            return;
-          }
           setActiveTab(tab);
           setIsMapOpen(false);
           setIsAtPond(false);
-          triggerHaptic('selection');
-        }}
-        onOpenMap={() => {
-          setIsMapOpen(true);
           triggerHaptic('selection');
         }}
         inventoryCount={player.inventoryCount}
