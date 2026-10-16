@@ -1,5 +1,5 @@
 import type { Fish, FishSizeCategory } from '../fishData';
-import { formatWeight, getCategoryBadgeStyle } from '../utils/fishUtils';
+import { formatWeight } from '../utils/fishUtils';
 
 export interface CaughtFishItem {
   fish: Fish;
@@ -178,7 +178,6 @@ export const InventoryScreen = ({
             const itemPrice = Number(item.price) || 1;
             const itemUid = item.uid || `fish_${index}`;
             const rarity = getRarityLabel(item.fish.rarity);
-            const badge = getCategoryBadgeStyle(item.sizeCategory);
 
             return (
               <div
@@ -235,38 +234,8 @@ export const InventoryScreen = ({
                   </div>
 
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                      <span style={{ fontWeight: 800, fontSize: '14px', color: '#ffffff' }}>
-                        {item.fish.name}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: '9px',
-                          fontWeight: 800,
-                          color: rarity.color,
-                          background: `${rarity.color}18`,
-                          border: `1px solid ${rarity.color}50`,
-                          padding: '1px 5px',
-                          borderRadius: '5px',
-                        }}
-                      >
-                        {rarity.text}
-                      </span>
-                      {badge.text && (
-                        <span
-                          style={{
-                            fontSize: '9px',
-                            fontWeight: 800,
-                            color: badge.color,
-                            background: badge.bg,
-                            border: badge.border,
-                            padding: '1px 5px',
-                            borderRadius: '5px',
-                          }}
-                        >
-                          {badge.text}
-                        </span>
-                      )}
+                    <div style={{ fontWeight: 800, fontSize: '14px', color: '#ffffff' }}>
+                      {item.fish.name}
                     </div>
                     <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px' }}>
                       Вес: <span style={{ color: '#38bdf8', fontWeight: 800 }}>{formatWeight(item.weight)}</span> • +{item.exp} XP

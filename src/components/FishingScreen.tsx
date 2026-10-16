@@ -1,7 +1,7 @@
 import React from 'react';
 import type { FishingLocation } from '../locationsData';
 import type { ActiveFishState } from '../hooks/useFishingSimulation';
-import { formatWeight, getCategoryBadgeStyle } from '../utils/fishUtils';
+import { formatWeight } from '../utils/fishUtils';
 import { FishingSceneCanvas } from './FishingSceneCanvas';
 
 export type GameState = 'idle' | 'waiting' | 'hooked' | 'reeling' | 'caught' | 'lost' | 'line_broken';
@@ -55,7 +55,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
   onOpenMap,
   onOpenShop,
   onBackToHub,
-  getRarityLabel,
+  getRarityLabel: _getRarityLabel,
 }) => {
   const currentBaitCount = baits[selectedBaitId] || 0;
   const canCast = currentBaitCount > 0 && hasLineOnRod;
@@ -582,41 +582,6 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
               </div>
             )}
 
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '8px' }}>
-              {(() => {
-                const rarity = getRarityLabel(currentFish.fish.rarity);
-                const badge = getCategoryBadgeStyle(currentFish.sizeCategory);
-                return (
-                  <>
-                    <span
-                      style={{
-                        fontSize: '10px',
-                        fontWeight: 'bold',
-                        color: rarity.color,
-                        border: `1px solid ${rarity.color}50`,
-                        padding: '2px 6px',
-                        borderRadius: '6px',
-                      }}
-                    >
-                      {rarity.text}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: '10px',
-                        fontWeight: 'bold',
-                        color: badge.color,
-                        background: badge.bg,
-                        border: badge.border,
-                        padding: '2px 6px',
-                        borderRadius: '6px',
-                      }}
-                    >
-                      {badge.text}
-                    </span>
-                  </>
-                );
-              })()}
-            </div>
 
             <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>
               {currentFish.fish.name}
