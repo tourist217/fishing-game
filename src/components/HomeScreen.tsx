@@ -284,7 +284,7 @@ export const HomeScreen = ({
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-start',
         borderRadius: '24px',
         overflow: 'hidden',
         border: '1px solid rgba(255, 255, 255, 0.15)',
@@ -543,7 +543,7 @@ export const HomeScreen = ({
         </div>
       </div>
 
-      {/* 2. Верхне-центральная зона: Виджеты локации/погоды слева + Столбец жетонов справа */}
+      {/* 2. Верхняя зона виджетов в точности по референсу (Погода и Локация слева, Турнир и жетоны справа) */}
       <div
         style={{
           position: 'relative',
@@ -554,72 +554,18 @@ export const HomeScreen = ({
           marginTop: '10px',
         }}
       >
-        {/* Левая группа: Локация и Погода в точности как на референсе */}
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {/* Виджет локации */}
-          <div
-            onClick={onOpenMap}
-            style={{
-              width: '88px',
-              height: '92px',
-              background: 'rgba(22, 28, 38, 0.78)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              border: '1.5px solid rgba(245, 158, 11, 0.35)',
-              borderRadius: '20px',
-              padding: '8px 6px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)',
-              transition: 'transform 0.12s ease',
-            }}
-          >
-            <div
-              style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '11px',
-                background: 'rgba(15, 23, 42, 0.75)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '22px',
-              }}
-            >
-              🗺️
-            </div>
-            <div
-              style={{
-                fontSize: '10.5px',
-                fontWeight: 800,
-                color: '#ffffff',
-                marginTop: '6px',
-                textAlign: 'center',
-                lineHeight: 1.15,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                maxWidth: '78px',
-              }}
-            >
-              {currentLocation.name.replace('водоём', '').trim()} &gt;
-            </div>
-          </div>
-
-          {/* Виджет погоды */}
+        {/* Левая колонка: Погода (сверху) и Локация (снизу) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {/* Виджет погоды (сверху слева) */}
           <div
             onClick={() => setActiveModal('weather')}
             style={{
-              width: '88px',
-              height: '92px',
-              background: 'rgba(22, 28, 38, 0.78)',
+              width: '86px',
+              height: '86px',
+              background: 'rgba(28, 33, 29, 0.88)',
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
-              border: '1.5px solid rgba(245, 158, 11, 0.35)',
+              border: '1.5px solid rgba(255, 255, 255, 0.12)',
               borderRadius: '20px',
               padding: '8px 6px',
               display: 'flex',
@@ -652,14 +598,69 @@ export const HomeScreen = ({
                 marginTop: '3px',
                 fontWeight: 600,
                 textAlign: 'center',
+                lineHeight: 1.1,
               }}
             >
               Отличный клёв
             </div>
           </div>
+
+          {/* Виджет локации (снизу под погодой) */}
+          <div
+            onClick={onOpenMap}
+            style={{
+              width: '86px',
+              height: '86px',
+              background: 'rgba(28, 33, 29, 0.88)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: '1.5px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '20px',
+              padding: '8px 6px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)',
+              transition: 'transform 0.12s ease',
+            }}
+          >
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '11px',
+                background: 'rgba(15, 23, 42, 0.75)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px',
+              }}
+            >
+              🗺️
+            </div>
+            <div
+              style={{
+                fontSize: '10px',
+                fontWeight: 800,
+                color: '#ffffff',
+                marginTop: '5px',
+                textAlign: 'center',
+                lineHeight: 1.15,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '74px',
+              }}
+            >
+              {currentLocation.name.replace('водоём', '').trim()} &gt;
+            </div>
+          </div>
         </div>
 
-        {/* Правый вертикальный стек жетонов (Турнир, Лидерборд, Квесты, Достижения) */}
+        {/* Правая колонка: Турнир (сверху справа) + вертикальный стек жетонов */}
         <div
           style={{
             display: 'flex',
@@ -673,10 +674,10 @@ export const HomeScreen = ({
             onClick={() => setActiveModal('tournament')}
             style={{
               width: '68px',
-              background: 'rgba(22, 28, 38, 0.8)',
+              background: 'rgba(28, 33, 29, 0.88)',
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
-              border: '1.5px solid rgba(245, 158, 11, 0.4)',
+              border: '1.5px solid rgba(255, 255, 255, 0.12)',
               borderRadius: '18px',
               padding: '6px 4px',
               display: 'flex',
@@ -713,10 +714,10 @@ export const HomeScreen = ({
               width: '44px',
               height: '44px',
               borderRadius: '50%',
-              background: 'rgba(22, 28, 38, 0.82)',
+              background: 'rgba(28, 33, 29, 0.88)',
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
-              border: '1.5px solid rgba(245, 158, 11, 0.45)',
+              border: '1.5px solid rgba(255, 255, 255, 0.12)',
               boxShadow: '0 6px 18px rgba(0, 0, 0, 0.45), 0 0 10px rgba(245, 158, 11, 0.25)',
               display: 'flex',
               alignItems: 'center',
@@ -737,10 +738,10 @@ export const HomeScreen = ({
               width: '44px',
               height: '44px',
               borderRadius: '50%',
-              background: 'rgba(22, 28, 38, 0.82)',
+              background: 'rgba(28, 33, 29, 0.88)',
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
-              border: '1.5px solid rgba(245, 158, 11, 0.45)',
+              border: '1.5px solid rgba(255, 255, 255, 0.12)',
               boxShadow: '0 6px 18px rgba(0, 0, 0, 0.45), 0 0 10px rgba(245, 158, 11, 0.25)',
               display: 'flex',
               alignItems: 'center',
@@ -782,10 +783,10 @@ export const HomeScreen = ({
               width: '44px',
               height: '44px',
               borderRadius: '50%',
-              background: 'rgba(22, 28, 38, 0.82)',
+              background: 'rgba(28, 33, 29, 0.88)',
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
-              border: '1.5px solid rgba(245, 158, 11, 0.45)',
+              border: '1.5px solid rgba(255, 255, 255, 0.12)',
               boxShadow: '0 6px 18px rgba(0, 0, 0, 0.45), 0 0 10px rgba(245, 158, 11, 0.25)',
               display: 'flex',
               alignItems: 'center',
@@ -799,6 +800,9 @@ export const HomeScreen = ({
           </button>
         </div>
       </div>
+
+      {/* 2.5. Свободная центральная зона озера (открывает вид на водоём, водную гладь и мостик) */}
+      <div style={{ flex: 1, minHeight: '30px' }} />
 
       {/* 3. Нижний блок снастей (Action Dock прямо над мостиком в точности по референсу) */}
       <div
