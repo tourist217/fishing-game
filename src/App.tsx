@@ -102,6 +102,7 @@ export default function App() {
           userName={player.userName}
           level={player.level}
           coins={player.coins}
+          gems={player.gems}
           exp={player.exp}
           maxExp={player.expToNextLevel}
           energy={player.energy}
@@ -177,6 +178,7 @@ export default function App() {
             exp={player.exp}
             maxExp={player.expToNextLevel}
             coins={player.coins}
+            gems={player.gems}
             energy={player.energy}
             maxEnergy={player.maxEnergy}
             inventoryCount={player.inventoryCount}

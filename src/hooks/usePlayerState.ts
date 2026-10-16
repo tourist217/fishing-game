@@ -26,6 +26,11 @@ export function usePlayerState() {
     const parsed = Number(val);
     return !isNaN(parsed) && parsed >= 0 ? parsed : 84;
   });
+  const [gems, setGems] = useState<number>(() => {
+    const val = localStorage.getItem('fg_gems');
+    const parsed = Number(val);
+    return !isNaN(parsed) && parsed >= 0 ? parsed : 120;
+  });
   const maxEnergy = 100;
   const maxKeepnetCapacity = 15;
 
@@ -51,6 +56,11 @@ export function usePlayerState() {
   useEffect(() => {
     localStorage.setItem('fg_energy', energy.toString());
   }, [energy]);
+
+  // Синхронизация алмазов с localStorage
+  useEffect(() => {
+    localStorage.setItem('fg_gems', gems.toString());
+  }, [gems]);
 
   // Инициализация Telegram WebApp
   useEffect(() => {
@@ -165,6 +175,8 @@ export function usePlayerState() {
   return {
     userName,
     coins,
+    gems,
+    setGems,
     exp,
     level,
     expToNextLevel,
