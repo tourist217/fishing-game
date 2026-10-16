@@ -165,27 +165,6 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
         />
 
         {/* Компактные информирующие бейджи сверху холста */}
-        {gameState === 'idle' && (
-          <div
-            style={{
-              position: 'absolute',
-              top: '10px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 5,
-              background: 'rgba(0, 0, 0, 0.5)',
-              backdropFilter: 'blur(6px)',
-              padding: '4px 14px',
-              borderRadius: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              fontSize: '11px',
-              color: '#cbd5e1',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Насади наживку и забрасывай
-          </div>
-        )}
 
         {gameState === 'waiting' && (
           <div
