@@ -7,6 +7,7 @@ import { InventoryScreen } from './components/InventoryScreen';
 import { ShopScreen } from './components/ShopScreen';
 import { MapScreen } from './components/MapScreen';
 import { HomeScreen } from './components/HomeScreen';
+import { GearInventoryScreen } from './components/GearInventoryScreen';
 
 import { usePlayerState } from './hooks/usePlayerState';
 import { useGearState } from './hooks/useGearState';
@@ -50,7 +51,7 @@ export default function App() {
   );
   const [isAtPond, setIsAtPond] = useState<boolean>(false);
   const [isMapOpen, setIsMapOpen] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('fishing');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('base');
 
   const currentLocation: FishingLocation =
     LOCATIONS.find((l) => l.id === selectedLocationId) || LOCATIONS[0];
@@ -90,14 +91,14 @@ export default function App() {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        padding: !isAtPond && activeTab === 'fishing' ? '8px 8px 6px 8px' : '12px 12px 8px 12px',
+        padding: !isAtPond && activeTab === 'base' ? '8px 8px 6px 8px' : '12px 12px 8px 12px',
         justifyContent: 'space-between',
         background: isAtPond ? currentLocation.gradient : 'linear-gradient(180deg, #091325 0%, #0d2744 60%, #06192d 100%)',
         userSelect: 'none',
         transition: 'background 0.5s ease',
       }}
     >
-      {(activeTab === 'inventory' || activeTab === 'shop') && (
+      {(activeTab === 'keepnet' || activeTab === 'inventory' || activeTab === 'shop') && (
         <Header
           userName={player.userName}
           level={player.level}
@@ -112,7 +113,7 @@ export default function App() {
         />
       )}
 
-      {isMapOpen && (
+      {(isMapOpen || activeTab === 'map') && (
         <MapScreen
           playerLevel={player.level}
           currentLocationId={selectedLocationId}
@@ -123,13 +124,13 @@ export default function App() {
           onGoFishing={() => {
             setIsMapOpen(false);
             setIsAtPond(true);
-            setActiveTab('fishing');
+            setActiveTab('base');
             triggerHaptic('notification');
           }}
         />
       )}
 
-      {!isMapOpen && activeTab === 'fishing' && (
+      {!isMapOpen && activeTab === 'base' && (
         isAtPond ? (
           <FishingScreen
             gameState={fishing.gameState}
@@ -148,11 +149,12 @@ export default function App() {
             onBackToHub={() => {
               fishing.resetToIdle();
               setIsAtPond(false);
+              setActiveTab('base');
               triggerHaptic('selection');
             }}
             onOpenMap={() => {
               fishing.resetToIdle();
-              setIsMapOpen(true);
+              setActiveTab('map');
               triggerHaptic('selection');
             }}
             onOpenShop={() => {
@@ -192,7 +194,7 @@ export default function App() {
               triggerHaptic('notification');
             }}
             onOpenMap={() => {
-              setIsMapOpen(true);
+              setActiveTab('map');
               triggerHaptic('selection');
             }}
             onOpenShop={() => {
@@ -207,7 +209,7 @@ export default function App() {
         )
       )}
 
-      {!isMapOpen && activeTab === 'inventory' && (
+      {!isMapOpen && activeTab === 'keepnet' && (
         <InventoryScreen
           inventory={player.inventory}
           getRarityLabel={getRarityLabel}
@@ -243,12 +245,28 @@ export default function App() {
         />
       )}
 
+      {!isMapOpen && activeTab === 'inventory' && (
+        <GearInventoryScreen
+          gear={gear.gear}
+          baits={baits.baits}
+          selectedBaitId={baits.selectedBaitId}
+          onEquipRod={gear.equipRod}
+          onEquipReel={gear.equipReel}
+          onEquipLine={gear.equipLine}
+          onSelectBait={baits.selectBait}
+          onOpenShop={() => {
+            setActiveTab('shop');
+            triggerHaptic('selection');
+          }}
+        />
+      )}
+
       <Navigation
         activeTab={activeTab}
         onTabChange={(tab) => {
           setActiveTab(tab);
-          setIsMapOpen(false);
-          setIsAtPond(false);
+          setIsMapOpen(tab === 'map');
+          if (tab !== 'base') setIsAtPond(false);
           triggerHaptic('selection');
         }}
         inventoryCount={player.inventoryCount}

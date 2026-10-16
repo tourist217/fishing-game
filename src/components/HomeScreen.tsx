@@ -253,7 +253,7 @@ export const HomeScreen = ({
   onSelectBait,
   onEquipRod,
   onGoFishing,
-  onOpenMap,
+  onOpenMap: _onOpenMap,
   onOpenShop,
   onResetProgress,
 }: HomeScreenProps) => {
@@ -558,47 +558,7 @@ export const HomeScreen = ({
             </div>
           </div>
 
-          {/* 2. Карта водоёмов */}
-          <div
-            onClick={onOpenMap}
-            style={{
-              width: '74px',
-              background: 'rgba(28, 36, 48, 0.85)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              border: '1.5px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '18px',
-              padding: '7px 4px 6px 4px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              cursor: 'pointer',
-              boxShadow: '0 6px 20px rgba(0, 0, 0, 0.45)',
-              transition: 'transform 0.12s ease',
-            }}
-          >
-            <div style={{ fontSize: '26px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>
-              🗺️
-            </div>
-            <div
-              style={{
-                fontSize: '9.5px',
-                fontWeight: 800,
-                color: '#ffffff',
-                marginTop: '4px',
-                textAlign: 'center',
-                lineHeight: 1.15,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                maxWidth: '68px',
-              }}
-            >
-              Карта
-            </div>
-          </div>
-
-          {/* 3. Достижения */}
+          {/* 2. Достижения */}
           <div
             onClick={() => setActiveModal('achievements')}
             style={{
