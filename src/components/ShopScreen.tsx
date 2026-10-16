@@ -45,8 +45,6 @@ export interface ShopScreenProps {
   onEquipLine?: (id: string) => void;
 }
 
-import { APP_VERSION } from '../version';
-
 type ShopTab = 'rods' | 'reels' | 'lines' | 'baits' | 'upgrades';
 
 export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
@@ -124,39 +122,67 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
         overflow: 'hidden',
       }}
     >
-      {/* Шапка магазина */}
+      {/* Шапка магазина в стиле дизайн-системы */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          background: 'rgba(255, 255, 255, 0.05)',
-          padding: '12px 16px',
-          borderRadius: '16px',
+          background: 'rgba(22, 28, 38, 0.85)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          padding: '12px 14px',
+          borderRadius: '22px',
+          border: '1.5px solid rgba(245, 158, 11, 0.3)',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)',
         }}
       >
-        <div>
-          <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-            Рыболовный магазин <span style={{ color: '#64748b', fontSize: '10px' }}>({APP_VERSION})</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '12px',
+              background: 'rgba(15, 23, 42, 0.75)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '22px',
+            }}
+          >
+            🏪
           </div>
-          <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#fff' }}>Товары и снасти</div>
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff' }}>
+              Рыболовный магазин
+            </div>
+            <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+              Снасти, наживки и экипировка
+            </div>
+          </div>
         </div>
+
         <div
           style={{
-            background: 'rgba(251, 191, 36, 0.15)',
-            border: '1px solid rgba(251, 191, 36, 0.4)',
-            borderRadius: '12px',
+            background: 'rgba(251, 191, 36, 0.16)',
+            border: '1.5px solid rgba(251, 191, 36, 0.4)',
+            borderRadius: '14px',
             padding: '6px 12px',
             color: '#fbbf24',
-            fontWeight: 'bold',
-            fontSize: '14px',
+            fontWeight: 800,
+            fontSize: '13px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
           }}
         >
-          {coins} 🪙
+          <span>🪙</span>
+          <span>{coins.toLocaleString('ru-RU')}</span>
         </div>
       </div>
 
-      {/* Вкладки магазина */}
+      {/* Вкладки категорий магазина */}
       <div
         style={{
           display: 'flex',
@@ -169,7 +195,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
           { id: 'rods' as ShopTab, label: 'Удочки 🎣' },
           { id: 'reels' as ShopTab, label: 'Катушки ⚙️' },
           { id: 'lines' as ShopTab, label: 'Лески 🧵' },
-          { id: 'baits' as ShopTab, label: 'Наживки 🪱' },
+          { id: 'baits' as ShopTab, label: 'Наживки 🍞' },
           { id: 'upgrades' as ShopTab, label: 'Мастерская 🛠️' },
         ].map((tab) => {
           const isActive = shopTab === tab.id;
@@ -179,14 +205,20 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
               onClick={() => setShopTab(tab.id)}
               style={{
                 flex: '0 0 auto',
-                background: isActive ? '#0284c7' : 'rgba(255, 255, 255, 0.06)',
-                border: 'none',
-                borderRadius: '10px',
+                background: isActive
+                  ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(217, 119, 6, 0.14) 100%)'
+                  : 'rgba(22, 28, 38, 0.75)',
+                border: isActive
+                  ? '1.5px solid #f59e0b'
+                  : '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '16px',
                 padding: '8px 12px',
-                color: isActive ? '#fff' : '#94a3b8',
-                fontWeight: 'bold',
+                color: isActive ? '#fef08a' : '#94a3b8',
+                fontWeight: 800,
                 fontSize: '12px',
                 cursor: 'pointer',
+                boxShadow: isActive ? '0 0 12px rgba(245, 158, 11, 0.25)' : 'none',
+                transition: 'all 0.15s ease',
               }}
             >
               {tab.label}

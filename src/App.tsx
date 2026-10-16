@@ -104,6 +104,8 @@ export default function App() {
           coins={player.coins}
           exp={player.exp}
           maxExp={player.expToNextLevel}
+          energy={player.energy}
+          maxEnergy={player.maxEnergy}
           rodName={`${gear.currentRod.name} [${gear.rodLevel} ур.]`}
           rodIcon={gear.currentRod.icon}
         />

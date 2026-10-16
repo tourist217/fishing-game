@@ -307,36 +307,37 @@ export const HomeScreen = ({
       />
 
       {/* 1. Верхний разгруженный и укрупнённый бар (Header) */}
+      {/* 1. Верхний разгруженный бар-капсула в точности по референсу */}
       <div
         style={{
           position: 'relative',
-          zIndex: 10,
+          zIndex: 15,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          background: 'rgba(15, 23, 42, 0.85)',
+          background: 'rgba(22, 28, 38, 0.85)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          borderRadius: '22px',
-          padding: '8px 12px',
-          border: '1px solid rgba(255, 255, 255, 0.16)',
-          boxShadow: '0 6px 24px rgba(0, 0, 0, 0.4)',
+          borderRadius: '24px',
+          padding: '7px 10px',
+          border: '1px solid rgba(255, 255, 255, 0.14)',
+          boxShadow: '0 8px 28px rgba(0, 0, 0, 0.5)',
         }}
       >
-        {/* Аватар + Имя + Уровень + Опыт (крупные и легко читаемые) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Аватар + Имя + Уровень + Опыт */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div
             style={{
-              width: '42px',
-              height: '42px',
+              width: '38px',
+              height: '38px',
               borderRadius: '50%',
               background: 'linear-gradient(135deg, #0284c7, #38bdf8)',
-              border: '2px solid #7dd3fc',
+              border: '2px solid #38bdf8',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '22px',
-              boxShadow: '0 2px 10px rgba(2, 132, 199, 0.55)',
+              fontSize: '20px',
+              boxShadow: '0 0 12px rgba(56, 189, 248, 0.55)',
               flexShrink: 0,
             }}
           >
@@ -346,32 +347,32 @@ export const HomeScreen = ({
           <div>
             <div
               style={{
-                fontSize: '14px',
+                fontSize: '13.5px',
                 fontWeight: 800,
-                color: '#fff',
-                lineHeight: 1.2,
+                color: '#ffffff',
+                lineHeight: 1.1,
                 letterSpacing: '0.2px',
               }}
             >
-              {userName || 'Рыболов'}
+              {userName || 'Igor'}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '3px' }}>
               <span
                 style={{
-                  fontSize: '10px',
+                  fontSize: '9.5px',
                   fontWeight: 800,
                   color: '#38bdf8',
-                  background: 'rgba(56, 189, 248, 0.22)',
-                  padding: '1px 6px',
-                  borderRadius: '6px',
+                  background: 'rgba(56, 189, 248, 0.18)',
+                  padding: '1px 5px',
+                  borderRadius: '5px',
                 }}
               >
                 Ур. {level}
               </span>
               <div
                 style={{
-                  width: '65px',
-                  height: '5px',
+                  width: '54px',
+                  height: '4.5px',
                   background: 'rgba(255, 255, 255, 0.15)',
                   borderRadius: '3px',
                   overflow: 'hidden',
@@ -389,25 +390,24 @@ export const HomeScreen = ({
           </div>
         </div>
 
-        {/* Ресурсы: Монеты, Термос энергии и Настройки (без дублирования садка, всё крупно) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {/* Ресурсы: Монеты, Термос энергии и Настройки */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           {/* Монеты */}
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '5px',
-              background: 'rgba(251, 191, 36, 0.15)',
-              border: '1px solid rgba(251, 191, 36, 0.35)',
+              background: 'rgba(30, 41, 59, 0.85)',
+              border: '1px solid rgba(245, 158, 11, 0.35)',
               borderRadius: '14px',
-              padding: '6px 10px',
+              padding: '5px 8px',
               color: '#fbbf24',
-              fontSize: '13px',
+              fontSize: '12px',
               fontWeight: 800,
-              boxShadow: '0 2px 8px rgba(251, 191, 36, 0.2)',
             }}
           >
-            <span style={{ fontSize: '15px' }}>🪙</span>
+            <span style={{ fontSize: '13px' }}>🪙</span>
             <span>{coins.toLocaleString('ru-RU')}</span>
           </div>
 
@@ -418,35 +418,52 @@ export const HomeScreen = ({
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              background: 'rgba(250, 204, 21, 0.14)',
-              border: '1px solid rgba(250, 204, 21, 0.3)',
+              background: 'rgba(30, 41, 59, 0.85)',
+              border: '1px solid rgba(250, 204, 21, 0.35)',
               borderRadius: '14px',
-              padding: '6px 9px',
+              padding: '5px 7px',
               color: '#fef08a',
-              fontSize: '12px',
+              fontSize: '11px',
               fontWeight: 800,
             }}
           >
-            <span style={{ fontSize: '14px' }}>⚡</span>
+            <span style={{ fontSize: '12px' }}>⚡</span>
             <span>
               {energy}/{maxEnergy}
+            </span>
+            <span
+              style={{
+                fontSize: '10px',
+                color: '#facc15',
+                background: 'rgba(250, 204, 21, 0.25)',
+                borderRadius: '50%',
+                width: '13px',
+                height: '13px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginLeft: '2px',
+              }}
+            >
+              +
             </span>
           </div>
 
           {/* Кнопка настроек */}
           <button
             onClick={() => setActiveModal('settings')}
+            title="Настройки"
             style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.18)',
-              background: 'rgba(255, 255, 255, 0.1)',
-              color: '#e2e8f0',
+              width: '28px',
+              height: '28px',
+              borderRadius: '10px',
+              border: '1px solid rgba(255, 255, 255, 0.16)',
+              background: 'rgba(255, 255, 255, 0.08)',
+              color: '#94a3b8',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '16px',
+              fontSize: '14px',
               cursor: 'pointer',
               padding: 0,
             }}
@@ -456,237 +473,260 @@ export const HomeScreen = ({
         </div>
       </div>
 
-      {/* 2. Центральная зона: Интерактивные карточки активностей прямо на водоёме */}
+      {/* 2. Верхне-центральная зона: Виджеты локации/погоды слева + Столбец жетонов справа */}
       <div
         style={{
           position: 'relative',
           zIndex: 10,
           display: 'flex',
-          flexDirection: 'column',
-          gap: '10px',
-          margin: 'auto 0',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginTop: '10px',
         }}
       >
-        {/* Главная плашка локации с возможностью быстрой смены карты */}
-        <div
-          onClick={onOpenMap}
-          style={{
-            background: 'rgba(15, 23, 42, 0.84)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.18)',
-            borderRadius: '18px',
-            padding: '10px 14px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            cursor: 'pointer',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '26px' }}>{currentLocation.icon}</span>
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>
-                {currentLocation.name}
-              </div>
-              <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '1px' }}>
-                Клёв: x{currentLocation.weightModifier} веса • Спокойная вода
-              </div>
-            </div>
-          </div>
-
+        {/* Левая группа: Локация и Погода в точности как на референсе */}
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {/* Виджет локации */}
           <div
+            onClick={onOpenMap}
             style={{
-              background: 'linear-gradient(135deg, #0284c7, #0369a1)',
-              color: '#fff',
-              fontSize: '11px',
-              fontWeight: 800,
-              padding: '6px 12px',
-              borderRadius: '12px',
+              width: '88px',
+              height: '92px',
+              background: 'rgba(22, 28, 38, 0.78)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: '1.5px solid rgba(245, 158, 11, 0.35)',
+              borderRadius: '20px',
+              padding: '8px 6px',
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
-              gap: '4px',
-              boxShadow: '0 2px 8px rgba(2, 132, 199, 0.5)',
-            }}
-          >
-            <span>Карта</span>
-            <span>🗺️</span>
-          </div>
-        </div>
-
-        {/* Сетка активностей: Лидерборд, Достижения, Квесты, Турнир */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '8px',
-          }}
-        >
-          {/* Лидерборд */}
-          <button
-            onClick={() => setActiveModal('leaderboard')}
-            style={{
-              background: 'rgba(15, 23, 42, 0.82)',
-              backdropFilter: 'blur(14px)',
-              WebkitBackdropFilter: 'blur(14px)',
-              border: '1px solid rgba(251, 191, 36, 0.28)',
-              borderRadius: '16px',
-              padding: '10px 12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
+              justifyContent: 'center',
               cursor: 'pointer',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.35)',
-              textAlign: 'left',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)',
+              transition: 'transform 0.12s ease',
             }}
           >
-            <span style={{ fontSize: '26px' }}>🏆</span>
-            <div>
-              <div style={{ fontSize: '12px', fontWeight: 800, color: '#fef08a' }}>
-                Лидерборд
-              </div>
-              <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '1px' }}>
-                Топ рыбаков недели
-              </div>
-            </div>
-          </button>
-
-          {/* Достижения */}
-          <button
-            onClick={() => setActiveModal('achievements')}
-            style={{
-              background: 'rgba(15, 23, 42, 0.82)',
-              backdropFilter: 'blur(14px)',
-              WebkitBackdropFilter: 'blur(14px)',
-              border: '1px solid rgba(168, 85, 247, 0.28)',
-              borderRadius: '16px',
-              padding: '10px 12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              cursor: 'pointer',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.35)',
-              textAlign: 'left',
-            }}
-          >
-            <span style={{ fontSize: '26px' }}>⭐</span>
-            <div>
-              <div style={{ fontSize: '12px', fontWeight: 800, color: '#e9d5ff' }}>
-                Достижения
-              </div>
-              <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '1px' }}>
-                Трофеи и звания
-              </div>
-            </div>
-          </button>
-
-          {/* Квесты егеря */}
-          <button
-            onClick={() => setActiveModal('quests')}
-            style={{
-              background: 'rgba(15, 23, 42, 0.82)',
-              backdropFilter: 'blur(14px)',
-              WebkitBackdropFilter: 'blur(14px)',
-              border: '1px solid rgba(34, 197, 94, 0.28)',
-              borderRadius: '16px',
-              padding: '10px 12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              cursor: 'pointer',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.35)',
-              textAlign: 'left',
-              position: 'relative',
-            }}
-          >
-            {/* Точка уведомления */}
-            <span
+            <div
               style={{
-                position: 'absolute',
-                top: '-3px',
-                right: '-3px',
-                background: '#ef4444',
-                color: '#fff',
-                fontSize: '10px',
-                fontWeight: 900,
-                width: '16px',
-                height: '16px',
-                borderRadius: '50%',
+                width: '38px',
+                height: '38px',
+                borderRadius: '11px',
+                background: 'rgba(15, 23, 42, 0.75)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 2px 8px rgba(239, 68, 68, 0.8)',
+                fontSize: '22px',
+              }}
+            >
+              🗺️
+            </div>
+            <div
+              style={{
+                fontSize: '10.5px',
+                fontWeight: 800,
+                color: '#ffffff',
+                marginTop: '6px',
+                textAlign: 'center',
+                lineHeight: 1.15,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '78px',
+              }}
+            >
+              {currentLocation.name.replace('водоём', '').trim()} &gt;
+            </div>
+          </div>
+
+          {/* Виджет погоды */}
+          <div
+            onClick={() => setActiveModal('weather')}
+            style={{
+              width: '88px',
+              height: '92px',
+              background: 'rgba(22, 28, 38, 0.78)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: '1.5px solid rgba(245, 158, 11, 0.35)',
+              borderRadius: '20px',
+              padding: '8px 6px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)',
+              transition: 'transform 0.12s ease',
+            }}
+          >
+            <span style={{ fontSize: '24px', filter: 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.65))' }}>
+              ☀️
+            </span>
+            <div
+              style={{
+                fontSize: '15px',
+                fontWeight: 900,
+                color: '#ffffff',
+                marginTop: '2px',
+                lineHeight: 1.1,
+              }}
+            >
+              +21°
+            </div>
+            <div
+              style={{
+                fontSize: '8.5px',
+                color: '#cbd5e1',
+                marginTop: '3px',
+                fontWeight: 600,
+                textAlign: 'center',
+              }}
+            >
+              Отличный клёв
+            </div>
+          </div>
+        </div>
+
+        {/* Правый вертикальный стек жетонов (Турнир, Лидерборд, Квесты, Достижения) */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          {/* Карточка турнира */}
+          <div
+            onClick={() => setActiveModal('tournament')}
+            style={{
+              width: '68px',
+              background: 'rgba(22, 28, 38, 0.8)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: '1.5px solid rgba(245, 158, 11, 0.4)',
+              borderRadius: '18px',
+              padding: '6px 4px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 6px 20px rgba(0, 0, 0, 0.45)',
+            }}
+          >
+            <span style={{ fontSize: '24px', filter: 'drop-shadow(0 0 6px rgba(251, 191, 36, 0.6))' }}>
+              🏆
+            </span>
+            <div
+              style={{
+                fontSize: '10px',
+                fontWeight: 800,
+                color: '#fef08a',
+                marginTop: '2px',
+                lineHeight: 1.1,
+              }}
+            >
+              Турнир
+            </div>
+            <div style={{ fontSize: '8.5px', color: '#94a3b8', marginTop: '2px' }}>
+              14ч 32м
+            </div>
+          </div>
+
+          {/* Жетон Лидерборда (Медаль) */}
+          <button
+            onClick={() => setActiveModal('leaderboard')}
+            title="Лидерборд"
+            style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              background: 'rgba(22, 28, 38, 0.82)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: '1.5px solid rgba(245, 158, 11, 0.45)',
+              boxShadow: '0 6px 18px rgba(0, 0, 0, 0.45), 0 0 10px rgba(245, 158, 11, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
+            🏅
+          </button>
+
+          {/* Жетон Квестов (Свиток с красной точкой !) */}
+          <button
+            onClick={() => setActiveModal('quests')}
+            title="Квесты егеря"
+            style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              background: 'rgba(22, 28, 38, 0.82)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: '1.5px solid rgba(245, 158, 11, 0.45)',
+              boxShadow: '0 6px 18px rgba(0, 0, 0, 0.45), 0 0 10px rgba(245, 158, 11, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              cursor: 'pointer',
+              position: 'relative',
+              padding: 0,
+            }}
+          >
+            <span
+              style={{
+                position: 'absolute',
+                top: '-2px',
+                right: '-2px',
+                width: '13px',
+                height: '13px',
+                borderRadius: '50%',
+                background: '#ef4444',
+                color: '#fff',
+                fontSize: '8.5px',
+                fontWeight: 900,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 0 6px rgba(239, 68, 68, 0.85)',
               }}
             >
               !
             </span>
-            <span style={{ fontSize: '26px' }}>🕵️‍♂️</span>
-            <div>
-              <div style={{ fontSize: '12px', fontWeight: 800, color: '#bbf7d0' }}>
-                Квесты егеря
-              </div>
-              <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '1px' }}>
-                Задания пруда
-              </div>
-            </div>
+            📜
           </button>
 
-          {/* Ежедневный турнир */}
+          {/* Жетон Достижений (Золотая звезда) */}
           <button
-            onClick={() => setActiveModal('tournament')}
+            onClick={() => setActiveModal('achievements')}
+            title="Достижения"
             style={{
-              background: 'rgba(15, 23, 42, 0.82)',
-              backdropFilter: 'blur(14px)',
-              WebkitBackdropFilter: 'blur(14px)',
-              border: '1px solid rgba(245, 158, 11, 0.28)',
-              borderRadius: '16px',
-              padding: '10px 12px',
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              background: 'rgba(22, 28, 38, 0.82)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: '1.5px solid rgba(245, 158, 11, 0.45)',
+              boxShadow: '0 6px 18px rgba(0, 0, 0, 0.45), 0 0 10px rgba(245, 158, 11, 0.25)',
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
+              justifyContent: 'center',
+              fontSize: '20px',
               cursor: 'pointer',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.35)',
-              textAlign: 'left',
+              padding: 0,
             }}
           >
-            <span style={{ fontSize: '26px' }}>⏱️</span>
-            <div>
-              <div style={{ fontSize: '12px', fontWeight: 800, color: '#fed7aa' }}>
-                Турнир дня
-              </div>
-              <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '1px' }}>
-                Осталось 14ч 32м
-              </div>
-            </div>
+            ⭐
           </button>
-        </div>
-
-        {/* Строка погоды и прогноза клёва */}
-        <div
-          onClick={() => setActiveModal('weather')}
-          style={{
-            background: 'rgba(15, 23, 42, 0.76)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-            borderRadius: '14px',
-            padding: '6px 12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            cursor: 'pointer',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '16px' }}>🌤️</span>
-            <span style={{ fontSize: '11px', color: '#bae6fd', fontWeight: 700 }}>
-              Штиль • +21°C • Давление 750 мм
-            </span>
-          </div>
-          <span style={{ fontSize: '10px', color: '#4ade80', fontWeight: 800 }}>
-            Клёв: Отличный
-          </span>
         </div>
       </div>
 
@@ -758,59 +798,69 @@ export const HomeScreen = ({
 
           <div
             style={{
-              fontSize: '9.5px',
-              color: '#94a3b8',
-              fontWeight: 600,
-              marginTop: '5px',
-              lineHeight: 1.1,
-              textAlign: 'center',
-            }}
-          >
-            Удилище:
-          </div>
-          <div
-            style={{
-              fontSize: '11px',
+              fontSize: '11.5px',
               fontWeight: 800,
               color: '#ffffff',
               lineHeight: 1.2,
               textAlign: 'center',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              maxWidth: '68px',
-              marginTop: '1px',
+              marginTop: '6px',
             }}
           >
-            {currentRod.name.replace('удилище', '').replace('удочка', '').trim()}
+            Удочка
           </div>
         </div>
 
-        {/* Кнопка «ЗАБРОСИТЬ» (по центру, крупная, сочная с поплавком как на референсе) */}
+        {/* Кнопка «ЗАБРОСИТЬ» (по центру, сочная лаймовая с волнами поплавка) */}
         <button
           onClick={onGoFishing}
           style={{
             flex: 1,
             height: '62px',
-            background: 'linear-gradient(180deg, #749931 0%, #4e6e1f 55%, #354e13 100%)',
-            border: '2.5px solid #c2e640',
+            background: 'linear-gradient(180deg, #84cc16 0%, #65a30d 50%, #4d7c0f 100%)',
+            border: '2.5px solid #bef264',
             borderRadius: '31px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px',
-            color: '#fffef0',
+            gap: '10px',
+            color: '#ffffff',
             fontSize: '18px',
             fontWeight: 900,
             letterSpacing: '0.8px',
-            textShadow: '0 2px 4px rgba(0, 0, 0, 0.6)',
+            textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
             boxShadow:
-              '0 0 26px rgba(163, 230, 53, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.5), 0 8px 24px rgba(0, 0, 0, 0.45)',
+              '0 0 28px rgba(132, 204, 22, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 8px 24px rgba(0, 0, 0, 0.45)',
             cursor: 'pointer',
             transition: 'transform 0.1s ease',
           }}
         >
-          <BobberIcon size={34} />
+          <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+            <span
+              style={{
+                position: 'absolute',
+                left: '-8px',
+                fontSize: '14px',
+                color: 'rgba(255, 255, 255, 0.75)',
+                fontWeight: 900,
+                lineHeight: 1,
+              }}
+            >
+              ((
+            </span>
+            <BobberIcon size={34} />
+            <span
+              style={{
+                position: 'absolute',
+                right: '-8px',
+                fontSize: '14px',
+                color: 'rgba(255, 255, 255, 0.75)',
+                fontWeight: 900,
+                lineHeight: 1,
+              }}
+            >
+              ))
+            </span>
+          </div>
           <span>ЗАБРОСИТЬ</span>
         </button>
 
@@ -859,22 +909,18 @@ export const HomeScreen = ({
               marginTop: '5px',
               lineHeight: 1.1,
               textAlign: 'center',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              maxWidth: '68px',
             }}
           >
-            {currentBait.id === 'bread' ? 'Мякиш хлеба' : currentBait.name}
+            Наживка
           </div>
           <div
             style={{
               fontSize: '10px',
-              fontWeight: 700,
+              fontWeight: 800,
               color: currentBaitCount > 0 ? '#4ade80' : '#ef4444',
               lineHeight: 1.2,
               textAlign: 'center',
-              marginTop: '1px',
+              marginTop: '2px',
             }}
           >
             {currentBaitCount} шт.

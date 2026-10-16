@@ -76,29 +76,31 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
         userSelect: 'none',
       }}
     >
-      {/* Верхний бар локации */}
+      {/* Верхний бар локации в стиле дизайн-системы */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          background: 'rgba(0, 0, 0, 0.45)',
-          backdropFilter: 'blur(8px)',
-          padding: '6px 12px',
-          borderRadius: '16px',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          background: 'rgba(22, 28, 38, 0.85)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          padding: '8px 14px',
+          borderRadius: '24px',
+          border: '1.5px solid rgba(245, 158, 11, 0.35)',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)',
           zIndex: 10,
           minHeight: '44px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '18px' }}>{currentLocation.icon}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '22px' }}>{currentLocation.icon}</span>
           <div>
-            <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff', lineHeight: 1.2 }}>
+            <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>
               {currentLocation.name}
             </div>
             {coins !== undefined && (
-              <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#fbbf24', lineHeight: 1.2 }}>
+              <div style={{ fontSize: '11px', fontWeight: 800, color: '#fbbf24', lineHeight: 1.2 }}>
                 🪙 {coins.toLocaleString('ru-RU')}
               </div>
             )}
@@ -111,12 +113,12 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
               onClick={onBackToHub}
               style={{
                 background: 'rgba(255, 255, 255, 0.12)',
-                border: 'none',
-                borderRadius: '10px',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: '12px',
                 color: '#fff',
                 fontSize: '11px',
-                fontWeight: 'bold',
-                padding: '5px 9px',
+                fontWeight: 800,
+                padding: '6px 10px',
                 cursor: 'pointer',
               }}
             >
@@ -126,13 +128,13 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
           <button
             onClick={onOpenMap}
             style={{
-              background: 'rgba(255, 255, 255, 0.15)',
-              border: 'none',
-              borderRadius: '10px',
-              color: '#fff',
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.15))',
+              border: '1px solid rgba(245, 158, 11, 0.45)',
+              borderRadius: '12px',
+              color: '#fef08a',
               fontSize: '11px',
-              fontWeight: 'bold',
-              padding: '5px 9px',
+              fontWeight: 800,
+              padding: '6px 10px',
               cursor: 'pointer',
             }}
           >
@@ -426,25 +428,32 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
             onClick={canCast ? onStartFishing : (!hasLineOnRod ? onOpenShop : undefined)}
             disabled={!canCast && hasLineOnRod}
             style={{
-              height: '46px',
+              height: '52px',
               background: canCast
-                ? 'linear-gradient(135deg, #0284c7, #0369a1)'
+                ? 'linear-gradient(180deg, #84cc16 0%, #65a30d 50%, #4d7c0f 100%)'
                 : !hasLineOnRod
-                ? 'linear-gradient(135deg, #ef4444, #b91c1c)'
-                : 'rgba(255, 255, 255, 0.1)',
-              border: 'none',
-              borderRadius: '14px',
-              color: canCast || !hasLineOnRod ? '#fff' : '#64748b',
+                ? 'linear-gradient(180deg, #ef4444 0%, #dc2626 50%, #991b1b 100%)'
+                : 'rgba(255, 255, 255, 0.08)',
+              border: canCast
+                ? '2px solid #bef264'
+                : !hasLineOnRod
+                ? '2px solid #fca5a5'
+                : '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '24px',
+              color: canCast || !hasLineOnRod ? '#ffffff' : '#64748b',
               fontSize: '15px',
-              fontWeight: 'bold',
+              fontWeight: 900,
               cursor: canCast || !hasLineOnRod ? 'pointer' : 'not-allowed',
-              boxShadow: canCast ? '0 4px 16px rgba(2, 132, 199, 0.4)' : 'none',
+              boxShadow: canCast
+                ? '0 0 24px rgba(132, 204, 22, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4)'
+                : 'none',
+              letterSpacing: '0.5px',
             }}
           >
             {canCast
               ? 'ЗАБРОСИТЬ УДОЧКУ 🎣'
               : !hasLineOnRod
-              ? 'НЕТ ЛЕСКИ (КУПИТЬ В МАГАЗИНЕ) 🛒'
+              ? 'НЕТ ЛЕСКИ (В МАГАЗИН) 🛒'
               : 'НЕТ НАЖИВКИ 🚫'}
           </button>
         )}
@@ -453,14 +462,15 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
           <button
             disabled
             style={{
-              height: '46px',
-              background: 'rgba(15, 23, 42, 0.6)',
-              border: '1px solid rgba(56, 189, 248, 0.2)',
-              borderRadius: '14px',
+              height: '52px',
+              background: 'rgba(22, 28, 38, 0.85)',
+              border: '1.5px solid rgba(56, 189, 248, 0.35)',
+              borderRadius: '24px',
               color: '#38bdf8',
               fontSize: '14px',
-              fontWeight: 'bold',
+              fontWeight: 800,
               cursor: 'default',
+              boxShadow: '0 0 16px rgba(56, 189, 248, 0.25)',
             }}
           >
             ОЖИДАНИЕ ПОКЛЁВКИ... 🌊
@@ -471,14 +481,14 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
           <button
             onClick={onStartReeling}
             style={{
-              height: '46px',
-              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-              border: 'none',
-              borderRadius: '14px',
-              color: '#fff',
+              height: '52px',
+              background: 'linear-gradient(180deg, #f59e0b 0%, #d97706 60%, #b45309 100%)',
+              border: '2px solid #fde68a',
+              borderRadius: '24px',
+              color: '#ffffff',
               fontSize: '16px',
-              fontWeight: 'bold',
-              boxShadow: '0 4px 16px rgba(245, 158, 11, 0.4)',
+              fontWeight: 900,
+              boxShadow: '0 0 24px rgba(245, 158, 11, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4)',
               cursor: 'pointer',
               animation: 'pulse 0.8s infinite',
             }}
@@ -494,15 +504,15 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
             onTouchStart={onPullStart}
             onTouchEnd={onPullEnd}
             style={{
-              height: '46px',
-              background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-              border: 'none',
-              borderRadius: '14px',
-              color: '#fff',
+              height: '52px',
+              background: 'linear-gradient(180deg, #ef4444 0%, #dc2626 50%, #991b1b 100%)',
+              border: '2px solid #fca5a5',
+              borderRadius: '24px',
+              color: '#ffffff',
               fontSize: '17px',
-              fontWeight: 'bold',
+              fontWeight: 900,
               cursor: 'pointer',
-              boxShadow: '0 4px 16px rgba(239, 68, 68, 0.4)',
+              boxShadow: '0 0 24px rgba(239, 68, 68, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4)',
               userSelect: 'none',
               WebkitUserSelect: 'none',
             }}
