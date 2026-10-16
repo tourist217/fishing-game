@@ -166,32 +166,6 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
 
         {/* Компактные информирующие бейджи сверху холста */}
 
-        {gameState === 'waiting' && (
-          <div
-            style={{
-              position: 'absolute',
-              top: '10px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 5,
-              background: 'rgba(0, 0, 0, 0.55)',
-              backdropFilter: 'blur(6px)',
-              padding: '4px 14px',
-              borderRadius: '12px',
-              border: '1px solid rgba(56, 189, 248, 0.3)',
-              fontSize: '11px',
-              fontWeight: 'bold',
-              color: '#38bdf8',
-              whiteSpace: 'nowrap',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
-          >
-            <span style={{ display: 'inline-block', animation: 'pulse 1.5s infinite' }}>🌊</span>
-            <span>Ждём поклёвку...</span>
-          </div>
-        )}
 
         {gameState === 'hooked' && (
           <div
