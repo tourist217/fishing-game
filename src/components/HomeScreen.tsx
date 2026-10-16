@@ -4,6 +4,215 @@ import { ROD_TIERS, type PlayerGearState } from '../gearData';
 import { AVAILABLE_BAITS } from '../hooks/useBaitState';
 import { APP_VERSION } from '../version';
 
+// --- SVG-иконки для реалистичного визуала снастей из референса ---
+export const BobberIcon = ({ size = 32 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 40 40"
+    fill="none"
+    style={{
+      transform: 'rotate(-25deg)',
+      filter: 'drop-shadow(0 2px 5px rgba(0, 0, 0, 0.45))',
+    }}
+  >
+    {/* Верхняя антенна с красным шариком */}
+    <line x1="20" y1="2" x2="20" y2="12" stroke="#1e293b" strokeWidth="2.2" strokeLinecap="round" />
+    <circle cx="20" cy="3" r="2.2" fill="#ef4444" />
+
+    {/* Верхняя часть тела поплавка (ярко-оранжево-красная) */}
+    <path
+      d="M13 18 C13 13, 27 13, 27 18 L26.5 21 C26.5 21, 20 22.5, 13.5 21 Z"
+      fill="url(#bobberRedGrad)"
+    />
+
+    {/* Белая разделительная полоса */}
+    <rect x="13.2" y="20.5" width="13.6" height="2.8" rx="0.6" fill="#f8fafc" />
+
+    {/* Нижняя часть тела (оливково-зелёная как на мокапе) */}
+    <path
+      d="M13.2 23 C13.2 28.5, 16.5 33.5, 20 35.5 C23.5 33.5, 26.8 28.5, 26.8 23 Z"
+      fill="url(#bobberGreenGrad)"
+    />
+
+    {/* Нижний киль */}
+    <line x1="20" y1="35.5" x2="20" y2="39.5" stroke="#0f172a" strokeWidth="1.8" strokeLinecap="round" />
+
+    {/* Блик света */}
+    <path
+      d="M16 15 C16 13.5, 17.5 13, 18 13 L17.5 30"
+      stroke="rgba(255, 255, 255, 0.45)"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+    />
+
+    <defs>
+      <linearGradient id="bobberRedGrad" x1="13" y1="13" x2="27" y2="21" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#fb923c" />
+        <stop offset="1" stopColor="#dc2626" />
+      </linearGradient>
+      <linearGradient id="bobberGreenGrad" x1="13" y1="23" x2="27" y2="35" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#84cc16" />
+        <stop offset="1" stopColor="#3f6212" />
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
+export const RodIcon = ({ material = 'bamboo' }: { material?: string }) => {
+  const isDark = material === 'carbon' || material === 'composite';
+  const isGold = material === 'gold';
+  const rodStroke = isGold ? '#eab308' : isDark ? '#475569' : '#b45309';
+  const handleStroke = isGold ? '#ca8a04' : '#d97706';
+
+  return (
+    <svg
+      width="36"
+      height="36"
+      viewBox="0 0 40 40"
+      fill="none"
+      style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4))' }}
+    >
+      {/* Бланк удилища по диагонали */}
+      <line
+        x1="6"
+        y1="34"
+        x2="34"
+        y2="6"
+        stroke={rodStroke}
+        strokeWidth="3.2"
+        strokeLinecap="round"
+      />
+      <line
+        x1="18"
+        y1="22"
+        x2="34"
+        y2="6"
+        stroke="#cbd5e1"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+
+      {/* Рукоять удилища */}
+      <line
+        x1="6.5"
+        y1="33.5"
+        x2="14.5"
+        y2="25.5"
+        stroke={handleStroke}
+        strokeWidth="5.2"
+        strokeLinecap="round"
+      />
+
+      {/* Пропускные кольца */}
+      <circle cx="21" cy="19" r="2.2" stroke="#cbd5e1" strokeWidth="1.2" fill="none" />
+      <circle cx="27" cy="13" r="1.8" stroke="#cbd5e1" strokeWidth="1.2" fill="none" />
+      <circle cx="33" cy="7" r="1.4" stroke="#cbd5e1" strokeWidth="1.2" fill="none" />
+
+      {/* Катушка */}
+      <circle cx="12.5" cy="27.5" r="3.4" fill="#334155" stroke="#94a3b8" strokeWidth="1.2" />
+      <circle cx="12.5" cy="27.5" r="1.5" fill="#f8fafc" />
+
+      {/* Леска */}
+      <path
+        d="M12.5 27.5 Q 20.5 21 34 6"
+        stroke="rgba(255, 255, 255, 0.85)"
+        strokeWidth="0.9"
+        fill="none"
+        strokeDasharray="2 1"
+      />
+    </svg>
+  );
+};
+
+export const BaitIcon = ({ baitId }: { baitId: string }) => {
+  if (baitId === 'worm') {
+    return (
+      <svg
+        width="34"
+        height="34"
+        viewBox="0 0 36 36"
+        fill="none"
+        style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4))' }}
+      >
+        <path
+          d="M7 25 C 9 17, 14 16, 17 21 C 20 26, 26 26, 29 18 C 31 13, 27 10, 24 12"
+          stroke="#f43f5e"
+          strokeWidth="4.5"
+          strokeLinecap="round"
+          fill="none"
+        />
+        <circle cx="24" cy="12" r="2.5" fill="#fb7185" />
+      </svg>
+    );
+  }
+
+  // По умолчанию: аппетитный батон / мякиш хлеба в точности как на референсе
+  return (
+    <svg
+      width="36"
+      height="36"
+      viewBox="0 0 36 36"
+      fill="none"
+      style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4))' }}
+    >
+      <ellipse
+        cx="18"
+        cy="18"
+        rx="13.5"
+        ry="9"
+        transform="rotate(-15 18 18)"
+        fill="url(#breadCrustGrad)"
+      />
+      <ellipse
+        cx="18"
+        cy="17"
+        rx="11.5"
+        ry="7"
+        transform="rotate(-15 18 17)"
+        fill="url(#breadInsideGrad)"
+      />
+      <line
+        x1="12"
+        y1="13"
+        x2="14"
+        y2="19"
+        stroke="#9a3412"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <line
+        x1="17"
+        y1="12"
+        x2="19"
+        y2="18"
+        stroke="#9a3412"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <line
+        x1="22"
+        y1="11"
+        x2="24"
+        y2="17"
+        stroke="#9a3412"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <defs>
+        <linearGradient id="breadCrustGrad" x1="6" y1="10" x2="30" y2="26" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#f59e0b" />
+          <stop offset="1" stopColor="#9a3412" />
+        </linearGradient>
+        <linearGradient id="breadInsideGrad" x1="8" y1="11" x2="28" y2="23" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#fef3c7" />
+          <stop offset="1" stopColor="#fde68a" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+};
+
 interface HomeScreenProps {
   currentLocation: FishingLocation;
   gear: PlayerGearState;
@@ -19,6 +228,7 @@ interface HomeScreenProps {
   selectedBaitId: string;
   baits: Record<string, number>;
   onSelectBait: (baitId: string) => void;
+  onEquipRod?: (rodId: string) => void;
   onGoFishing: () => void;
   onOpenMap: () => void;
   onOpenShop: () => void;
@@ -39,6 +249,7 @@ export const HomeScreen = ({
   selectedBaitId,
   baits,
   onSelectBait,
+  onEquipRod,
   onGoFishing,
   onOpenMap,
   onOpenShop,
@@ -51,7 +262,7 @@ export const HomeScreen = ({
 
   // Интерактивные модальные окна
   const [activeModal, setActiveModal] = useState<
-    'quests' | 'tournament' | 'weather' | 'settings' | 'baitSelect' | 'leaderboard' | 'achievements' | null
+    'quests' | 'tournament' | 'weather' | 'settings' | 'baitSelect' | 'rodSelect' | 'leaderboard' | 'achievements' | null
   >(null);
 
   const expPercentage = Math.min(100, Math.max(0, (exp / maxExp) * 100));
@@ -479,7 +690,7 @@ export const HomeScreen = ({
         </div>
       </div>
 
-      {/* 3. Нижний блок снастей (Action Dock прямо над мостиком) */}
+      {/* 3. Нижний блок снастей (Action Dock прямо над мостиком в точности по референсу) */}
       <div
         style={{
           position: 'relative',
@@ -487,133 +698,327 @@ export const HomeScreen = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '8px',
-          marginBottom: '4px',
+          gap: '10px',
+          marginBottom: '6px',
         }}
       >
-        {/* Удилище (слева) */}
+        {/* Удилище (слева, вертикальная карточка в точности по референсу) */}
         <div
-          onClick={onOpenShop}
+          onClick={() => setActiveModal('rodSelect')}
           style={{
-            flex: '0 0 auto',
-            minWidth: '85px',
-            maxWidth: '105px',
-            background: 'rgba(15, 23, 42, 0.88)',
+            width: '74px',
+            flexShrink: 0,
+            background: 'rgba(15, 23, 42, 0.85)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.18)',
+            border: '1px solid rgba(255, 255, 255, 0.16)',
             borderRadius: '18px',
-            padding: '8px 10px',
+            padding: '8px 4px 7px 4px',
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
-            gap: '8px',
             cursor: 'pointer',
-            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.4)',
+            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.15)',
+            transition: 'transform 0.12s ease',
           }}
         >
-          <span style={{ fontSize: '22px' }}>{currentRod.icon}</span>
-          <div style={{ minWidth: 0, overflow: 'hidden' }}>
-            <div style={{ fontSize: '9px', color: '#94a3b8', fontWeight: 600 }}>Удилище:</div>
-            <div
+          {/* Квадратный слот с иконкой снасти */}
+          <div
+            style={{
+              width: '46px',
+              height: '46px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: 'inset 0 1px 3px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.3)',
+              position: 'relative',
+            }}
+          >
+            <RodIcon material={currentRod.material} />
+            <span
               style={{
-                fontSize: '11px',
-                color: '#fff',
-                fontWeight: 800,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
+                position: 'absolute',
+                top: '-4px',
+                right: '-4px',
+                background: 'rgba(56, 189, 248, 0.95)',
+                color: '#0f172a',
+                fontSize: '9px',
+                fontWeight: 900,
+                borderRadius: '6px',
+                padding: '0 4px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.4)',
               }}
             >
-              {currentRod.name.replace('удилище', '').replace('удочка', '').trim()} [{rodLevel} ур.]
-            </div>
+              {rodLevel} ур.
+            </span>
+          </div>
+
+          <div
+            style={{
+              fontSize: '9.5px',
+              color: '#94a3b8',
+              fontWeight: 600,
+              marginTop: '5px',
+              lineHeight: 1.1,
+              textAlign: 'center',
+            }}
+          >
+            Удилище:
+          </div>
+          <div
+            style={{
+              fontSize: '11px',
+              fontWeight: 800,
+              color: '#ffffff',
+              lineHeight: 1.2,
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: '68px',
+              marginTop: '1px',
+            }}
+          >
+            {currentRod.name.replace('удилище', '').replace('удочка', '').trim()}
           </div>
         </div>
 
-        {/* Кнопка «ЗАБРОСИТЬ» (по центру, крупная, сочная и светящаяся) */}
+        {/* Кнопка «ЗАБРОСИТЬ» (по центру, крупная, сочная с поплавком как на референсе) */}
         <button
           onClick={onGoFishing}
           style={{
             flex: 1,
-            height: '56px',
-            background: 'linear-gradient(135deg, #a3e635 0%, #65a30d 45%, #3f6212 100%)',
-            border: '2px solid #d9f99d',
-            borderRadius: '28px',
+            height: '62px',
+            background: 'linear-gradient(180deg, #749931 0%, #4e6e1f 55%, #354e13 100%)',
+            border: '2.5px solid #c2e640',
+            borderRadius: '31px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '8px',
-            color: '#fff',
+            color: '#fffef0',
             fontSize: '18px',
             fontWeight: 900,
             letterSpacing: '0.8px',
-            textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+            textShadow: '0 2px 4px rgba(0, 0, 0, 0.6)',
             boxShadow:
-              '0 0 28px rgba(163, 230, 53, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 6px 20px rgba(0, 0, 0, 0.45)',
+              '0 0 26px rgba(163, 230, 53, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.5), 0 8px 24px rgba(0, 0, 0, 0.45)',
             cursor: 'pointer',
             transition: 'transform 0.1s ease',
           }}
         >
-          <span
-            style={{
-              fontSize: '24px',
-              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))',
-              display: 'inline-block',
-              animation: 'bounce 2s infinite',
-            }}
-          >
-            🪶
-          </span>
+          <BobberIcon size={34} />
           <span>ЗАБРОСИТЬ</span>
         </button>
 
-        {/* Наживка (справа) */}
+        {/* Наживка (справа, вертикальная карточка в точности по референсу) */}
         <div
           onClick={() => setActiveModal('baitSelect')}
           style={{
-            flex: '0 0 auto',
-            minWidth: '85px',
-            maxWidth: '105px',
-            background: 'rgba(15, 23, 42, 0.88)',
+            width: '74px',
+            flexShrink: 0,
+            background: 'rgba(15, 23, 42, 0.85)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.18)',
+            border: '1px solid rgba(255, 255, 255, 0.16)',
             borderRadius: '18px',
-            padding: '8px 10px',
+            padding: '8px 4px 7px 4px',
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
-            gap: '8px',
             cursor: 'pointer',
-            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.4)',
+            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.15)',
+            transition: 'transform 0.12s ease',
           }}
         >
-          <span style={{ fontSize: '22px' }}>{currentBait.icon}</span>
-          <div style={{ minWidth: 0, overflow: 'hidden' }}>
-            <div
-              style={{
-                fontSize: '11px',
-                color: '#fff',
-                fontWeight: 800,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {currentBait.name}
-            </div>
-            <div
-              style={{
-                fontSize: '9px',
-                color: currentBaitCount > 0 ? '#4ade80' : '#ef4444',
-                fontWeight: 700,
-              }}
-            >
-              {currentBaitCount} шт.
-            </div>
+          {/* Квадратный слот с иконкой наживки */}
+          <div
+            style={{
+              width: '46px',
+              height: '46px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: 'inset 0 1px 3px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.3)',
+            }}
+          >
+            <BaitIcon baitId={currentBait.id} />
+          </div>
+
+          <div
+            style={{
+              fontSize: '11px',
+              fontWeight: 800,
+              color: '#ffffff',
+              marginTop: '5px',
+              lineHeight: 1.1,
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: '68px',
+            }}
+          >
+            {currentBait.id === 'bread' ? 'Мякиш хлеба' : currentBait.name}
+          </div>
+          <div
+            style={{
+              fontSize: '10px',
+              fontWeight: 700,
+              color: currentBaitCount > 0 ? '#4ade80' : '#ef4444',
+              lineHeight: 1.2,
+              textAlign: 'center',
+              marginTop: '1px',
+            }}
+          >
+            {currentBaitCount} шт.
           </div>
         </div>
       </div>
 
       {/* 4. Интерактивные модальные окна */}
+      {/* Выбор удилища прямо на мостике */}
+      {activeModal === 'rodSelect' && (
+        <div
+          onClick={() => setActiveModal(null)}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.72)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 50,
+            display: 'flex',
+            alignItems: 'flex-end',
+            padding: '12px',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              background: '#0f172a',
+              borderRadius: '24px',
+              padding: '16px',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <div style={{ fontSize: '15px', fontWeight: 800, color: '#fff' }}>
+                Ваши удилища 🎣
+              </div>
+              <button
+                onClick={() => setActiveModal(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#94a3b8',
+                  fontSize: '18px',
+                  cursor: 'pointer',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                maxHeight: '240px',
+                overflowY: 'auto',
+              }}
+            >
+              {ROD_TIERS.filter((r) => gear.ownedRods.includes(r.id)).map((rod) => {
+                const isSelected = gear.equippedRodId === rod.id;
+                const rLevel = gear.rodLevels[rod.id] || 1;
+                return (
+                  <button
+                    key={rod.id}
+                    onClick={() => {
+                      if (onEquipRod) onEquipRod(rod.id);
+                      setActiveModal(null);
+                    }}
+                    style={{
+                      background: isSelected
+                        ? 'rgba(56, 189, 248, 0.2)'
+                        : 'rgba(255, 255, 255, 0.05)',
+                      border: isSelected
+                        ? '1px solid #38bdf8'
+                        : '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '14px',
+                      padding: '10px 12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
+                      color: '#fff',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <RodIcon material={rod.material} />
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: '13px', fontWeight: 700 }}>
+                          {rod.name} [{rLevel} ур.]
+                        </div>
+                        <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                          Прочность: {rod.baseStrengthKg} - {rod.maxStrengthKg} кг
+                        </div>
+                      </div>
+                    </div>
+                    {isSelected && (
+                      <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 800 }}>
+                        Экипировано ✓
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => {
+                setActiveModal(null);
+                onOpenShop();
+              }}
+              style={{
+                width: '100%',
+                background: 'linear-gradient(135deg, #0284c7, #0369a1)',
+                border: 'none',
+                color: '#fff',
+                fontWeight: 800,
+                padding: '11px',
+                borderRadius: '14px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+              }}
+            >
+              <span>🏪</span>
+              <span>Магазин новых удилищ</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Выбор наживки прямо на мостике */}
       {activeModal === 'baitSelect' && (
         <div

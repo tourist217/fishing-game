@@ -182,6 +182,7 @@ export default function App() {
             selectedBaitId={baits.selectedBaitId}
             baits={baits.baits}
             onSelectBait={baits.selectBait}
+            onEquipRod={gear.equipRod}
             onGoFishing={() => {
               setIsAtPond(true);
               triggerHaptic('notification');
