@@ -90,14 +90,14 @@ export default function App() {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        padding: '16px 16px 8px 16px',
+        padding: !isAtPond && activeTab === 'fishing' ? '8px 8px 6px 8px' : '12px 12px 8px 12px',
         justifyContent: 'space-between',
         background: isAtPond ? currentLocation.gradient : 'linear-gradient(180deg, #091325 0%, #0d2744 60%, #06192d 100%)',
         userSelect: 'none',
         transition: 'background 0.5s ease',
       }}
     >
-      {!isAtPond && (
+      {(activeTab === 'inventory' || activeTab === 'shop') && (
         <Header
           userName={player.userName}
           level={player.level}
@@ -170,7 +170,18 @@ export default function App() {
           <HomeScreen
             currentLocation={currentLocation}
             gear={gear.gear}
+            userName={player.userName}
+            level={player.level}
+            exp={player.exp}
+            maxExp={player.expToNextLevel}
+            coins={player.coins}
+            energy={player.energy}
+            maxEnergy={player.maxEnergy}
             inventoryCount={player.inventoryCount}
+            maxKeepnetCapacity={player.maxKeepnetCapacity}
+            selectedBaitId={baits.selectedBaitId}
+            baits={baits.baits}
+            onSelectBait={baits.selectBait}
             onGoFishing={() => {
               setIsAtPond(true);
               triggerHaptic('notification');
@@ -179,8 +190,12 @@ export default function App() {
               setIsMapOpen(true);
               triggerHaptic('selection');
             }}
-            onNavigateTab={(tab) => {
-              setActiveTab(tab);
+            onOpenShop={() => {
+              setActiveTab('shop');
+              triggerHaptic('selection');
+            }}
+            onOpenInventory={() => {
+              setActiveTab('inventory');
               triggerHaptic('selection');
             }}
           />
@@ -226,8 +241,21 @@ export default function App() {
       <Navigation
         activeTab={activeTab}
         onTabChange={(tab) => {
+          if (tab === 'leaderboard') {
+            alert('🏆 Клуб и Лидерборд: соревнуйтесь с другими рыбаками за звание лучшего (Скоро в v1.3!)');
+            return;
+          }
+          if (tab === 'achievements') {
+            alert('⭐ Достижения: открывайте трофеи, медали и звания (Скоро в v1.3!)');
+            return;
+          }
           setActiveTab(tab);
           setIsMapOpen(false);
+          setIsAtPond(false);
+          triggerHaptic('selection');
+        }}
+        onOpenMap={() => {
+          setIsMapOpen(true);
           triggerHaptic('selection');
         }}
         inventoryCount={player.inventoryCount}

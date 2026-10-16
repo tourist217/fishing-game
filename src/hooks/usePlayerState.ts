@@ -21,6 +21,14 @@ export function usePlayerState() {
     const parsed = Number(val);
     return !isNaN(parsed) && parsed >= 1 ? parsed : 1;
   });
+  const [energy, setEnergy] = useState<number>(() => {
+    const val = localStorage.getItem('fg_energy');
+    const parsed = Number(val);
+    return !isNaN(parsed) && parsed >= 0 ? parsed : 84;
+  });
+  const maxEnergy = 100;
+  const maxKeepnetCapacity = 15;
+
   const [inventory, setInventory] = useState<CaughtFishItem[]>(() => {
     try {
       const saved = localStorage.getItem('fg_inventory');
@@ -38,6 +46,11 @@ export function usePlayerState() {
   });
 
   const expToNextLevel = Math.round(150 * Math.pow(1.25, level - 1));
+
+  // Синхронизация энергии с localStorage
+  useEffect(() => {
+    localStorage.setItem('fg_energy', energy.toString());
+  }, [energy]);
 
   // Инициализация Telegram WebApp
   useEffect(() => {
@@ -137,12 +150,29 @@ export function usePlayerState() {
     }
   }, []);
 
+  const spendEnergy = useCallback((amount: number): boolean => {
+    if (energy >= amount) {
+      setEnergy((prev) => Math.max(0, prev - amount));
+      return true;
+    }
+    return false;
+  }, [energy]);
+
+  const restoreEnergy = useCallback((amount: number) => {
+    setEnergy((prev) => Math.min(maxEnergy, prev + amount));
+  }, []);
+
   return {
     userName,
     coins,
     exp,
     level,
     expToNextLevel,
+    energy,
+    maxEnergy,
+    maxKeepnetCapacity,
+    spendEnergy,
+    restoreEnergy,
     inventory,
     inventoryCount: inventory.length,
     addCaughtFish,
