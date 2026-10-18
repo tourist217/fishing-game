@@ -3,6 +3,7 @@ import type { FishingLocation } from '../locationsData';
 import type { ActiveFishState } from '../hooks/useFishingSimulation';
 import { formatWeight } from '../utils/fishUtils';
 import { FishingSceneCanvas } from './FishingSceneCanvas';
+import { TrophyCardModal } from './TrophyCardModal';
 
 export type GameState = 'idle' | 'waiting' | 'hooked' | 'reeling' | 'caught' | 'lost' | 'line_broken';
 
@@ -477,94 +478,97 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
 
       {/* Модальное окно поимки рыбы */}
       {gameState === 'caught' && currentFish && (
-        <div
-          onClick={onDismissModal}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(8px)',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: '24px',
-            zIndex: 10,
-            cursor: canDismissModal ? 'pointer' : 'default',
-          }}
-        >
+        currentFish.sizeCategory === 'trophy' ? (
+          <TrophyCardModal
+            currentFish={currentFish}
+            canDismiss={canDismissModal}
+            onDismiss={onDismissModal}
+          />
+        ) : (
           <div
+            onClick={onDismissModal}
             style={{
-              background: '#1e293b',
-              border: currentFish.sizeCategory === 'trophy'
-                ? '2px solid #fbbf24'
-                : '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '24px',
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.75)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
               padding: '24px',
-              width: '100%',
-              maxWidth: '290px',
-              textAlign: 'center',
-              boxShadow: currentFish.sizeCategory === 'trophy'
-                ? '0 10px 30px rgba(251, 191, 36, 0.3)'
-                : '0 10px 30px rgba(0, 0, 0, 0.5)',
+              zIndex: 10,
+              cursor: canDismissModal ? 'pointer' : 'default',
             }}
           >
-            {currentFish.fish.image ? (
+            <div
+              style={{
+                background: '#1e293b',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                borderRadius: '24px',
+                padding: '24px',
+                width: '100%',
+                maxWidth: '290px',
+                textAlign: 'center',
+                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)',
+              }}
+            >
+              {currentFish.fish.image ? (
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginBottom: '12px',
+                  }}
+                >
+                  <img
+                    src={currentFish.fish.image}
+                    alt={currentFish.fish.name}
+                    style={{
+                      width: '200px',
+                      height: '130px',
+                      objectFit: 'contain',
+                      filter: 'drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6))',
+                    }}
+                  />
+                </div>
+              ) : (
+                <div style={{ fontSize: '64px', marginBottom: '8px' }}>
+                  {currentFish.fish.icon}
+                </div>
+              )}
+
+              <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>
+                {currentFish.fish.name}
+              </div>
+
+              <div style={{ fontSize: '16px', color: '#38bdf8', fontWeight: 'bold', marginTop: '6px' }}>
+                {formatWeight(currentFish.weight)}
+              </div>
+
               <div
                 style={{
                   display: 'flex',
                   justifyContent: 'center',
-                  alignItems: 'center',
-                  marginBottom: '12px',
+                  gap: '16px',
+                  marginTop: '14px',
+                  paddingTop: '12px',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: '#94a3b8',
+                  fontSize: '13px',
                 }}
               >
-                <img
-                  src={currentFish.fish.image}
-                  alt={currentFish.fish.name}
-                  style={{
-                    width: '200px',
-                    height: '130px',
-                    objectFit: 'contain',
-                    filter: 'drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6))',
-                  }}
-                />
+                <div>Цена: <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>+{currentFish.price} 🪙</span></div>
+                <div>Опыт: <span style={{ color: '#34d399', fontWeight: 'bold' }}>+{currentFish.exp} XP</span></div>
               </div>
-            ) : (
-              <div style={{ fontSize: '64px', marginBottom: '8px' }}>
-                {currentFish.fish.icon}
+
+              <div style={{ marginTop: '16px', fontSize: '11px', color: canDismissModal ? '#94a3b8' : '#64748b' }}>
+                {canDismissModal ? 'Нажми в любое место, чтобы забрать' : 'Забираем в садок...'}
               </div>
-            )}
-
-
-            <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>
-              {currentFish.fish.name}
-            </div>
-
-            <div style={{ fontSize: '16px', color: '#38bdf8', fontWeight: 'bold', marginTop: '6px' }}>
-              {formatWeight(currentFish.weight)}
-            </div>
-
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '16px',
-                marginTop: '14px',
-                paddingTop: '12px',
-                borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-                color: '#94a3b8',
-                fontSize: '13px',
-              }}
-            >
-              <div>Цена: <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>+{currentFish.price} 🪙</span></div>
-              <div>Опыт: <span style={{ color: '#34d399', fontWeight: 'bold' }}>+{currentFish.exp} XP</span></div>
-            </div>
-
-            <div style={{ marginTop: '16px', fontSize: '11px', color: canDismissModal ? '#94a3b8' : '#64748b' }}>
-              {canDismissModal ? 'Нажми в любое место, чтобы забрать' : 'Забираем в садок...'}
             </div>
           </div>
-        </div>
+        )
       )}
 
       {/* Модальное окно схода рыбы */}

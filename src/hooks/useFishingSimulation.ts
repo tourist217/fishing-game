@@ -4,6 +4,7 @@ import type { GameState } from '../components/FishingScreen';
 import type { CaughtFishItem } from '../components/InventoryScreen';
 import type { FishingLocation } from '../locationsData';
 import { getFishDifficultyConfig } from '../utils/fishUtils';
+import { triggerFishHaptic } from '../utils/haptics';
 
 
 export interface ActiveFishState extends CaughtFishItem {
@@ -187,7 +188,7 @@ export function useFishingSimulation({
       setCurrentFish(readyFish);
       currentFishRef.current = readyFish;
       setGameState('hooked');
-      triggerHapticRef.current?.('notification');
+      triggerFishHaptic(readyFish.weight, readyFish.sizeCategory, 'hook');
     }, waitTime);
   };
 
@@ -226,7 +227,7 @@ export function useFishingSimulation({
       const nextPos = possiblePositions[Math.floor(Math.random() * possiblePositions.length)];
       setSweetZoneCenter(nextPos);
       sweetZoneCenterRef.current = nextPos;
-      triggerHapticRef.current?.('selection');
+      triggerFishHaptic(currentFish.weight, currentFish.sizeCategory, 'jerk');
     }, config.jerkIntervalMs);
 
     return () => clearInterval(moveInterval);
@@ -315,11 +316,11 @@ export function useFishingSimulation({
             caughtAt: caught.caughtAt,
           };
           onFishCaughtRef.current(cleanFish, caught.exp);
+          triggerFishHaptic(caught.weight, caught.sizeCategory, 'catch');
         }
         setGameState('caught');
         setCanDismissModal(false);
         setTimeout(() => setCanDismissModal(true), 1500);
-        triggerHapticRef.current?.('notification');
         return;
       }
 

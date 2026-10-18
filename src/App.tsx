@@ -13,6 +13,7 @@ import { usePlayerState } from './hooks/usePlayerState';
 import { useGearState } from './hooks/useGearState';
 import { useBaitState } from './hooks/useBaitState';
 import { useFishingSimulation } from './hooks/useFishingSimulation';
+import { triggerHaptic as triggerHapticUtil } from './utils/haptics';
 
 import { FISH_DATABASE } from './fishData';
 
@@ -26,14 +27,9 @@ export default function App() {
       }
     });
   }, []);
-  // Виброотклик Telegram WebApp
+  // Виброотклик Telegram WebApp и браузера
   const triggerHaptic = (type: 'impact' | 'notification' | 'selection') => {
-    const tg = window.Telegram?.WebApp;
-    if (tg?.HapticFeedback) {
-      if (type === 'impact') tg.HapticFeedback.impactOccurred('medium');
-      if (type === 'notification') tg.HapticFeedback.notificationOccurred('success');
-      if (type === 'selection') tg.HapticFeedback.selectionChanged();
-    }
+    triggerHapticUtil(type);
   };
 
   // 1. Состояние игрока и экономики
