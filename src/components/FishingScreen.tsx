@@ -4,6 +4,7 @@ import type { ActiveFishState } from '../hooks/useFishingSimulation';
 import { formatWeight } from '../utils/fishUtils';
 import { FishingSceneCanvas } from './FishingSceneCanvas';
 import { TrophyCardModal } from './TrophyCardModal';
+import { CoinIcon } from './CoinIcon';
 
 export type GameState = 'idle' | 'waiting' | 'hooked' | 'reeling' | 'caught' | 'lost' | 'line_broken';
 
@@ -493,7 +494,9 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                   fontSize: '13px',
                 }}
               >
-                <div>Цена: <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>+{currentFish.price} 🪙</span></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  Цена: <span style={{ color: '#fbbf24', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+{currentFish.price} <CoinIcon size={14} /></span>
+                </div>
                 <div>Опыт: <span style={{ color: '#34d399', fontWeight: 'bold' }}>+{currentFish.exp} XP</span></div>
               </div>
 

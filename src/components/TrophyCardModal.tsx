@@ -3,6 +3,7 @@ import type { ActiveFishState } from '../hooks/useFishingSimulation';
 import { formatWeight } from '../utils/fishUtils';
 import { playTrophyFanfare } from '../utils/audio';
 import { triggerFishHaptic } from '../utils/haptics';
+import { CoinIcon } from './CoinIcon';
 
 interface TrophyCardModalProps {
   currentFish: ActiveFishState;
@@ -268,8 +269,8 @@ export const TrophyCardModal: React.FC<TrophyCardModalProps> = ({
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
             <span style={{ color: '#94a3b8' }}>Награда:</span>
-            <span style={{ color: '#fbbf24', fontWeight: 900, fontSize: '15px' }}>
-              +{currentFish.price} 🪙
+            <span style={{ color: '#fbbf24', fontWeight: 900, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+              +{currentFish.price} <CoinIcon size={15} />
             </span>
           </div>
 

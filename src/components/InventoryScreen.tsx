@@ -1,5 +1,6 @@
 import type { Fish, FishSizeCategory } from '../fishData';
 import { formatWeight } from '../utils/fishUtils';
+import { CoinIcon } from './CoinIcon';
 
 export interface CaughtFishItem {
   fish: Fish;
@@ -131,7 +132,9 @@ export const InventoryScreen = ({
               transition: 'transform 0.1s ease',
             }}
           >
-            <span>Продать всё за {totalValue} 🪙</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              Продать всё за {totalValue} <CoinIcon size={16} />
+            </span>
           </button>
         )}
       </div>
@@ -262,7 +265,7 @@ export const InventoryScreen = ({
                     flexShrink: 0,
                   }}
                 >
-                  +{itemPrice} 🪙
+                  +{itemPrice} <CoinIcon size={14} />
                 </button>
               </div>
             );

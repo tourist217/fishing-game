@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import * as GearData from '../gearData';
 import type { RodTier, ReelTier, LineTier } from '../gearData';
 import { AVAILABLE_BAITS, type UpgradesState } from '../hooks/useBaitState';
+import { CoinIcon } from './CoinIcon';
 
 interface GearState {
   ownedRods: string[];
@@ -177,7 +178,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
             gap: '5px',
           }}
         >
-          <span>🪙</span>
+          <CoinIcon size={17} />
           <span>{coins.toLocaleString('ru-RU')}</span>
         </div>
       </div>
@@ -273,8 +274,8 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                     </div>
                   </div>
                   {!isOwned && (
-                    <span style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '13px' }}>
-                      {price} 🪙
+                    <span style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                      {price} <CoinIcon size={14} />
                     </span>
                   )}
                 </div>
@@ -294,9 +295,15 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                         fontWeight: 'bold',
                         fontSize: '12px',
                         cursor: canAfford && isLevelUnlocked ? 'pointer' : 'not-allowed',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px',
                       }}
                     >
-                      {!isLevelUnlocked ? `Требуется ${lvlReq} ур. 🔒` : `Купить за ${price} 🪙`}
+                      {!isLevelUnlocked ? `Требуется ${lvlReq} ур. 🔒` : (
+                        <>Купить за {price} <CoinIcon size={14} /></>
+                      )}
                     </button>
                   )}
 
@@ -375,8 +382,8 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                     </div>
                   </div>
                   {!isOwned && (
-                    <span style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '13px' }}>
-                      {price} 🪙
+                    <span style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                      {price} <CoinIcon size={14} />
                     </span>
                   )}
                 </div>
@@ -396,9 +403,15 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                         fontWeight: 'bold',
                         fontSize: '12px',
                         cursor: canAfford && isLevelUnlocked ? 'pointer' : 'not-allowed',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px',
                       }}
                     >
-                      {!isLevelUnlocked ? `Требуется ${lvlReq} ур. 🔒` : `Купить за ${price} 🪙`}
+                      {!isLevelUnlocked ? `Требуется ${lvlReq} ур. 🔒` : (
+                        <>Купить за {price} <CoinIcon size={14} /></>
+                      )}
                     </button>
                   )}
 
@@ -477,8 +490,8 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '13px' }}>
-                      {price} 🪙
+                    <div style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '3px' }}>
+                      {price} <CoinIcon size={14} />
                     </div>
                     <div style={{ fontSize: '11px', color: stockCount > 0 ? '#34d399' : '#94a3b8', marginTop: '2px' }}>
                       В наличии: {stockCount} шт.
@@ -595,7 +608,11 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                       fontSize: '13px',
                     }}
                   >
-                    {isFull ? '—' : `${actualPrice} 🪙`}
+                    {isFull ? '—' : (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        {actualPrice} <CoinIcon size={14} />
+                      </span>
+                    )}
                   </span>
                   <button
                     disabled={!canAfford || isFull}
@@ -662,10 +679,12 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                       color: canAfford ? '#fff' : '#64748b',
                       fontWeight: 'bold',
                       fontSize: '12px',
-                      cursor: canAfford ? 'pointer' : 'not-allowed',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
                     }}
                   >
-                    {cost} 🪙
+                    {cost} <CoinIcon size={14} />
                   </button>
                 </div>
               );
@@ -712,9 +731,12 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                       fontWeight: 'bold',
                       fontSize: '12px',
                       cursor: canAfford ? 'pointer' : 'not-allowed',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
                     }}
                   >
-                    {cost} 🪙
+                    {cost} <CoinIcon size={14} />
                   </button>
                 </div>
               );
@@ -761,9 +783,12 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                       fontWeight: 'bold',
                       fontSize: '12px',
                       cursor: canAfford ? 'pointer' : 'not-allowed',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
                     }}
                   >
-                    {cost} 🪙
+                    {cost} <CoinIcon size={14} />
                   </button>
                 </div>
               );

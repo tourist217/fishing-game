@@ -6,6 +6,7 @@ import type { FishJournal } from '../hooks/usePlayerState';
 import { triggerHaptic } from '../utils/haptics';
 import { AVAILABLE_BAITS } from '../hooks/useBaitState';
 import { TIME_CONFIGS, WEATHER_CONFIGS, type TimeOfDay, type WeatherType } from '../utils/weatherTime';
+import { CoinIcon } from './CoinIcon';
 
 interface FishJournalModalProps {
   journal: FishJournal;
@@ -215,11 +216,13 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                     }}
                   >
                     <span>🏆</span>
-                    <span>Забрать награду: +5 000 🪙 и +100 💎</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                      Забрать награду: +5 000 <CoinIcon size={14} /> и +100 💎
+                    </span>
                   </button>
                 ) : (
-                  <div style={{ fontSize: '10px', color: '#4ade80', fontWeight: 800, textAlign: 'center' }}>
-                    ✅ Главная награда ихтиолога получена (+5 000 🪙, +100 💎)
+                  <div style={{ fontSize: '10px', color: '#4ade80', fontWeight: 800, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
+                    ✅ Главная награда ихтиолога получена (+5 000 <CoinIcon size={12} />, +100 💎)
                   </div>
                 )}
               </div>
@@ -604,7 +607,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                 desc: 'Поймать первую рыбу в игре',
                 progress: Math.min(1, caughtSpeciesCount),
                 total: 1,
-                reward: '+50 🪙',
+                reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+50 <CoinIcon size={12} /></span>,
               },
               {
                 icon: '🥈',
@@ -612,7 +615,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                 desc: 'Поймать 5 разных видов рыб',
                 progress: Math.min(5, caughtSpeciesCount),
                 total: 5,
-                reward: '+250 🪙, +10 💎',
+                reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+250 <CoinIcon size={12} />, +10 💎</span>,
               },
               {
                 icon: '🥇',
@@ -620,7 +623,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                 desc: 'Открыть 12 видов рыб в журнале',
                 progress: Math.min(12, caughtSpeciesCount),
                 total: 12,
-                reward: '+1 000 🪙, +30 💎',
+                reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+1 000 <CoinIcon size={12} />, +30 💎</span>,
               },
               {
                 icon: '👑',
@@ -628,7 +631,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                 desc: 'Выловить 3 трофейных экземпляра',
                 progress: Math.min(3, trophyCount),
                 total: 3,
-                reward: '+2 000 🪙, +50 💎',
+                reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+2 000 <CoinIcon size={12} />, +50 💎</span>,
               },
               {
                 icon: '🌟',
@@ -636,7 +639,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                 desc: 'Собрать полную коллекцию (все 21 вид)',
                 progress: caughtSpeciesCount,
                 total: totalSpecies,
-                reward: '+5 000 🪙, +100 💎',
+                reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+5 000 <CoinIcon size={12} />, +100 💎</span>,
               },
             ].map((medal, i) => {
               const isCompleted = medal.progress >= medal.total;
@@ -931,8 +934,8 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                     </div>
                     <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '14px', padding: '8px 4px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
                       <div style={{ fontSize: '10px', color: '#94a3b8' }}>Ценность</div>
-                      <div style={{ fontSize: '13px', fontWeight: 900, color: '#4ade80', marginTop: '2px' }}>
-                        {inspectedFish.basePricePerKg} 🪙/кг
+                      <div style={{ fontSize: '13px', fontWeight: 900, color: '#4ade80', marginTop: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                        {inspectedFish.basePricePerKg} <CoinIcon size={13} />/кг
                       </div>
                     </div>
                   </div>

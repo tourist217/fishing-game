@@ -8,6 +8,7 @@ import { FishJournalModal } from './FishJournalModal';
 import { RangerQuestsModal } from './RangerQuestsModal';
 import type { DailyQuest } from '../types/quests';
 import { getCurrentWeather, getWeatherForecast, TIME_CONFIGS, WEATHER_CONFIGS } from '../utils/weatherTime';
+import { CoinIcon } from './CoinIcon';
 
 // --- SVG-иконки для реалистичного визуала снастей из референса ---
 export const BobberIcon = ({ size = 32 }: { size?: number }) => (
@@ -456,7 +457,7 @@ export const HomeScreen = ({
               boxShadow: '0 6px 20px rgba(0, 0, 0, 0.4)',
             }}
           >
-            <span style={{ fontSize: '15px' }}>🪙</span>
+            <CoinIcon size={19} />
             <span
               style={{
                 fontSize: '12.5px',
@@ -1475,7 +1476,7 @@ export const HomeScreen = ({
               Турнир: <strong>«Золотой карась»</strong>.<br />
               Поймайте самого крупного карася за день.
               <br />
-              Призовой фонд: <strong>🪙 5,000 монет</strong>!
+              Призовой фонд: <strong><CoinIcon size={16} /> 5,000 монет</strong>!
             </p>
             <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '8px' }}>
               До окончания: <strong>14 часов 32 минуты</strong>

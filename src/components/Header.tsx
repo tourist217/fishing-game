@@ -1,3 +1,5 @@
+import { CoinIcon } from './CoinIcon';
+
 interface HeaderProps {
   userName: string;
   level: number;
@@ -141,7 +143,7 @@ export const Header = ({
             boxShadow: '0 6px 20px rgba(0, 0, 0, 0.4)',
           }}
         >
-          <span style={{ fontSize: '15px' }}>🪙</span>
+          <CoinIcon size={19} />
           <span
             style={{
               fontSize: '12.5px',

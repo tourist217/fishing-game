@@ -2,6 +2,7 @@ import React from 'react';
 import type { DailyQuest } from '../types/quests';
 import { DAILY_BONUS_REWARD } from '../types/quests';
 import { triggerHaptic } from '../utils/haptics';
+import { CoinIcon } from './CoinIcon';
 
 interface RangerQuestsModalProps {
   quests: DailyQuest[];
@@ -224,8 +225,8 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
 
             {/* Награды за премию */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', gap: '6px', fontSize: '11px', fontWeight: 800 }}>
-                <span style={{ color: '#fbbf24' }}>+{DAILY_BONUS_REWARD.coins} 🪙</span>
+              <div style={{ display: 'flex', gap: '6px', fontSize: '11px', fontWeight: 800, alignItems: 'center' }}>
+                <span style={{ color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '3px' }}>+{DAILY_BONUS_REWARD.coins} <CoinIcon size={13} /></span>
                 <span style={{ color: '#38bdf8' }}>+{DAILY_BONUS_REWARD.gems} 💎</span>
                 <span style={{ color: '#a78bfa' }}>+{DAILY_BONUS_REWARD.exp} XP</span>
               </div>
@@ -306,8 +307,8 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
                     </div>
 
                     {/* Награда */}
-                    <div style={{ display: 'flex', gap: '6px', fontSize: '11px', fontWeight: 800 }}>
-                      <span style={{ color: '#fbbf24' }}>+{quest.rewardCoins} 🪙</span>
+                    <div style={{ display: 'flex', gap: '6px', fontSize: '11px', fontWeight: 800, alignItems: 'center' }}>
+                      <span style={{ color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '3px' }}>+{quest.rewardCoins} <CoinIcon size={13} /></span>
                       {quest.rewardGems && quest.rewardGems > 0 && (
                         <span style={{ color: '#38bdf8' }}>+{quest.rewardGems} 💎</span>
                       )}
