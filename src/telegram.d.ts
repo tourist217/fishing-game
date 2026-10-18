@@ -6,6 +6,14 @@ interface TelegramWebApp {
   };
   ready: () => void;
   expand: () => void;
+  requestFullscreen?: () => void;
+  exitFullscreen?: () => void;
+  isFullscreen?: boolean;
+  disableVerticalSwipes?: () => void;
+  enableVerticalSwipes?: () => void;
+  isVerticalSwipesEnabled?: boolean;
+  setHeaderColor?: (color: string) => void;
+  setBackgroundColor?: (color: string) => void;
   initDataUnsafe?: { user?: { first_name?: string } };
 }
 

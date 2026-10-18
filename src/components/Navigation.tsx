@@ -203,6 +203,7 @@ export const Navigation = ({
         WebkitBackdropFilter: 'blur(20px)',
         borderRadius: '26px',
         padding: '5px 6px',
+        margin: '0 8px',
         border: '1px solid rgba(255, 255, 255, 0.12)',
         boxShadow: '0 10px 36px rgba(0, 0, 0, 0.55)',
         gap: '4px',

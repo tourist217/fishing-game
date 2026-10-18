@@ -323,15 +323,18 @@ export const HomeScreen = ({
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'flex-start',
-        borderRadius: '24px',
+        borderRadius: '0',
         overflow: 'hidden',
-        border: '1px solid rgba(255, 255, 255, 0.15)',
-        boxShadow: '0 12px 36px rgba(0, 0, 0, 0.6)',
+        border: 'none',
+        boxShadow: 'none',
         userSelect: 'none',
         backgroundImage: 'url(/assets/locations/main_fishing_dock.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center bottom',
-        padding: '14px 12px',
+        paddingTop: 'max(14px, env(safe-area-inset-top, 14px))',
+        paddingLeft: 'max(10px, env(safe-area-inset-left, 10px))',
+        paddingRight: 'max(10px, env(safe-area-inset-right, 10px))',
+        paddingBottom: '8px',
       }}
     >
       {/* Мягкое виньетирование для глубины сцены */}

@@ -88,12 +88,39 @@ export function usePlayerState() {
     localStorage.setItem('fg_gems', gems.toString());
   }, [gems]);
 
-  // Инициализация Telegram WebApp
+  // Инициализация Telegram WebApp и переход в Fullscreen
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
     if (tg) {
       tg.ready();
       tg.expand();
+
+      try {
+        if (typeof tg.requestFullscreen === 'function') {
+          tg.requestFullscreen();
+        }
+        if (typeof tg.disableVerticalSwipes === 'function') {
+          tg.disableVerticalSwipes();
+        }
+        tg.setHeaderColor?.('#091325');
+        tg.setBackgroundColor?.('#091325');
+      } catch (err) {
+        console.warn('Telegram WebApp fullscreen init:', err);
+      }
+
+      // Дополнительный вызов на первый клик/тап на случай, если Telegram требует взаимодействия пользователя
+      const handleFirstInteraction = () => {
+        try {
+          if (typeof tg.requestFullscreen === 'function' && !tg.isFullscreen) {
+            tg.requestFullscreen();
+          }
+        } catch {}
+        window.removeEventListener('click', handleFirstInteraction);
+        window.removeEventListener('touchstart', handleFirstInteraction);
+      };
+
+      window.addEventListener('click', handleFirstInteraction, { once: true });
+      window.addEventListener('touchstart', handleFirstInteraction, { once: true });
     }
   }, []);
 
