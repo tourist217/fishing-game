@@ -5,6 +5,8 @@ import { AVAILABLE_BAITS } from '../hooks/useBaitState';
 import { APP_VERSION } from '../version';
 import type { FishJournal } from '../hooks/usePlayerState';
 import { FishJournalModal } from './FishJournalModal';
+import { RangerQuestsModal } from './RangerQuestsModal';
+import type { DailyQuest } from '../types/quests';
 
 // --- SVG-иконки для реалистичного визуала снастей из референса ---
 export const BobberIcon = ({ size = 32 }: { size?: number }) => (
@@ -241,6 +243,14 @@ interface HomeScreenProps {
   onClaimAllSpeciesReward?: () => boolean;
   onResetProgress?: () => void;
   resetModalSignal?: number;
+  dailyQuests?: DailyQuest[];
+  allCompletedBonusClaimed?: boolean;
+  timeUntilMidnight?: string;
+  questCompletedCount?: number;
+  questUnclaimedCount?: number;
+  canClaimBonus?: boolean;
+  onClaimQuestReward?: (questId: string) => boolean;
+  onClaimDailyBonus?: () => boolean;
 }
 
 export const HomeScreen = ({
@@ -266,6 +276,14 @@ export const HomeScreen = ({
   onOpenShop,
   onResetProgress,
   resetModalSignal,
+  dailyQuests = [],
+  allCompletedBonusClaimed = false,
+  timeUntilMidnight = '00:00:00',
+  questCompletedCount = 0,
+  questUnclaimedCount = 0,
+  canClaimBonus = false,
+  onClaimQuestReward,
+  onClaimDailyBonus,
 }: HomeScreenProps) => {
   const currentRod = ROD_TIERS.find((r) => r.id === gear.equippedRodId) || ROD_TIERS[0];
   const rodLevel = gear.rodLevels[gear.equippedRodId] || 1;
@@ -538,28 +556,54 @@ export const HomeScreen = ({
               transition: 'transform 0.12s ease',
             }}
           >
-            <span
-              style={{
-                position: 'absolute',
-                top: '-3px',
-                right: '-3px',
-                width: '14px',
-                height: '14px',
-                borderRadius: '50%',
-                background: '#ef4444',
-                color: '#fff',
-                fontSize: '9px',
-                fontWeight: 900,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 0 8px rgba(239, 68, 68, 0.9)',
-              }}
-            >
-              !
-            </span>
+            {questUnclaimedCount > 0 || canClaimBonus ? (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '-4px',
+                  right: '-4px',
+                  minWidth: '16px',
+                  height: '16px',
+                  padding: '0 4px',
+                  borderRadius: '8px',
+                  background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                  color: '#fff',
+                  fontSize: '9.5px',
+                  fontWeight: 900,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 0 10px rgba(34, 197, 94, 0.9)',
+                  border: '1px solid rgba(255, 255, 255, 0.4)',
+                }}
+              >
+                {canClaimBonus ? '🎁' : questUnclaimedCount}
+              </span>
+            ) : (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '-4px',
+                  right: '-4px',
+                  padding: '2px 5px',
+                  borderRadius: '7px',
+                  background: questCompletedCount === 3
+                    ? 'linear-gradient(135deg, #10b981, #059669)'
+                    : 'rgba(51, 65, 85, 0.9)',
+                  color: '#fff',
+                  fontSize: '8.5px',
+                  fontWeight: 900,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                }}
+              >
+                {questCompletedCount}/3
+              </span>
+            )}
             <div style={{ fontSize: '26px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>
-              👨‍🌾
+              🕵️‍♂️
             </div>
             <div
               style={{
@@ -571,7 +615,7 @@ export const HomeScreen = ({
                 lineHeight: 1.15,
               }}
             >
-              Квесты<br />егеря
+              Заказы<br />егеря
             </div>
           </div>
 
@@ -1376,59 +1420,18 @@ export const HomeScreen = ({
         />
       )}
 
-      {/* Квесты егеря */}
+      {/* Заказы егеря */}
       {activeModal === 'quests' && (
-        <div
-          onClick={() => setActiveModal(null)}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.72)',
-            backdropFilter: 'blur(8px)',
-            zIndex: 50,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: '#0f172a',
-              borderRadius: '24px',
-              padding: '20px',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              maxWidth: '320px',
-              textAlign: 'center',
-            }}
-          >
-            <div style={{ fontSize: '42px', marginBottom: '8px' }}>🕵️‍♂️</div>
-            <div style={{ fontSize: '16px', fontWeight: 800, color: '#fff', marginBottom: '6px' }}>
-              Квесты егеря
-            </div>
-            <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.5, margin: 0 }}>
-              «Здорово, рыбак! Я местный егерь. В следующем обновлении я буду выдавать тебе особые
-              задания на отлов редких рыб с ценными наградами!»
-            </p>
-            <button
-              onClick={() => setActiveModal(null)}
-              style={{
-                marginTop: '16px',
-                width: '100%',
-                background: '#0284c7',
-                border: 'none',
-                color: '#fff',
-                fontWeight: 700,
-                padding: '10px',
-                borderRadius: '12px',
-                cursor: 'pointer',
-              }}
-            >
-              Понятно, жду! 👍
-            </button>
-          </div>
-        </div>
+        <RangerQuestsModal
+          quests={dailyQuests || []}
+          allCompletedBonusClaimed={allCompletedBonusClaimed || false}
+          timeUntilMidnight={timeUntilMidnight || '00:00:00'}
+          completedCount={questCompletedCount || 0}
+          canClaimBonus={canClaimBonus || false}
+          onClaimQuestReward={onClaimQuestReward || (() => false)}
+          onClaimDailyBonus={onClaimDailyBonus || (() => false)}
+          onClose={() => setActiveModal(null)}
+        />
       )}
 
       {/* Ежедневный турнир */}

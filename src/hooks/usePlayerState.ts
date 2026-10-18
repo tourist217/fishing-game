@@ -212,6 +212,19 @@ export function usePlayerState() {
     }
   }, []);
 
+  // Прямое начисление опыта
+  const addExp = useCallback((amount: number) => {
+    if (amount <= 0) return;
+    setExp((prev) => {
+      const nextExp = prev + amount;
+      if (nextExp >= expToNextLevel) {
+        setLevel((lvl) => lvl + 1);
+        return nextExp - expToNextLevel;
+      }
+      return nextExp;
+    });
+  }, [expToNextLevel]);
+
   const spendEnergy = useCallback((amount: number): boolean => {
     if (energy >= amount) {
       setEnergy((prev) => Math.max(0, prev - amount));
@@ -257,5 +270,6 @@ export function usePlayerState() {
     sellAllFish,
     spendCoins,
     addCoins,
+    addExp,
   };
 }

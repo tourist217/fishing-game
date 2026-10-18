@@ -13,6 +13,7 @@ import { usePlayerState } from './hooks/usePlayerState';
 import { useGearState } from './hooks/useGearState';
 import { useBaitState } from './hooks/useBaitState';
 import { useFishingSimulation } from './hooks/useFishingSimulation';
+import { useDailyQuests } from './hooks/useDailyQuests';
 import { triggerHaptic as triggerHapticUtil } from './utils/haptics';
 
 import { FISH_DATABASE } from './fishData';
@@ -57,7 +58,14 @@ export default function App() {
     localStorage.setItem('fg_selected_location', selectedLocationId);
   }, [selectedLocationId]);
 
-  // 4. Физика рыбалки и игровой цикл
+  // 4. Задания Егеря (ежедневные квесты)
+  const dailyQuests = useDailyQuests({
+    onAddCoins: player.addCoins,
+    onAddExp: player.addExp,
+    onAddGems: (amount) => player.setGems((prev) => prev + amount),
+  });
+
+  // 5. Физика рыбалки и игровой цикл
   const fishing = useFishingSimulation({
     currentRodStrength: gear.currentRodStrength,
     currentLineTensileKg: gear.currentLineTensileKg,
@@ -68,7 +76,10 @@ export default function App() {
     baits: baits.baits,
     currentLocation,
     consumeBait: baits.consumeBait,
-    onFishCaught: player.addCaughtFish,
+    onFishCaught: (fish, exp) => {
+      player.addCaughtFish(fish, exp);
+      dailyQuests.handleFishCaught(fish, baits.selectedBaitId);
+    },
     onLineBreak: gear.breakLine,
     triggerHaptic,
   });
@@ -187,6 +198,14 @@ export default function App() {
             journal={player.journal}
             hasClaimedAllSpeciesReward={player.hasClaimedAllSpeciesReward}
             onClaimAllSpeciesReward={player.claimAllSpeciesReward}
+            dailyQuests={dailyQuests.quests}
+            allCompletedBonusClaimed={dailyQuests.allCompletedBonusClaimed}
+            timeUntilMidnight={dailyQuests.timeUntilMidnight}
+            questCompletedCount={dailyQuests.completedCount}
+            questUnclaimedCount={dailyQuests.unclaimedCount}
+            canClaimBonus={dailyQuests.canClaimBonus}
+            onClaimQuestReward={dailyQuests.claimQuestReward}
+            onClaimDailyBonus={dailyQuests.claimDailyBonus}
             resetModalSignal={baseClickNonce}
             onSelectBait={baits.selectBait}
             onEquipRod={gear.equipRod}
