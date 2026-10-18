@@ -1,6 +1,18 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { CaughtFishItem } from '../components/InventoryScreen';
 
+export interface FishJournalEntry {
+  fishId: string;
+  firstCaughtAt: number;
+  count: number;
+  maxWeight: number;
+  hasTrophy: boolean;
+  trophyWeight?: number;
+  trophyCaughtAt?: number;
+}
+
+export type FishJournal = Record<string, FishJournalEntry>;
+
 export function usePlayerState() {
   const [userName] = useState<string>(() => {
     const tg = window.Telegram?.WebApp;
@@ -33,6 +45,20 @@ export function usePlayerState() {
   });
   const maxEnergy = 100;
   const maxKeepnetCapacity = 15;
+
+  // Рыболовный журнал (Энциклопедия видов и трофеев)
+  const [journal, setJournal] = useState<FishJournal>(() => {
+    try {
+      const saved = localStorage.getItem('fg_fish_journal');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const [hasClaimedAllSpeciesReward, setHasClaimedAllSpeciesReward] = useState<boolean>(() => {
+    return localStorage.getItem('fg_all_species_claimed') === 'true';
+  });
 
   const [inventory, setInventory] = useState<CaughtFishItem[]>(() => {
     try {
@@ -98,6 +124,32 @@ export function usePlayerState() {
     };
 
     setInventory((prev) => [safeFish, ...prev]);
+
+    // Обновляем рыболовный журнал (энциклопедию)
+    setJournal((prevJournal) => {
+      const fId = fish.fish.id;
+      const prevEntry = prevJournal[fId];
+      const isTrophy = (fish as any).sizeCategory === 'trophy' || (prevEntry?.hasTrophy ?? false);
+      const updatedEntry: FishJournalEntry = {
+        fishId: fId,
+        firstCaughtAt: prevEntry ? prevEntry.firstCaughtAt : Date.now(),
+        count: (prevEntry?.count || 0) + 1,
+        maxWeight: Math.max(prevEntry?.maxWeight || 0, fish.weight),
+        hasTrophy: isTrophy,
+        trophyWeight:
+          (fish as any).sizeCategory === 'trophy'
+            ? Math.max(prevEntry?.trophyWeight || 0, fish.weight)
+            : prevEntry?.trophyWeight,
+        trophyCaughtAt:
+          (fish as any).sizeCategory === 'trophy'
+            ? Date.now()
+            : prevEntry?.trophyCaughtAt,
+      };
+
+      const nextJournal = { ...prevJournal, [fId]: updatedEntry };
+      localStorage.setItem('fg_fish_journal', JSON.stringify(nextJournal));
+      return nextJournal;
+    });
 
     setExp((prev) => {
       const nextExp = prev + (gainedExp || 10);
@@ -172,6 +224,16 @@ export function usePlayerState() {
     setEnergy((prev) => Math.min(maxEnergy, prev + amount));
   }, []);
 
+  const claimAllSpeciesReward = useCallback((): boolean => {
+    if (hasClaimedAllSpeciesReward) return false;
+    // Начисляем 5 000 монет и 100 кристаллов за закрытие всех видов
+    addCoins(5000);
+    setGems((prev) => prev + 100);
+    setHasClaimedAllSpeciesReward(true);
+    localStorage.setItem('fg_all_species_claimed', 'true');
+    return true;
+  }, [hasClaimedAllSpeciesReward, addCoins]);
+
   return {
     userName,
     coins,
@@ -187,6 +249,9 @@ export function usePlayerState() {
     restoreEnergy,
     inventory,
     inventoryCount: inventory.length,
+    journal,
+    hasClaimedAllSpeciesReward,
+    claimAllSpeciesReward,
     addCaughtFish,
     sellFish,
     sellAllFish,

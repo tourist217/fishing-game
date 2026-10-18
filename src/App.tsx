@@ -183,6 +183,9 @@ export default function App() {
             maxKeepnetCapacity={player.maxKeepnetCapacity}
             selectedBaitId={baits.selectedBaitId}
             baits={baits.baits}
+            journal={player.journal}
+            hasClaimedAllSpeciesReward={player.hasClaimedAllSpeciesReward}
+            onClaimAllSpeciesReward={player.claimAllSpeciesReward}
             onSelectBait={baits.selectBait}
             onEquipRod={gear.equipRod}
             onGoFishing={() => {

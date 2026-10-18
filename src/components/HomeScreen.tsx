@@ -3,6 +3,8 @@ import type { FishingLocation } from '../locationsData';
 import { ROD_TIERS, type PlayerGearState } from '../gearData';
 import { AVAILABLE_BAITS } from '../hooks/useBaitState';
 import { APP_VERSION } from '../version';
+import type { FishJournal } from '../hooks/usePlayerState';
+import { FishJournalModal } from './FishJournalModal';
 
 // --- SVG-иконки для реалистичного визуала снастей из референса ---
 export const BobberIcon = ({ size = 32 }: { size?: number }) => (
@@ -234,6 +236,9 @@ interface HomeScreenProps {
   onOpenMap: () => void;
   onOpenShop: () => void;
   onOpenInventory: () => void;
+  journal?: FishJournal;
+  hasClaimedAllSpeciesReward?: boolean;
+  onClaimAllSpeciesReward?: () => boolean;
   onResetProgress?: () => void;
 }
 
@@ -250,6 +255,9 @@ export const HomeScreen = ({
   maxEnergy,
   selectedBaitId,
   baits,
+  journal = {},
+  hasClaimedAllSpeciesReward = false,
+  onClaimAllSpeciesReward,
   onSelectBait,
   onEquipRod,
   onGoFishing,
@@ -264,7 +272,7 @@ export const HomeScreen = ({
 
   // Интерактивные модальные окна
   const [activeModal, setActiveModal] = useState<
-    'quests' | 'tournament' | 'weather' | 'settings' | 'baitSelect' | 'rodSelect' | 'leaderboard' | 'achievements' | null
+    'quests' | 'tournament' | 'weather' | 'settings' | 'baitSelect' | 'rodSelect' | 'leaderboard' | 'achievements' | 'journal' | null
   >(null);
 
   const expPercentage = Math.min(100, Math.max(0, (exp / maxExp) * 100));
@@ -558,10 +566,11 @@ export const HomeScreen = ({
             </div>
           </div>
 
-          {/* 2. Достижения */}
+          {/* 2. Рыболовный журнал и энциклопедия */}
           <div
-            onClick={() => setActiveModal('achievements')}
+            onClick={() => setActiveModal('journal')}
             style={{
+              position: 'relative',
               width: '74px',
               background: 'rgba(28, 36, 48, 0.85)',
               backdropFilter: 'blur(16px)',
@@ -577,8 +586,26 @@ export const HomeScreen = ({
               transition: 'transform 0.12s ease',
             }}
           >
+            {/* Бейдж открытых видов рыб */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '-4px',
+                right: '-4px',
+                background: 'linear-gradient(135deg, #10b981, #059669)',
+                color: '#fff',
+                fontSize: '9px',
+                fontWeight: 900,
+                padding: '2px 5px',
+                borderRadius: '8px',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+                border: '1px solid rgba(255,255,255,0.4)',
+              }}
+            >
+              {Object.keys(journal || {}).length}/21
+            </div>
             <div style={{ fontSize: '26px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>
-              📕
+              📖
             </div>
             <div
               style={{
@@ -590,7 +617,7 @@ export const HomeScreen = ({
                 lineHeight: 1.15,
               }}
             >
-              Достижения
+              Журнал
             </div>
           </div>
         </div>
@@ -1328,6 +1355,16 @@ export const HomeScreen = ({
             </button>
           </div>
         </div>
+      )}
+
+      {/* Рыболовный журнал и энциклопедия */}
+      {activeModal === 'journal' && (
+        <FishJournalModal
+          journal={journal || {}}
+          hasClaimedAllSpeciesReward={hasClaimedAllSpeciesReward || false}
+          onClaimAllSpeciesReward={onClaimAllSpeciesReward || (() => false)}
+          onClose={() => setActiveModal(null)}
+        />
       )}
 
       {/* Квесты егеря */}
