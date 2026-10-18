@@ -9,6 +9,7 @@ import { RangerQuestsModal } from './RangerQuestsModal';
 import type { DailyQuest } from '../types/quests';
 import { getCurrentWeather, getWeatherForecast, TIME_CONFIGS, WEATHER_CONFIGS } from '../utils/weatherTime';
 import { CoinIcon } from './CoinIcon';
+import { EnergyIcon } from './EnergyIcon';
 
 // --- SVG-иконки для реалистичного визуала снастей из референса ---
 export const BobberIcon = ({ size = 32 }: { size?: number }) => (
@@ -472,35 +473,59 @@ export const HomeScreen = ({
             </span>
           </div>
 
-          {/* Термос / Энергия */}
+          {/* Фляга / Энергия */}
           <div
             title="Энергия рыбака"
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '5px',
+              gap: '6px',
               background: 'rgba(28, 36, 48, 0.88)',
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
               border: '1.5px solid rgba(255, 255, 255, 0.12)',
               borderRadius: '18px',
-              padding: '6px 10px 6px 7px',
+              padding: '5px 10px 5px 6px',
               boxShadow: '0 6px 20px rgba(0, 0, 0, 0.4)',
             }}
           >
-            <span style={{ fontSize: '14px', lineHeight: 1 }}>🥫⚡</span>
-            <span
-              style={{
-                fontSize: '12px',
-                fontWeight: 800,
-                color: '#ffffff',
-                letterSpacing: '0.2px',
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                lineHeight: 1,
-              }}
-            >
-              {energy}/{maxEnergy}
-            </span>
+            <EnergyIcon size={21} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5px' }}>
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  color: '#ffffff',
+                  letterSpacing: '0.2px',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                  lineHeight: 1,
+                }}
+              >
+                {energy}/{maxEnergy}
+              </span>
+              {/* Шкала энергии с золотым градиентным наполнением */}
+              <div
+                style={{
+                  width: '38px',
+                  height: '4px',
+                  background: 'rgba(0, 0, 0, 0.55)',
+                  borderRadius: '3px',
+                  overflow: 'hidden',
+                  border: '0.5px solid rgba(251, 191, 36, 0.25)',
+                }}
+              >
+                <div
+                  style={{
+                    width: `${Math.min(100, Math.max(0, (energy / maxEnergy) * 100))}%`,
+                    height: '100%',
+                    background: 'linear-gradient(90deg, #d97706, #fbbf24)',
+                    boxShadow: '0 0 6px rgba(251, 191, 36, 0.6)',
+                    borderRadius: '3px',
+                    transition: 'width 0.3s ease',
+                  }}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Кнопка настроек шестерёнка */}
