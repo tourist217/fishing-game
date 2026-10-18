@@ -48,6 +48,7 @@ export default function App() {
   const [isAtPond, setIsAtPond] = useState<boolean>(false);
   const [isMapOpen, setIsMapOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>('base');
+  const [baseClickNonce, setBaseClickNonce] = useState<number>(0);
 
   const currentLocation: FishingLocation =
     LOCATIONS.find((l) => l.id === selectedLocationId) || LOCATIONS[0];
@@ -186,6 +187,7 @@ export default function App() {
             journal={player.journal}
             hasClaimedAllSpeciesReward={player.hasClaimedAllSpeciesReward}
             onClaimAllSpeciesReward={player.claimAllSpeciesReward}
+            resetModalSignal={baseClickNonce}
             onSelectBait={baits.selectBait}
             onEquipRod={gear.equipRod}
             onGoFishing={() => {
@@ -263,6 +265,7 @@ export default function App() {
       <Navigation
         activeTab={activeTab}
         onTabChange={(tab) => {
+          setBaseClickNonce((prev) => prev + 1);
           if (tab === 'base') {
             if (isAtPond) {
               fishing.resetToIdle();

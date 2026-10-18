@@ -78,8 +78,8 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
         style={{
           width: '100%',
           maxWidth: '360px',
-          height: '92vh',
-          maxHeight: '680px',
+          height: '100%',
+          maxHeight: '100%',
           background: 'linear-gradient(180deg, #16202c 0%, #0f172a 100%)',
           borderRadius: '26px',
           border: '1.5px solid rgba(255, 255, 255, 0.14)',
@@ -664,6 +664,39 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
             })}
           </div>
         )}
+
+        {/* Кнопка быстрого возврата на базу */}
+        <div
+          style={{
+            padding: '8px 14px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+            background: 'rgba(15, 23, 42, 0.75)',
+            display: 'flex',
+            justifyContent: 'center',
+          }}
+        >
+          <button
+            onClick={onClose}
+            style={{
+              width: '100%',
+              padding: '8px 14px',
+              borderRadius: '12px',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%)',
+              color: '#94a3b8',
+              fontSize: '11.5px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+            }}
+          >
+            <span>🏠</span>
+            <span>Вернуться на базу</span>
+          </button>
+        </div>
 
         {/* Всплывающее подробное досье выбранной рыбы */}
         {inspectedFish && (

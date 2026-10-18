@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FishingLocation } from '../locationsData';
 import { ROD_TIERS, type PlayerGearState } from '../gearData';
 import { AVAILABLE_BAITS } from '../hooks/useBaitState';
@@ -240,6 +240,7 @@ interface HomeScreenProps {
   hasClaimedAllSpeciesReward?: boolean;
   onClaimAllSpeciesReward?: () => boolean;
   onResetProgress?: () => void;
+  resetModalSignal?: number;
 }
 
 export const HomeScreen = ({
@@ -264,6 +265,7 @@ export const HomeScreen = ({
   onOpenMap: _onOpenMap,
   onOpenShop,
   onResetProgress,
+  resetModalSignal,
 }: HomeScreenProps) => {
   const currentRod = ROD_TIERS.find((r) => r.id === gear.equippedRodId) || ROD_TIERS[0];
   const rodLevel = gear.rodLevels[gear.equippedRodId] || 1;
@@ -274,6 +276,13 @@ export const HomeScreen = ({
   const [activeModal, setActiveModal] = useState<
     'quests' | 'tournament' | 'weather' | 'settings' | 'baitSelect' | 'rodSelect' | 'leaderboard' | 'achievements' | 'journal' | null
   >(null);
+
+  // Закрытие всех модальных окон при клике на "База" или смене таба в нижнем меню
+  useEffect(() => {
+    if (resetModalSignal !== undefined && resetModalSignal > 0) {
+      setActiveModal(null);
+    }
+  }, [resetModalSignal]);
 
   const expPercentage = Math.min(100, Math.max(0, (exp / maxExp) * 100));
 
