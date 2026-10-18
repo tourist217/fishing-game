@@ -7,6 +7,7 @@ import type { FishJournal } from '../hooks/usePlayerState';
 import { FishJournalModal } from './FishJournalModal';
 import { RangerQuestsModal } from './RangerQuestsModal';
 import type { DailyQuest } from '../types/quests';
+import { getCurrentWeather, getWeatherForecast, TIME_CONFIGS, WEATHER_CONFIGS } from '../utils/weatherTime';
 
 // --- SVG-иконки для реалистичного визуала снастей из референса ---
 export const BobberIcon = ({ size = 32 }: { size?: number }) => (
@@ -289,6 +290,8 @@ export const HomeScreen = ({
   const rodLevel = gear.rodLevels[gear.equippedRodId] || 1;
   const currentBait = AVAILABLE_BAITS.find((b) => b.id === selectedBaitId) || AVAILABLE_BAITS[0];
   const currentBaitCount = baits[selectedBaitId] || 0;
+  const currentEnv = getCurrentWeather();
+  const forecast = getWeatherForecast(4);
 
   // Интерактивные модальные окна
   const [activeModal, setActiveModal] = useState<
@@ -754,7 +757,7 @@ export const HomeScreen = ({
             }}
           >
             <div style={{ fontSize: '26px', filter: 'drop-shadow(0 2px 6px rgba(56, 189, 248, 0.6))' }}>
-              🌤️
+              {WEATHER_CONFIGS[currentEnv.weather]?.icon || '🌤️'}
             </div>
             <div
               style={{
@@ -1517,29 +1520,89 @@ export const HomeScreen = ({
               borderRadius: '24px',
               padding: '20px',
               border: '1px solid rgba(255, 255, 255, 0.15)',
-              maxWidth: '320px',
+              maxWidth: '340px',
+              width: '100%',
               textAlign: 'center',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
             }}
           >
-            <div style={{ fontSize: '42px', marginBottom: '8px' }}>🌤️</div>
-            <div style={{ fontSize: '16px', fontWeight: 800, color: '#bae6fd', marginBottom: '6px' }}>
-              Сводка погоды
+            <div style={{ fontSize: '42px', marginBottom: '4px' }}>
+              {WEATHER_CONFIGS[currentEnv.weather]?.icon || '🌤️'}
             </div>
-            <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.5, margin: 0 }}>
-              Локация: <strong>{currentLocation.name}</strong>
-              <br />
-              Температура: <strong>+21°C</strong>
-              <br />
-              Ветер: <strong>Юго-восточный, 1.8 м/с (штиль)</strong>
-              <br />
-              Давление: <strong>750 мм рт. ст.</strong>
-              <br />
-              Прогноз клёва: <span style={{ color: '#4ade80', fontWeight: 700 }}>Отличный</span>
+            <div style={{ fontSize: '17px', fontWeight: 800, color: '#bae6fd', marginBottom: '2px' }}>
+              Сводка погоды и прогноз
+            </div>
+            <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '14px' }}>
+              Синхронизировано у всех рыбаков онлайн (период 15 мин)
+            </div>
+
+            {/* Карточка текущей погоды */}
+            <div
+              style={{
+                background: 'rgba(30, 41, 59, 0.7)',
+                borderRadius: '16px',
+                padding: '12px',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                marginBottom: '14px',
+                textAlign: 'left',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span style={{ fontSize: '11px', color: '#94a3b8' }}>{currentLocation.name}:</span>
+                <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 700 }}>
+                  {TIME_CONFIGS[currentEnv.timeOfDay]?.icon} {TIME_CONFIGS[currentEnv.timeOfDay]?.label}
+                </span>
+              </div>
+              <div style={{ fontSize: '15px', fontWeight: 800, color: '#f8fafc', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>{WEATHER_CONFIGS[currentEnv.weather]?.icon}</span>
+                <span>{WEATHER_CONFIGS[currentEnv.weather]?.label}</span>
+              </div>
+              <div style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: 1.4 }}>
+                {WEATHER_CONFIGS[currentEnv.weather]?.description}
+              </div>
+            </div>
+
+            {/* Прогноз на следующие периоды */}
+            <div style={{ textAlign: 'left', marginBottom: '14px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', marginBottom: '8px' }}>
+                ⏳ Прогноз смены погоды:
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                {forecast.map((slot, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      background: 'rgba(30, 41, 59, 0.5)',
+                      borderRadius: '12px',
+                      padding: '8px',
+                      border: '1px solid rgba(255, 255, 255, 0.05)',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '2px' }}>
+                      через ~{slot.startsInMinutes} мин
+                    </div>
+                    <div style={{ fontSize: '18px', margin: '2px 0' }}>
+                      {TIME_CONFIGS[slot.timeOfDay]?.icon} {WEATHER_CONFIGS[slot.weather]?.icon}
+                    </div>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: '#e2e8f0' }}>
+                      {slot.timeLabel}
+                    </div>
+                    <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                      {WEATHER_CONFIGS[slot.weather]?.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <p style={{ fontSize: '11px', color: '#64748b', lineHeight: 1.4, margin: '0 0 14px 0' }}>
+              💡 Активность рыбы зависит от времени и погоды. Подбирайте правильные снасти и наживки под условия!
             </p>
+
             <button
               onClick={() => setActiveModal(null)}
               style={{
-                marginTop: '16px',
                 width: '100%',
                 background: '#0284c7',
                 border: 'none',

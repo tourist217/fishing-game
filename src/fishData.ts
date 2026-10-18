@@ -1,3 +1,5 @@
+import { type TimeOfDay, type WeatherType, getCurrentWeather } from './utils/weatherTime';
+
 export type FishRarity = 'common' | 'rare' | 'epic' | 'legendary';
 export type FishSizeCategory = 'small' | 'medium' | 'large' | 'trophy';
 
@@ -19,6 +21,8 @@ export interface Fish {
   baseExpPerKg: number;
   weightTiers: Record<FishSizeCategory, FishWeightRange>;
   baitPreferences: Record<string, number>;
+  timePreferences?: Partial<Record<TimeOfDay, number>>;
+  weatherPreferences?: Partial<Record<WeatherType, number>>;
   fightBehavior: {
     pullForce: number;      // Сила давления ко дну (0.8 - 2.5)
     jerkFrequency: number;  // Частота рывков и прыжков зоны (0.2 - 2.0)
@@ -53,6 +57,8 @@ export const FISH_DATABASE: Fish[] = [
       trophy: { minKg: 0.085, maxKg: 0.130, priceMultiplier: 3.5, expMultiplier: 3.0, label: 'ТРОФЕЙ' },
     },
     baitPreferences: { bloodworm: 1.0, worm: 0.8, maggot: 0.7, bread: 0.3 },
+    timePreferences: { morning: 1.2, day: 1.2, evening: 1.0, night: 0.3 },
+    weatherPreferences: { clear: 1.1, fog: 1.0, overcast: 1.0, rain: 0.9 },
     fightBehavior: { pullForce: 0.8, jerkFrequency: 0.3 },
     habitats: {
       loc_village_pond: ['small', 'medium'],
@@ -78,6 +84,8 @@ export const FISH_DATABASE: Fish[] = [
       trophy: { minKg: 0.260, maxKg: 0.450, priceMultiplier: 3.2, expMultiplier: 2.8, label: 'ТРОФЕЙ' },
     },
     baitPreferences: { worm: 1.0, maggot: 0.8, livebait: 0.6 },
+    timePreferences: { morning: 1.1, day: 1.3, evening: 1.2, night: 0.5 },
+    weatherPreferences: { clear: 1.2, fog: 1.0, overcast: 1.1, rain: 0.8 },
     fightBehavior: { pullForce: 1.1, jerkFrequency: 0.2 },
     habitats: {
       loc_village_pond: ['small'],
@@ -101,6 +109,8 @@ export const FISH_DATABASE: Fish[] = [
       trophy: { minKg: 0.075, maxKg: 0.115, priceMultiplier: 3.8, expMultiplier: 3.2, label: 'ТРОФЕЙ' },
     },
     baitPreferences: { maggot: 1.0, bread: 0.9, dough: 0.8, bloodworm: 0.7 },
+    timePreferences: { morning: 1.3, day: 1.5, evening: 1.0, night: 0.1 },
+    weatherPreferences: { clear: 1.5, fog: 0.8, overcast: 0.9, rain: 0.4 },
     fightBehavior: { pullForce: 0.7, jerkFrequency: 1.4 },
     habitats: {
       loc_old_oxbow: ['small', 'medium'],
@@ -127,6 +137,8 @@ export const FISH_DATABASE: Fish[] = [
       trophy: { minKg: 0.950, maxKg: 1.850, priceMultiplier: 3.5, expMultiplier: 3.0, label: 'ТРОФЕЙ' },
     },
     baitPreferences: { worm: 1.0, dough: 0.9, bread: 0.8, maggot: 0.7, corn: 0.5 },
+    timePreferences: { morning: 1.4, day: 1.4, evening: 1.1, night: 0.3 },
+    weatherPreferences: { clear: 1.4, fog: 1.2, overcast: 1.0, rain: 0.5 },
     fightBehavior: { pullForce: 1.0, jerkFrequency: 0.4 },
     habitats: {
       loc_village_pond: ['small'],
@@ -152,6 +164,8 @@ export const FISH_DATABASE: Fish[] = [
       trophy: { minKg: 0.650, maxKg: 1.300, priceMultiplier: 3.4, expMultiplier: 3.0, label: 'ТРОФЕЙ' },
     },
     baitPreferences: { maggot: 1.0, bloodworm: 0.9, dough: 0.8, bread: 0.7, worm: 0.6 },
+    timePreferences: { morning: 1.4, day: 1.3, evening: 1.1, night: 0.2 },
+    weatherPreferences: { clear: 1.3, fog: 1.2, overcast: 1.1, rain: 0.6 },
     fightBehavior: { pullForce: 0.9, jerkFrequency: 0.9 },
     habitats: {
       loc_village_pond: ['small'],
@@ -179,6 +193,8 @@ export const FISH_DATABASE: Fish[] = [
       trophy: { minKg: 0.750, maxKg: 1.500, priceMultiplier: 3.5, expMultiplier: 3.0, label: 'ТРОФЕЙ' },
     },
     baitPreferences: { corn: 1.0, maggot: 0.9, bread: 0.8, worm: 0.6 },
+    timePreferences: { morning: 1.1, day: 1.5, evening: 1.0, night: 0.1 },
+    weatherPreferences: { clear: 1.5, fog: 0.7, overcast: 0.9, rain: 0.4 },
     fightBehavior: { pullForce: 1.0, jerkFrequency: 1.1 },
     habitats: {
       loc_quiet_river: ['small', 'medium'],
@@ -205,6 +221,8 @@ export const FISH_DATABASE: Fish[] = [
       trophy: { minKg: 1.100, maxKg: 2.200, priceMultiplier: 4.0, expMultiplier: 3.5, label: 'ТРОФЕЙ' },
     },
     baitPreferences: { livebait: 1.0, worm: 0.9, bloodworm: 0.7, maggot: 0.5 },
+    timePreferences: { morning: 1.5, day: 0.8, evening: 1.4, night: 0.2 },
+    weatherPreferences: { clear: 0.7, fog: 1.1, overcast: 1.4, rain: 1.4 },
     fightBehavior: { pullForce: 1.3, jerkFrequency: 1.3 },
     habitats: {
       loc_old_oxbow: ['small'],
@@ -232,6 +250,8 @@ export const FISH_DATABASE: Fish[] = [
       trophy: { minKg: 2.400, maxKg: 4.200, priceMultiplier: 4.2, expMultiplier: 3.6, label: 'ТРОФЕЙ' },
     },
     baitPreferences: { worm: 1.0, maggot: 0.7, corn: 0.6, dough: 0.4 },
+    timePreferences: { morning: 1.4, day: 0.6, evening: 1.5, night: 0.4 },
+    weatherPreferences: { clear: 0.6, fog: 1.5, overcast: 1.3, rain: 0.8 },
     fightBehavior: { pullForce: 1.5, jerkFrequency: 0.3 },
     habitats: {
       loc_forest_lake: ['small', 'medium'],
@@ -255,6 +275,8 @@ export const FISH_DATABASE: Fish[] = [
       trophy: { minKg: 2.800, maxKg: 5.100, priceMultiplier: 4.0, expMultiplier: 3.4, label: 'ТРОФЕЙ' },
     },
     baitPreferences: { corn: 1.0, maggot: 0.8, worm: 0.8, dough: 0.5 },
+    timePreferences: { morning: 1.3, day: 0.7, evening: 1.4, night: 0.5 },
+    weatherPreferences: { clear: 0.8, fog: 1.1, overcast: 1.3, rain: 1.4 },
     fightBehavior: { pullForce: 1.4, jerkFrequency: 1.0 },
     habitats: {
       loc_quiet_river: ['small', 'medium'],
@@ -279,6 +301,8 @@ export const FISH_DATABASE: Fish[] = [
       trophy: { minKg: 2.800, maxKg: 5.500, priceMultiplier: 4.0, expMultiplier: 3.5, label: 'ТРОФЕЙ' },
     },
     baitPreferences: { maggot: 1.0, worm: 0.9, bloodworm: 0.8, corn: 0.7, dough: 0.6 },
+    timePreferences: { morning: 1.1, day: 0.5, evening: 1.4, night: 1.6 },
+    weatherPreferences: { clear: 0.7, fog: 1.4, overcast: 1.3, rain: 1.1 },
     fightBehavior: { pullForce: 1.3, jerkFrequency: 0.5 },
     habitats: {
       loc_beaver_backwater: ['small', 'medium'],
@@ -305,6 +329,8 @@ export const FISH_DATABASE: Fish[] = [
       trophy: { minKg: 7.500, maxKg: 16.000, priceMultiplier: 5.0, expMultiplier: 4.0, label: 'ТРОФЕЙ' },
     },
     baitPreferences: { livebait: 1.0, worm: 0.2 },
+    timePreferences: { morning: 1.6, day: 0.6, evening: 1.5, night: 0.1 },
+    weatherPreferences: { clear: 0.6, fog: 1.1, overcast: 1.5, rain: 1.6 },
     fightBehavior: { pullForce: 1.8, jerkFrequency: 1.7 },
     habitats: {
       loc_forest_lake: ['small'],
@@ -331,6 +357,8 @@ export const FISH_DATABASE: Fish[] = [
       trophy: { minKg: 5.800, maxKg: 11.500, priceMultiplier: 4.8, expMultiplier: 4.0, label: 'ТРОФЕЙ' },
     },
     baitPreferences: { livebait: 1.0, worm: 0.3 },
+    timePreferences: { morning: 1.2, day: 0.3, evening: 1.5, night: 1.7 },
+    weatherPreferences: { clear: 0.5, fog: 1.5, overcast: 1.4, rain: 1.1 },
     fightBehavior: { pullForce: 1.7, jerkFrequency: 0.8 },
     habitats: {
       loc_wide_reach: ['small', 'medium'],
@@ -358,6 +386,8 @@ export const FISH_DATABASE: Fish[] = [
       trophy: { minKg: 5.200, maxKg: 9.000, priceMultiplier: 4.8, expMultiplier: 4.0, label: 'ТРОФЕЙ' },
     },
     baitPreferences: { livebait: 1.0, maggot: 0.4 },
+    timePreferences: { morning: 1.4, day: 1.5, evening: 1.1, night: 0.1 },
+    weatherPreferences: { clear: 1.4, fog: 0.6, overcast: 1.1, rain: 0.5 },
     fightBehavior: { pullForce: 1.6, jerkFrequency: 1.8 },
     habitats: {
       loc_reservoir: ['small', 'medium'],
@@ -383,6 +413,8 @@ export const FISH_DATABASE: Fish[] = [
       trophy: { minKg: 10.500, maxKg: 22.000, priceMultiplier: 5.0, expMultiplier: 4.2, label: 'ТРОФЕЙ' },
     },
     baitPreferences: { corn: 1.0, worm: 0.8, dough: 0.7, maggot: 0.6 },
+    timePreferences: { morning: 1.4, day: 1.4, evening: 1.1, night: 0.4 },
+    weatherPreferences: { clear: 1.4, fog: 1.1, overcast: 1.0, rain: 0.5 },
     fightBehavior: { pullForce: 1.9, jerkFrequency: 0.7 },
     habitats: {
       loc_beaver_backwater: ['small'],
@@ -410,6 +442,8 @@ export const FISH_DATABASE: Fish[] = [
       trophy: { minKg: 12.000, maxKg: 25.000, priceMultiplier: 5.2, expMultiplier: 4.4, label: 'ТРОФЕЙ' },
     },
     baitPreferences: { corn: 1.0, dough: 0.8, bread: 0.7 },
+    timePreferences: { morning: 1.3, day: 1.5, evening: 1.1, night: 0.2 },
+    weatherPreferences: { clear: 1.5, fog: 0.8, overcast: 1.0, rain: 0.5 },
     fightBehavior: { pullForce: 1.8, jerkFrequency: 1.5 },
     habitats: {
       loc_quiet_river: ['small'],
@@ -435,6 +469,8 @@ export const FISH_DATABASE: Fish[] = [
       trophy: { minKg: 14.000, maxKg: 30.000, priceMultiplier: 5.0, expMultiplier: 4.2, label: 'ТРОФЕЙ' },
     },
     baitPreferences: { dough: 1.0, bread: 0.8, corn: 0.6 },
+    timePreferences: { morning: 1.2, day: 1.4, evening: 1.2, night: 0.3 },
+    weatherPreferences: { clear: 1.3, fog: 1.1, overcast: 1.1, rain: 0.7 },
     fightBehavior: { pullForce: 2.1, jerkFrequency: 0.5 },
     habitats: {
       loc_wide_reach: ['small', 'medium'],
@@ -459,6 +495,8 @@ export const FISH_DATABASE: Fish[] = [
       trophy: { minKg: 14.000, maxKg: 28.000, priceMultiplier: 6.0, expMultiplier: 5.0, label: 'ТРОФЕЙ' },
     },
     baitPreferences: { corn: 1.0, worm: 0.8, dough: 0.6 },
+    timePreferences: { morning: 1.3, day: 1.3, evening: 1.4, night: 0.6 },
+    weatherPreferences: { clear: 1.3, fog: 1.2, overcast: 1.1, rain: 0.8 },
     fightBehavior: { pullForce: 2.3, jerkFrequency: 1.2 },
     habitats: {
       loc_oka_river: ['small', 'medium'],
@@ -483,6 +521,8 @@ export const FISH_DATABASE: Fish[] = [
       trophy: { minKg: 42.000, maxKg: 95.000, priceMultiplier: 7.5, expMultiplier: 6.0, label: 'ТРОФЕЙ' },
     },
     baitPreferences: { livebait: 1.0, worm: 0.8 },
+    timePreferences: { morning: 0.6, day: 0.2, evening: 1.5, night: 1.8 },
+    weatherPreferences: { clear: 0.4, fog: 1.3, overcast: 1.3, rain: 1.7 },
     fightBehavior: { pullForce: 2.5, jerkFrequency: 0.4 },
     habitats: {
       loc_lower_volga: ['small', 'medium'],
@@ -549,15 +589,21 @@ export const JUNK_ITEMS: Fish[] = [
 
 let lastCaughtWasTrophy = false;
 
-// Функция подбора рыбы по водоёму, насадке и снастям
+// Функция подбора рыбы по водоёму, насадке, времени суток и погоде
 export function getRandomFish(
   rodStrengthKg: number,
   lineTensileKg: number,
   baitId: string = 'worm',
   locationId: string = 'loc_village_pond',
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _locationWeightModifier: number = 1.0
+  _locationWeightModifier: number = 1.0,
+  timeOfDay?: TimeOfDay,
+  weather?: WeatherType
 ): GeneratedFishResult {
+  const currentEnv = getCurrentWeather();
+  const effectiveTime = timeOfDay || currentEnv.timeOfDay;
+  const effectiveWeather = weather || currentEnv.weather;
+
   // 0. Шанс 5% поймать мусор / ветку / банку
   if (Math.random() < 0.05) {
     const junk = JUNK_ITEMS[Math.floor(Math.random() * JUNK_ITEMS.length)];
@@ -580,16 +626,21 @@ export function getRandomFish(
     candidates = FISH_DATABASE.filter((f) => f.id === 'crucian_carp' || f.id === 'roach');
   }
 
-  // 2. Взвешиваем вероятность поклёвки по наживке
+  // 2. Взвешиваем вероятность поклёвки по наживке, времени суток и погоде
   const weightedList: { fish: Fish; weight: number }[] = [];
   for (const f of candidates) {
-    const pref = f.baitPreferences[baitId] || 0;
-    if (pref > 0) {
-      weightedList.push({ fish: f, weight: pref });
+    const baitPref = f.baitPreferences[baitId] || 0;
+    if (baitPref > 0) {
+      const timeCoeff = f.timePreferences?.[effectiveTime] ?? 1.0;
+      const weatherCoeff = f.weatherPreferences?.[effectiveWeather] ?? 1.0;
+      const finalWeight = baitPref * timeCoeff * weatherCoeff;
+      if (finalWeight > 0) {
+        weightedList.push({ fish: f, weight: finalWeight });
+      }
     }
   }
 
-  // Если на выбранную наживку в этом водоёме никто не клюёт, fallback на любую доступную рыбу
+  // Если на выбранную наживку в этом водоёме никто не клюёт, fallback на любую доступную рыбу с учетом погоды
   let selectedFish: Fish;
   if (weightedList.length > 0) {
     const totalWeight = weightedList.reduce((sum, item) => sum + item.weight, 0);
@@ -610,9 +661,20 @@ export function getRandomFish(
   const availableCategories = selectedFish.habitats[locationId] || ['small'];
   let sizeCategory = availableCategories[Math.floor(Math.random() * availableCategories.length)];
 
-  // Трофейная рыба: защита от повтора подряд + шанс < 1% (0.8%)
+  // Трофейная рыба: защита от повтора подряд + базовый шанс 0.8%
+  let trophyChance = 0.008;
+
+  // В идеальных условиях (любимое время суток, любимая погода, любимая наживка) повышаем шанс на 20%
+  const isIdealTime = (selectedFish.timePreferences?.[effectiveTime] ?? 1.0) >= 1.3;
+  const isIdealWeather = (selectedFish.weatherPreferences?.[effectiveWeather] ?? 1.0) >= 1.3;
+  const isIdealBait = (selectedFish.baitPreferences[baitId] || 0) >= 1.0;
+
+  if (isIdealTime && isIdealWeather && isIdealBait) {
+    trophyChance *= 1.20; // +20% к шансу трофея в идеальных условиях
+  }
+
   if (sizeCategory === 'trophy') {
-    if (lastCaughtWasTrophy || Math.random() > 0.008) {
+    if (lastCaughtWasTrophy || Math.random() > trophyChance) {
       sizeCategory = availableCategories.includes('large') ? 'large' : 'medium';
     } else {
       lastCaughtWasTrophy = true;

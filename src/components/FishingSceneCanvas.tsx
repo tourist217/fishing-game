@@ -2,16 +2,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { FishingLocation } from '../locationsData';
 import type { GameState } from './FishingScreen';
 
-export type TimeOfDay = 'dawn' | 'morning' | 'day' | 'evening' | 'night';
-
-export function getTimeOfDay(date: Date = new Date()): TimeOfDay {
-  const hour = date.getHours();
-  if (hour >= 5 && hour < 8) return 'dawn';
-  if (hour >= 8 && hour < 12) return 'morning';
-  if (hour >= 12 && hour < 17) return 'day';
-  if (hour >= 17 && hour < 21) return 'evening';
-  return 'night';
-}
+import {
+  type TimeOfDay,
+  type WeatherType,
+  getCurrentWeather,
+  TIME_CONFIGS,
+  WEATHER_CONFIGS,
+} from '../utils/weatherTime';
 
 interface FishingSceneCanvasProps {
   location: FishingLocation;
@@ -19,6 +16,8 @@ interface FishingSceneCanvasProps {
   tension: number; // 0..100
   rodMaterial?: string;
   onCastComplete?: () => void;
+  timeOfDay?: TimeOfDay;
+  weather?: WeatherType;
 }
 
 const bgImages: Record<string, HTMLImageElement> = {};
@@ -56,9 +55,13 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
   gameState,
   tension,
   rodMaterial = 'reed',
+  timeOfDay: propTimeOfDay,
+  weather: propWeather,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const timeOfDay = getTimeOfDay();
+  const currentEnv = getCurrentWeather();
+  const effectiveTime = propTimeOfDay || currentEnv.timeOfDay;
+  const effectiveWeather = propWeather || currentEnv.weather;
 
   // Состояние позиции заброса поплавка для текущего каста
   const [castTarget, setCastTarget] = useState<{ x: number; y: number }>({ x: 0.5, y: 0.65 });
@@ -118,28 +121,28 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
           drawImageCover(ctx, photoImg, width, height);
 
           // Динамическое наложение освещения по времени суток на единое фоновое изображение
-          if (timeOfDay === 'dawn') {
-            // Зорька: теплая золотисто-розовая утренняя дымка
-            ctx.fillStyle = 'rgba(246, 189, 96, 0.22)';
+          if (effectiveTime === 'morning') {
+            // Утро: теплая золотисто-розовая утренняя дымка и рассвет
+            ctx.fillStyle = 'rgba(251, 191, 36, 0.16)';
             ctx.fillRect(0, 0, width, height);
-            ctx.fillStyle = 'rgba(217, 119, 111, 0.15)';
+            ctx.fillStyle = 'rgba(244, 114, 182, 0.08)';
             ctx.fillRect(0, 0, width, height);
-          } else if (timeOfDay === 'morning') {
-            // Утро: нежный естественный свет
+          } else if (effectiveTime === 'day') {
+            // День: нежный естественный свет
             ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
             ctx.fillRect(0, 0, width, height);
-          } else if (timeOfDay === 'evening') {
+          } else if (effectiveTime === 'evening') {
             // Вечер: заходящий закатный пурпурно-оранжевый оттенок
-            ctx.fillStyle = 'rgba(168, 63, 81, 0.32)';
+            ctx.fillStyle = 'rgba(168, 63, 81, 0.28)';
             ctx.fillRect(0, 0, width, height);
-            ctx.fillStyle = 'rgba(242, 142, 43, 0.18)';
+            ctx.fillStyle = 'rgba(242, 142, 43, 0.16)';
             ctx.fillRect(0, 0, width, height);
-          } else if (timeOfDay === 'night') {
+          } else if (effectiveTime === 'night') {
             // Ночь: глубокое синее ночное освещение
             ctx.fillStyle = 'rgba(5, 12, 28, 0.82)';
             ctx.fillRect(0, 0, width, height);
 
-            // Звезды и Луна ночью
+            // Звезды ночью
             ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
             for (let i = 0; i < 30; i++) {
               const sx = (Math.sin(i * 99) * 0.5 + 0.5) * width;
@@ -150,14 +153,17 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
             }
           }
         } else {
-          drawSky(ctx, width, height, timeOfDay, location);
-          drawBackgroundScenery(ctx, width, height, timeOfDay, location);
-          drawWaterSurface(ctx, width, height, height * 0.48, timeOfDay, location, time);
+          drawSky(ctx, width, height, effectiveTime, location);
+          drawBackgroundScenery(ctx, width, height, effectiveTime, location);
+          drawWaterSurface(ctx, width, height, height * 0.48, effectiveTime, location, time);
         }
       } else {
-        drawSky(ctx, width, height, timeOfDay, location);
-        drawWaterSurface(ctx, width, height, height * 0.48, timeOfDay, location, time);
+        drawSky(ctx, width, height, effectiveTime, location);
+        drawWaterSurface(ctx, width, height, height * 0.48, effectiveTime, location, time);
       }
+
+      // 3.5. Отрисовка погодных эффектов на холсте (дождь с каплями и кругами, туман, пасмурно, солнце)
+      drawWeatherEffects(ctx, width, height, effectiveWeather, time);
 
       // 4. Позиция поплавка на экране
       const targetX = width * castTarget.x;
@@ -210,7 +216,7 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
 
       // 8. Отрисовка Поплавка
       if (gameState !== 'idle') {
-        drawFloat(ctx, floatX, floatY, timeOfDay, gameState);
+        drawFloat(ctx, floatX, floatY, effectiveTime, gameState);
       }
 
       // 9. Отрисовка Удилища (Rod)
@@ -222,7 +228,7 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
     render();
 
     return () => cancelAnimationFrame(animationFrameId);
-  }, [location, gameState, tension, rodMaterial, timeOfDay, castTarget, castProgress]);
+  }, [location, gameState, tension, rodMaterial, effectiveTime, effectiveWeather, castTarget, castProgress]);
 
   // Автоматический ресайз холста под реальный размер родительского контейнера
   useEffect(() => {
@@ -251,28 +257,33 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
         }}
       />
       
-      {/* Метка текущего времени суток */}
+      {/* Метка текущего времени суток и погоды */}
       <div
         style={{
           position: 'absolute',
           top: '12px',
           left: '14px',
-          background: 'rgba(0, 0, 0, 0.4)',
-          backdropFilter: 'blur(6px)',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-          borderRadius: '10px',
-          padding: '4px 10px',
-          fontSize: '11px',
+          background: 'rgba(0, 0, 0, 0.45)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(255, 255, 255, 0.18)',
+          borderRadius: '12px',
+          padding: '5px 10px',
+          fontSize: '12px',
           fontWeight: 'bold',
-          color: '#e2e8f0',
+          color: '#f8fafc',
           display: 'flex',
           alignItems: 'center',
-          gap: '4px',
+          gap: '6px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
           pointerEvents: 'none',
         }}
       >
-        <span>{getTimeOfDayBadge(timeOfDay).icon}</span>
-        <span>{getTimeOfDayBadge(timeOfDay).label}</span>
+        <span>{TIME_CONFIGS[effectiveTime]?.icon || '🌅'}</span>
+        <span>{TIME_CONFIGS[effectiveTime]?.label || 'Утро'}</span>
+        <span style={{ opacity: 0.4, margin: '0 1px' }}>•</span>
+        <span style={{ fontSize: '14px' }}>
+          {WEATHER_CONFIGS[effectiveWeather]?.icon || '☀️'}
+        </span>
       </div>
     </div>
   );
@@ -280,13 +291,87 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
 
 // --- ВСПОМОГАТЕЛЬНЫЕ РИСОВАЛКИ Canvas 2D ---
 
-function getTimeOfDayBadge(timeOfDay: TimeOfDay) {
-  switch (timeOfDay) {
-    case 'dawn': return { label: 'Зорька (Рассвет)', icon: '🌅' };
-    case 'morning': return { label: 'Утро', icon: '☀️' };
-    case 'day': return { label: 'Обед (День)', icon: '🌤️' };
-    case 'evening': return { label: 'Вечер (Закат)', icon: '🌆' };
-    case 'night': default: return { label: 'Ночь', icon: '🌙' };
+function drawWeatherEffects(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  weather: WeatherType,
+  time: number
+) {
+  if (weather === 'rain') {
+    ctx.save();
+    // 1. Пасмурное дождевое затемнение атмосферы
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.22)';
+    ctx.fillRect(0, 0, width, height);
+
+    // 2. Анимированные падающие струи дождя
+    ctx.strokeStyle = 'rgba(215, 235, 255, 0.38)';
+    ctx.lineWidth = 1.3;
+    const dropCount = 85;
+    for (let i = 0; i < dropCount; i++) {
+      const seedX = (Math.sin(i * 197.3) * 0.5 + 0.5) * width;
+      const speed = 420 + (i % 6) * 45;
+      const dropY = ((i * 41 + time * speed) % (height + 60)) - 30;
+      const dropX = (seedX + (time * 50)) % width;
+      const len = 14 + (i % 5) * 4;
+      ctx.beginPath();
+      ctx.moveTo(dropX, dropY);
+      ctx.lineTo(dropX - 3.5, dropY + len);
+      ctx.stroke();
+    }
+
+    // 3. Круги / всплески капель на поверхности воды (нижняя половина экрана)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 7; i++) {
+      const rx = ((i * 89 + Math.sin(time * 0.8 + i) * 35) % (width - 40)) + 20;
+      const ry = height * 0.52 + ((i * 59) % (height * 0.38));
+      const phase = ((time * 2.2 + i * 0.65) % 1);
+      const r = phase * 11;
+      ctx.beginPath();
+      ctx.ellipse(rx, ry, r, r * 0.35, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else if (weather === 'fog') {
+    ctx.save();
+    // Плавные стелющиеся полосы тумана над гладью воды
+    for (let band = 0; band < 4; band++) {
+      const y = height * (0.44 + band * 0.11);
+      const drift = Math.sin(time * 0.2 + band) * 20;
+      const grad = ctx.createLinearGradient(0, y - 28, 0, y + 28);
+      grad.addColorStop(0, 'rgba(235, 245, 255, 0)');
+      grad.addColorStop(0.5, `rgba(225, 238, 250, ${0.22 - band * 0.025})`);
+      grad.addColorStop(1, 'rgba(235, 245, 255, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, y - 28 + drift, width, 56);
+    }
+    // Легкая общая дымка
+    ctx.fillStyle = 'rgba(210, 225, 240, 0.14)';
+    ctx.fillRect(0, 0, width, height);
+    ctx.restore();
+  } else if (weather === 'overcast') {
+    ctx.save();
+    // Плотное серое пасмурное рассеяние
+    ctx.fillStyle = 'rgba(50, 65, 80, 0.20)';
+    ctx.fillRect(0, 0, width, height);
+    ctx.restore();
+  } else if (weather === 'clear') {
+    ctx.save();
+    // Солнечный мягкий блик в верхней части
+    const sunGlow = ctx.createRadialGradient(
+      width * 0.3,
+      height * 0.18,
+      10,
+      width * 0.3,
+      height * 0.18,
+      width * 0.65
+    );
+    sunGlow.addColorStop(0, 'rgba(255, 245, 210, 0.14)');
+    sunGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = sunGlow;
+    ctx.fillRect(0, 0, width, height);
+    ctx.restore();
   }
 }
 
@@ -299,15 +384,11 @@ function drawSky(
 ) {
   const grad = ctx.createLinearGradient(0, 0, 0, h * 0.55);
 
-  if (timeOfDay === 'dawn') {
+  if (timeOfDay === 'morning') {
     grad.addColorStop(0, '#2d1b4e');
     grad.addColorStop(0.4, '#8a3b68');
     grad.addColorStop(0.8, '#d9776f');
     grad.addColorStop(1, location.accentColor || '#f6bd60');
-  } else if (timeOfDay === 'morning') {
-    grad.addColorStop(0, '#1a5b8c');
-    grad.addColorStop(0.5, '#3891c8');
-    grad.addColorStop(1, '#8bd3dd');
   } else if (timeOfDay === 'day') {
     grad.addColorStop(0, '#0f4c81');
     grad.addColorStop(0.6, '#2589bd');
