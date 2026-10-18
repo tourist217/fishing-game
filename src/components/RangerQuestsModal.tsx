@@ -49,7 +49,7 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: '12px',
+        padding: 'max(84px, var(--tg-content-safe-area-inset-top, calc(env(safe-area-inset-top, 44px) + 40px))) 12px calc(12px + env(safe-area-inset-bottom, 0px)) 12px',
         userSelect: 'none',
       }}
     >

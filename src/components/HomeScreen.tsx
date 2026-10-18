@@ -331,7 +331,7 @@ export const HomeScreen = ({
         backgroundImage: 'url(/assets/locations/main_fishing_dock.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center bottom',
-        paddingTop: 'max(14px, env(safe-area-inset-top, 14px))',
+        paddingTop: 'max(96px, var(--tg-content-safe-area-inset-top, calc(env(safe-area-inset-top, 44px) + 52px)))',
         paddingLeft: 'max(10px, env(safe-area-inset-left, 10px))',
         paddingRight: 'max(10px, env(safe-area-inset-right, 10px))',
         paddingBottom: '8px',

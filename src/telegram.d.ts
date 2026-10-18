@@ -14,6 +14,10 @@ interface TelegramWebApp {
   isVerticalSwipesEnabled?: boolean;
   setHeaderColor?: (color: string) => void;
   setBackgroundColor?: (color: string) => void;
+  contentSafeAreaInset?: { top: number; bottom: number; left: number; right: number };
+  safeAreaInset?: { top: number; bottom: number; left: number; right: number };
+  onEvent?: (eventType: string, eventHandler: () => void) => void;
+  offEvent?: (eventType: string, eventHandler: () => void) => void;
   initDataUnsafe?: { user?: { first_name?: string } };
 }
 

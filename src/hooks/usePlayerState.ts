@@ -108,12 +108,32 @@ export function usePlayerState() {
         console.warn('Telegram WebApp fullscreen init:', err);
       }
 
+      // Синхронизация отступов контента для избежания наложения нативных кнопок Telegram в Fullscreen
+      const updateContentInsets = () => {
+        try {
+          const topInset = tg.contentSafeAreaInset?.top || tg.safeAreaInset?.top || 0;
+          if (topInset > 0) {
+            document.documentElement.style.setProperty('--tg-content-safe-area-inset-top', `${topInset}px`);
+          }
+          const bottomInset = tg.contentSafeAreaInset?.bottom || tg.safeAreaInset?.bottom || 0;
+          if (bottomInset > 0) {
+            document.documentElement.style.setProperty('--tg-content-safe-area-inset-bottom', `${bottomInset}px`);
+          }
+        } catch {}
+      };
+
+      updateContentInsets();
+      tg.onEvent?.('fullscreen_changed', updateContentInsets);
+      tg.onEvent?.('content_safe_area_changed', updateContentInsets);
+      tg.onEvent?.('safe_area_changed', updateContentInsets);
+
       // Дополнительный вызов на первый клик/тап на случай, если Telegram требует взаимодействия пользователя
       const handleFirstInteraction = () => {
         try {
           if (typeof tg.requestFullscreen === 'function' && !tg.isFullscreen) {
             tg.requestFullscreen();
           }
+          updateContentInsets();
         } catch {}
         window.removeEventListener('click', handleFirstInteraction);
         window.removeEventListener('touchstart', handleFirstInteraction);
@@ -121,6 +141,14 @@ export function usePlayerState() {
 
       window.addEventListener('click', handleFirstInteraction, { once: true });
       window.addEventListener('touchstart', handleFirstInteraction, { once: true });
+
+      return () => {
+        tg.offEvent?.('fullscreen_changed', updateContentInsets);
+        tg.offEvent?.('content_safe_area_changed', updateContentInsets);
+        tg.offEvent?.('safe_area_changed', updateContentInsets);
+        window.removeEventListener('click', handleFirstInteraction);
+        window.removeEventListener('touchstart', handleFirstInteraction);
+      };
     }
   }, []);
 

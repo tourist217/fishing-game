@@ -103,7 +103,7 @@ export default function App() {
         boxSizing: 'border-box',
         padding: !isAtPond && activeTab === 'base'
           ? '0 0 calc(6px + env(safe-area-inset-bottom, 0px)) 0'
-          : 'max(8px, env(safe-area-inset-top, 8px)) 8px calc(6px + env(safe-area-inset-bottom, 0px)) 8px',
+          : 'max(96px, var(--tg-content-safe-area-inset-top, calc(env(safe-area-inset-top, 44px) + 52px))) 8px calc(6px + env(safe-area-inset-bottom, 0px)) 8px',
         justifyContent: 'space-between',
         background: isAtPond ? currentLocation.gradient : 'linear-gradient(180deg, #091325 0%, #0d2744 60%, #06192d 100%)',
         userSelect: 'none',
