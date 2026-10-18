@@ -260,9 +260,21 @@ export default function App() {
       <Navigation
         activeTab={activeTab}
         onTabChange={(tab) => {
-          setActiveTab(tab);
-          setIsMapOpen(tab === 'map');
-          if (tab !== 'base') setIsAtPond(false);
+          if (tab === 'base') {
+            if (isAtPond) {
+              fishing.resetToIdle();
+              setIsAtPond(false);
+            }
+            setActiveTab('base');
+            setIsMapOpen(false);
+          } else {
+            if (isAtPond) {
+              fishing.resetToIdle();
+              setIsAtPond(false);
+            }
+            setActiveTab(tab);
+            setIsMapOpen(tab === 'map');
+          }
           triggerHaptic('selection');
         }}
         inventoryCount={player.inventoryCount}

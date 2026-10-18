@@ -46,16 +46,16 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
   baits,
   hasLineOnRod = true,
   rodMaterial = 'bamboo',
-  coins,
+  coins: _coins,
   onSelectBait,
   onStartFishing,
   onStartReeling,
   onPullStart,
   onPullEnd,
   onDismissModal,
-  onOpenMap,
+  onOpenMap: _onOpenMap,
   onOpenShop,
-  onBackToHub,
+  onBackToHub: _onBackToHub,
   getRarityLabel: _getRarityLabel,
 }) => {
   const currentBaitCount = baits[selectedBaitId] || 0;
@@ -77,72 +77,6 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
         userSelect: 'none',
       }}
     >
-      {/* Верхний бар локации в стиле дизайн-системы */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: 'rgba(22, 28, 38, 0.85)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          padding: '8px 14px',
-          borderRadius: '24px',
-          border: '1.5px solid rgba(245, 158, 11, 0.35)',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)',
-          zIndex: 10,
-          minHeight: '44px',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '22px' }}>{currentLocation.icon}</span>
-          <div>
-            <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>
-              {currentLocation.name}
-            </div>
-            {coins !== undefined && (
-              <div style={{ fontSize: '11px', fontWeight: 800, color: '#fbbf24', lineHeight: 1.2 }}>
-                🪙 {coins.toLocaleString('ru-RU')}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          {onBackToHub && (
-            <button
-              onClick={onBackToHub}
-              style={{
-                background: 'rgba(255, 255, 255, 0.12)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                borderRadius: '12px',
-                color: '#fff',
-                fontSize: '11px',
-                fontWeight: 800,
-                padding: '6px 10px',
-                cursor: 'pointer',
-              }}
-            >
-              База 🏠
-            </button>
-          )}
-          <button
-            onClick={onOpenMap}
-            style={{
-              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.15))',
-              border: '1px solid rgba(245, 158, 11, 0.45)',
-              borderRadius: '12px',
-              color: '#fef08a',
-              fontSize: '11px',
-              fontWeight: 800,
-              padding: '6px 10px',
-              cursor: 'pointer',
-            }}
-          >
-            Карта 🗺️
-          </button>
-        </div>
-      </div>
 
       {/* Центральная игровая зона с 2D Canvas водоёма, удочки и поплавка */}
       <div
