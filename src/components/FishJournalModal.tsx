@@ -4,6 +4,8 @@ import { LOCATIONS } from '../locationsData';
 import { formatWeight } from '../utils/fishUtils';
 import type { FishJournal } from '../hooks/usePlayerState';
 import { triggerHaptic } from '../utils/haptics';
+import { AVAILABLE_BAITS } from '../hooks/useBaitState';
+import { TIME_CONFIGS, WEATHER_CONFIGS, type TimeOfDay, type WeatherType } from '../utils/weatherTime';
 
 interface FishJournalModalProps {
   journal: FishJournal;
@@ -47,6 +49,20 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
       default:
         return { label: 'Обычная', color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.15)' };
     }
+  };
+
+  const getActivityBadge = (coeff: number = 1.0) => {
+    if (coeff >= 1.3) return { label: 'Жор', color: '#f87171', bg: 'rgba(239, 68, 68, 0.18)', icon: '🔥' };
+    if (coeff >= 1.0) return { label: 'Активна', color: '#4ade80', bg: 'rgba(34, 197, 94, 0.18)', icon: '✨' };
+    if (coeff >= 0.5) return { label: 'Слабо', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.15)', icon: '🌤️' };
+    return { label: 'Спит', color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.12)', icon: '💤' };
+  };
+
+  const getBaitBadge = (pref: number = 0) => {
+    if (pref >= 0.9) return { label: 'Любимая', color: '#4ade80', bg: 'rgba(34, 197, 94, 0.18)', icon: '🟢' };
+    if (pref >= 0.5) return { label: 'Клюёт', color: '#facc15', bg: 'rgba(250, 204, 21, 0.18)', icon: '🟡' };
+    if (pref > 0) return { label: 'Редко', color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.14)', icon: '⚪' };
+    return { label: 'Игнор', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.12)', icon: '❌' };
   };
 
   const handleClaimReward = () => {
@@ -331,10 +347,8 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                   <div
                     key={fish.id}
                     onClick={() => {
-                      if (isDiscovered) {
-                        setInspectedFish(fish);
-                        triggerHaptic('selection');
-                      }
+                      setInspectedFish(fish);
+                      triggerHaptic('selection');
                     }}
                     style={{
                       background: isDiscovered
@@ -351,7 +365,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                       flexDirection: 'column',
                       alignItems: 'center',
                       textAlign: 'center',
-                      cursor: isDiscovered ? 'pointer' : 'default',
+                      cursor: 'pointer',
                       position: 'relative',
                       boxShadow: entry?.hasTrophy
                         ? '0 0 14px rgba(250, 204, 21, 0.25)'
@@ -499,6 +513,10 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                   return (
                     <div
                       key={entry.fishId}
+                      onClick={() => {
+                        setInspectedFish(fish);
+                        triggerHaptic('selection');
+                      }}
                       style={{
                         background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(20, 27, 40, 0.95) 100%)',
                         border: '1.5px solid #fde047',
@@ -508,6 +526,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         boxShadow: '0 4px 20px rgba(250, 204, 21, 0.2)',
+                        cursor: 'pointer',
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -698,112 +717,456 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
           </button>
         </div>
 
-        {/* Всплывающее подробное досье выбранной рыбы */}
-        {inspectedFish && (
-          <div
-            onClick={() => setInspectedFish(null)}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 60,
-              background: 'rgba(5, 10, 18, 0.85)',
-              backdropFilter: 'blur(10px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '16px',
-            }}
-          >
+        {/* Всплывающее подробное досье выбранной рыбы (Бестиарий) */}
+        {inspectedFish && (() => {
+          const entry = journal[inspectedFish.id];
+          const isDiscovered = Boolean(entry);
+          const rarity = getRarityBadge(inspectedFish.rarity);
+          const times: TimeOfDay[] = ['morning', 'day', 'evening', 'night'];
+          const weathers: WeatherType[] = ['clear', 'fog', 'overcast', 'rain'];
+
+          return (
             <div
-              onClick={(e) => e.stopPropagation()}
+              onClick={() => setInspectedFish(null)}
               style={{
-                width: '100%',
-                maxWidth: '300px',
-                background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
-                borderRadius: '22px',
-                border: '1.5px solid #38bdf8',
-                padding: '18px 16px',
+                position: 'absolute',
+                inset: 0,
+                zIndex: 60,
+                background: 'rgba(5, 10, 18, 0.88)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
-                textAlign: 'center',
-                gap: '8px',
-                boxShadow: '0 8px 30px rgba(0, 0, 0, 0.7)',
+                justifyContent: 'center',
+                padding: '12px',
               }}
             >
-              <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+              <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  width: '100%',
+                  maxWidth: '350px',
+                  maxHeight: '92%',
+                  background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
+                  borderRadius: '24px',
+                  border: isDiscovered && entry?.hasTrophy
+                    ? '1.5px solid #facc15'
+                    : `1.5px solid ${rarity.color}60`,
+                  padding: '16px 14px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                  boxShadow: entry?.hasTrophy
+                    ? '0 0 25px rgba(250, 204, 21, 0.3), 0 16px 40px rgba(0, 0, 0, 0.8)'
+                    : '0 16px 40px rgba(0, 0, 0, 0.8)',
+                  overflowY: 'auto',
+                }}
+              >
+                {/* 1. Шапка карточки досье */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '18px' }}>📖</span>
+                    <span style={{ fontSize: '13px', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Бестиарий видов
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setInspectedFish(null)}
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: 'none',
+                      color: '#cbd5e1',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* 2. Визуальная карточка рыбы */}
+                <div
+                  style={{
+                    background: 'rgba(15, 23, 42, 0.7)',
+                    borderRadius: '18px',
+                    padding: '14px 12px',
+                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    textAlign: 'center',
+                    position: 'relative',
+                  }}
+                >
+                  {/* Трофейная ленточка если выловлен трофей */}
+                  {isDiscovered && entry?.hasTrophy && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '10px',
+                        right: '10px',
+                        background: 'linear-gradient(135deg, #facc15 0%, #ca8a04 100%)',
+                        color: '#1c1917',
+                        padding: '3px 8px',
+                        borderRadius: '8px',
+                        fontSize: '9.5px',
+                        fontWeight: 900,
+                        boxShadow: '0 0 10px rgba(250, 204, 21, 0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <span>🏆</span>
+                      <span>ТРОФЕЙ</span>
+                    </div>
+                  )}
+
+                  {/* Изображение рыбы */}
+                  <div
+                    style={{
+                      width: '130px',
+                      height: '80px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative',
+                    }}
+                  >
+                    {isDiscovered ? (
+                      inspectedFish.image ? (
+                        <img
+                          src={inspectedFish.image}
+                          alt={inspectedFish.name}
+                          style={{
+                            maxWidth: '100%',
+                            maxHeight: '100%',
+                            objectFit: 'contain',
+                            filter: 'drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5))',
+                          }}
+                        />
+                      ) : (
+                        <span style={{ fontSize: '56px' }}>{inspectedFish.icon}</span>
+                      )
+                    ) : (
+                      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {inspectedFish.image ? (
+                          <img
+                            src={inspectedFish.image}
+                            alt="Неизвестный вид"
+                            style={{
+                              maxWidth: '100%',
+                              maxHeight: '100%',
+                              objectFit: 'contain',
+                              filter: 'brightness(0) invert(0.25)',
+                              opacity: 0.7,
+                            }}
+                          />
+                        ) : (
+                          <span style={{ fontSize: '56px', filter: 'brightness(0) invert(0.25)', opacity: 0.7 }}>
+                            {inspectedFish.icon}
+                          </span>
+                        )}
+                        <span
+                          style={{
+                            position: 'absolute',
+                            fontSize: '28px',
+                            color: '#38bdf8',
+                            filter: 'drop-shadow(0 0 8px rgba(56, 189, 248, 0.8))',
+                          }}
+                        >
+                          ❓
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ fontSize: '18px', fontWeight: 900, color: '#ffffff', marginTop: '6px' }}>
+                    {isDiscovered ? inspectedFish.name : '??? (Неизвестный вид)'}
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: '4px',
+                      background: rarity.bg,
+                      color: rarity.color,
+                      border: `1px solid ${rarity.color}40`,
+                      borderRadius: '8px',
+                      padding: '2px 8px',
+                      fontSize: '10.5px',
+                      fontWeight: 800,
+                    }}
+                  >
+                    {rarity.label}
+                  </div>
+                </div>
+
+                {/* 3. Личная статистика игрока */}
+                {isDiscovered ? (
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
+                      gap: '8px',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '14px', padding: '8px 4px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                      <div style={{ fontSize: '10px', color: '#94a3b8' }}>Личный рекорд</div>
+                      <div style={{ fontSize: '13px', fontWeight: 900, color: '#facc15', marginTop: '2px' }}>
+                        {formatWeight(entry.maxWeight)}
+                      </div>
+                    </div>
+                    <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '14px', padding: '8px 4px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                      <div style={{ fontSize: '10px', color: '#94a3b8' }}>Выловлено</div>
+                      <div style={{ fontSize: '13px', fontWeight: 900, color: '#38bdf8', marginTop: '2px' }}>
+                        {entry.count} шт.
+                      </div>
+                    </div>
+                    <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '14px', padding: '8px 4px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                      <div style={{ fontSize: '10px', color: '#94a3b8' }}>Ценность</div>
+                      <div style={{ fontSize: '13px', fontWeight: 900, color: '#4ade80', marginTop: '2px' }}>
+                        {inspectedFish.basePricePerKg} 🪙/кг
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      background: 'rgba(15, 23, 42, 0.5)',
+                      borderRadius: '14px',
+                      padding: '10px 12px',
+                      border: '1px dashed rgba(255, 255, 255, 0.1)',
+                      textAlign: 'center',
+                      fontSize: '11px',
+                      color: '#94a3b8',
+                    }}
+                  >
+                    🔒 Экземпляр ещё не выловлен. Записи рекордов откроются после первой поимки!
+                  </div>
+                )}
+
+                {/* 4. Описание и повадки */}
+                <div
+                  style={{
+                    background: 'rgba(30, 41, 59, 0.5)',
+                    borderRadius: '16px',
+                    padding: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                    textAlign: 'left',
+                  }}
+                >
+                  <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#38bdf8', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>🌿</span>
+                    <span>Повадки и особенности:</span>
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: 1.5 }}>
+                    {isDiscovered
+                      ? (inspectedFish.description || 'Обитатель рек и озёр средней полосы.')
+                      : 'Этот вид ещё не изучен. Отправляйтесь на водоёмы, экспериментируйте с наживками и временем суток, чтобы внести подробные повадки в бестиарий!'}
+                  </div>
+                </div>
+
+                {/* 5. Суточный ритм (Время суток) */}
+                <div
+                  style={{
+                    background: 'rgba(30, 41, 59, 0.5)',
+                    borderRadius: '16px',
+                    padding: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                    textAlign: 'left',
+                  }}
+                >
+                  <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#facc15', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>⏰</span>
+                    <span>Суточный ритм клёва:</span>
+                  </div>
+                  {isDiscovered ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                      {times.map((t) => {
+                        const coeff = inspectedFish.timePreferences?.[t] ?? 1.0;
+                        const badge = getActivityBadge(coeff);
+                        return (
+                          <div
+                            key={t}
+                            style={{
+                              background: badge.bg,
+                              border: `1px solid ${badge.color}35`,
+                              borderRadius: '10px',
+                              padding: '6px 2px',
+                              textAlign: 'center',
+                            }}
+                          >
+                            <div style={{ fontSize: '14px' }}>{TIME_CONFIGS[t]?.icon}</div>
+                            <div style={{ fontSize: '9.5px', fontWeight: 800, color: '#e2e8f0', margin: '2px 0' }}>
+                              {TIME_CONFIGS[t]?.label}
+                            </div>
+                            <div style={{ fontSize: '9px', fontWeight: 900, color: badge.color }}>
+                              {badge.icon} {badge.label}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '10.5px', color: '#64748b', textAlign: 'center', padding: '6px 0' }}>
+                      🔒 Изучите вид, поймав первую рыбу
+                    </div>
+                  )}
+                </div>
+
+                {/* 6. Зависимость от погоды */}
+                <div
+                  style={{
+                    background: 'rgba(30, 41, 59, 0.5)',
+                    borderRadius: '16px',
+                    padding: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                    textAlign: 'left',
+                  }}
+                >
+                  <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#38bdf8', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>🌦️</span>
+                    <span>Зависимость от погоды:</span>
+                  </div>
+                  {isDiscovered ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                      {weathers.map((w) => {
+                        const coeff = inspectedFish.weatherPreferences?.[w] ?? 1.0;
+                        const badge = getActivityBadge(coeff);
+                        return (
+                          <div
+                            key={w}
+                            style={{
+                              background: badge.bg,
+                              border: `1px solid ${badge.color}35`,
+                              borderRadius: '10px',
+                              padding: '6px 2px',
+                              textAlign: 'center',
+                            }}
+                          >
+                            <div style={{ fontSize: '14px' }}>{WEATHER_CONFIGS[w]?.icon}</div>
+                            <div style={{ fontSize: '9.5px', fontWeight: 800, color: '#e2e8f0', margin: '2px 0' }}>
+                              {WEATHER_CONFIGS[w]?.label}
+                            </div>
+                            <div style={{ fontSize: '9px', fontWeight: 900, color: badge.color }}>
+                              {badge.icon} {badge.label}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '10.5px', color: '#64748b', textAlign: 'center', padding: '6px 0' }}>
+                      🔒 Изучите вид, поймав первую рыбу
+                    </div>
+                  )}
+                </div>
+
+                {/* 7. Атлас наживок (На что ловить) */}
+                <div
+                  style={{
+                    background: 'rgba(30, 41, 59, 0.5)',
+                    borderRadius: '16px',
+                    padding: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                    textAlign: 'left',
+                  }}
+                >
+                  <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#4ade80', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>🪱</span>
+                    <span>Атлас наживок:</span>
+                  </div>
+                  {isDiscovered ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+                      {AVAILABLE_BAITS.map((bait) => {
+                        const pref = inspectedFish.baitPreferences[bait.id] || 0;
+                        const badge = getBaitBadge(pref);
+                        return (
+                          <div
+                            key={bait.id}
+                            style={{
+                              background: badge.bg,
+                              border: `1px solid ${badge.color}30`,
+                              borderRadius: '10px',
+                              padding: '5px 8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                              <span style={{ fontSize: '14px' }}>{bait.icon}</span>
+                              <span style={{ fontSize: '10.5px', fontWeight: 700, color: '#e2e8f0' }}>{bait.name}</span>
+                            </div>
+                            <span style={{ fontSize: '9px', fontWeight: 900, color: badge.color }}>
+                              {badge.label}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '10.5px', color: '#64748b', textAlign: 'center', padding: '6px 0' }}>
+                      🔒 Наживки неизвестны. Поймайте особь для заполнения атласа.
+                    </div>
+                  )}
+                </div>
+
+                {/* 8. Ареал обитания */}
+                <div
+                  style={{
+                    background: 'rgba(30, 41, 59, 0.5)',
+                    borderRadius: '16px',
+                    padding: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                    textAlign: 'left',
+                  }}
+                >
+                  <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#cbd5e1', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>📍</span>
+                    <span>Места обитания:</span>
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', lineHeight: 1.4 }}>
+                    {Object.keys(inspectedFish.habitats).length > 0 ? (
+                      Object.keys(inspectedFish.habitats)
+                        .map((locId) => LOCATIONS.find((l) => l.id === locId)?.name || locId)
+                        .join(' • ')
+                    ) : (
+                      'Встречается повсеместно'
+                    )}
+                  </div>
+                </div>
+
+                {/* 9. Кнопка закрытия */}
                 <button
                   onClick={() => setInspectedFish(null)}
                   style={{
-                    background: 'none',
+                    width: '100%',
+                    padding: '10px',
+                    borderRadius: '14px',
                     border: 'none',
-                    color: '#94a3b8',
-                    fontSize: '14px',
+                    background: '#0284c7',
+                    color: '#ffffff',
+                    fontSize: '12px',
+                    fontWeight: 800,
                     cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)',
+                    marginTop: '4px',
                   }}
                 >
-                  ✕
+                  Закрыть досье
                 </button>
               </div>
-
-              {inspectedFish.image ? (
-                <img
-                  src={inspectedFish.image}
-                  alt={inspectedFish.name}
-                  style={{ width: '130px', height: '85px', objectFit: 'contain' }}
-                />
-              ) : (
-                <span style={{ fontSize: '54px' }}>{inspectedFish.icon}</span>
-              )}
-
-              <div style={{ fontSize: '17px', fontWeight: 900, color: '#ffffff' }}>
-                {inspectedFish.name}
-              </div>
-
-              {/* Где обитает */}
-              <div
-                style={{
-                  width: '100%',
-                  background: 'rgba(15, 23, 42, 0.6)',
-                  borderRadius: '12px',
-                  padding: '8px 10px',
-                  fontSize: '11px',
-                  color: '#cbd5e1',
-                  textAlign: 'left',
-                }}
-              >
-                <div style={{ fontWeight: 800, color: '#38bdf8', marginBottom: '3px' }}>
-                  📍 Места обитания:
-                </div>
-                <div>
-                  {Object.keys(inspectedFish.habitats)
-                    .map((locId) => LOCATIONS.find((l) => l.id === locId)?.name || locId)
-                    .join(', ')}
-                </div>
-              </div>
-
-              {/* Предпочтения наживки */}
-              <div
-                style={{
-                  width: '100%',
-                  background: 'rgba(15, 23, 42, 0.6)',
-                  borderRadius: '12px',
-                  padding: '8px 10px',
-                  fontSize: '11px',
-                  color: '#cbd5e1',
-                  textAlign: 'left',
-                }}
-              >
-                <div style={{ fontWeight: 800, color: '#fbbf24', marginBottom: '3px' }}>
-                  🪱 Любимые наживки:
-                </div>
-                <div>
-                  {Object.keys(inspectedFish.baitPreferences).join(', ')}
-                </div>
-              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );

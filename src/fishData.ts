@@ -17,6 +17,7 @@ export interface Fish {
   rarity: FishRarity;
   icon: string;
   image?: string;
+  description?: string;
   basePricePerKg: number;
   baseExpPerKg: number;
   weightTiers: Record<FishSizeCategory, FishWeightRange>;
@@ -48,6 +49,7 @@ export const FISH_DATABASE: Fish[] = [
     rarity: 'common',
     icon: '🐟',
     image: '/fish/gudgeon.png',
+    description: 'Небольшая донная рыбка, предпочитающая чистые песчаные отмели и каменистые перекаты. Держится стайками у дна, активно отзывается на мотыля и червя в светлое время суток.',
     basePricePerKg: 35,
     baseExpPerKg: 120,
     weightTiers: {
@@ -75,6 +77,7 @@ export const FISH_DATABASE: Fish[] = [
     rarity: 'common',
     icon: '🐟',
     image: '/fish/rotan.png',
+    description: 'Неприхотливый хищный житель заросших прудов и тихих стариц. Заглатывает любую белковую наживку с поразительной жадностью, выручая рыбака в периоды бесклёвья.',
     basePricePerKg: 25,
     baseExpPerKg: 90,
     weightTiers: {
@@ -100,6 +103,7 @@ export const FISH_DATABASE: Fish[] = [
     rarity: 'common',
     icon: '🐟',
     image: '/fish/bleak.png',
+    description: 'Юркая стайная верховодка с яркой серебристой чешуёй. Плавает у поверхности, обожает солнечную тёплую погоду и молниеносно сбивает мякиш хлеба и опарыша.',
     basePricePerKg: 45,
     baseExpPerKg: 140,
     weightTiers: {
@@ -128,6 +132,7 @@ export const FISH_DATABASE: Fish[] = [
     rarity: 'common',
     icon: '🐠',
     image: '/fish/crucian_carp.png',
+    description: 'Классика русской рыбалки. Любит илистое дно и заросли кувшинок. Особенно активен на утренней зорьке в тёплые тихие дни. Предпочитает червя, ароматное тесто и хлеб.',
     basePricePerKg: 20,
     baseExpPerKg: 65,
     weightTiers: {
@@ -155,6 +160,7 @@ export const FISH_DATABASE: Fish[] = [
     rarity: 'common',
     icon: '🐟',
     image: '/fish/roach.png',
+    description: 'Осторожная и чуткая рыба с яркими оранжевыми плавниками. Питается водорослями и мелкими личинками. Лучше всего ловится утром и днём на опарыша, тесто и мотыля.',
     basePricePerKg: 22,
     baseExpPerKg: 70,
     weightTiers: {
@@ -184,6 +190,7 @@ export const FISH_DATABASE: Fish[] = [
     rarity: 'common',
     icon: '🐠',
     image: '/fish/rudd.png',
+    description: 'Золотистая красавица с алыми плавниками. Обитает в верхних слоях тёплых заводей среди камыша. Любит яркое солнце, ловится на кукурузу, опарыша и хлеб.',
     basePricePerKg: 24,
     baseExpPerKg: 75,
     weightTiers: {
@@ -212,6 +219,7 @@ export const FISH_DATABASE: Fish[] = [
     rarity: 'rare',
     icon: '🐡',
     image: '/fish/perch.png',
+    description: 'Полосатый разбойник с колючим спинным плавником. Охотится стаями на бровках и у коряжника. Прекрасно берёт в пасмурную погоду и дождь на живца и червя.',
     basePricePerKg: 30,
     baseExpPerKg: 95,
     weightTiers: {
@@ -241,6 +249,7 @@ export const FISH_DATABASE: Fish[] = [
     rarity: 'rare',
     icon: '🐟',
     image: '/fish/tench.png',
+    description: 'Таинственный обитатель заиленных заводей. Бронзовая чешуя покрыта густой защитной слизью. Любит тёплые сумерки и туманное утро, обожает сочного червя.',
     basePricePerKg: 35,
     baseExpPerKg: 110,
     weightTiers: {
@@ -266,6 +275,7 @@ export const FISH_DATABASE: Fish[] = [
     rarity: 'rare',
     icon: '🐟',
     image: '/fish/ide.png',
+    description: 'Сильная и осторожная рыба глубоких плёсов и омутов. Оказывает мощное сопротивление при вываживании. Ловится на кукурузу, червя и опарыша.',
     basePricePerKg: 28,
     baseExpPerKg: 100,
     weightTiers: {
@@ -292,6 +302,7 @@ export const FISH_DATABASE: Fish[] = [
     rarity: 'rare',
     icon: '🐠',
     image: '/fish/bream.png',
+    description: 'Широкий серебристый великан русловых ям. Питается со дна, при поклёвке характерно выкладывает поплавок. Активен на рассвете и в тумане, любит мотыля и опарыша.',
     basePricePerKg: 26,
     baseExpPerKg: 85,
     weightTiers: {
@@ -320,6 +331,7 @@ export const FISH_DATABASE: Fish[] = [
     rarity: 'epic',
     icon: '🐊',
     image: '/fish/pike.png',
+    description: 'Главная зубастая хищница наших вод. Устраивает засады в зарослях тростника и у затопленных коряг. Особенно свирепствует в затяжной дождь и пасмурную погоду. Клюёт на живца.',
     basePricePerKg: 38,
     baseExpPerKg: 130,
     weightTiers: {
@@ -348,6 +360,7 @@ export const FISH_DATABASE: Fish[] = [
     rarity: 'epic',
     icon: '🦈',
     image: '/fish/zander.png',
+    description: 'Глубоководный клыкастый охотник с прекрасным ночным зрением. Предпочитает каменистое дно и перепады глубин. Выходит на охоту в сумерках, тумане и ночью за живцом.',
     basePricePerKg: 42,
     baseExpPerKg: 140,
     weightTiers: {
@@ -377,6 +390,7 @@ export const FISH_DATABASE: Fish[] = [
     rarity: 'epic',
     icon: '🐟',
     image: '/fish/asp.png',
+    description: 'Стремительный речной корсар открытых просторов. Охотится с оглушительными всплесками, загоняя стайки малька. Пуглив, особенно активен солнечным днём на течении.',
     basePricePerKg: 36,
     baseExpPerKg: 135,
     weightTiers: {
@@ -404,6 +418,7 @@ export const FISH_DATABASE: Fish[] = [
     rarity: 'epic',
     icon: '🐠',
     image: '/fish/carp.png',
+    description: 'Могучий сазан, одомашненный великан пресных вод. Требует прочных снастей и терпения. Любит тёплые солнечные дни, илистые ямы, сладкую кукурузу и тесто.',
     basePricePerKg: 32,
     baseExpPerKg: 115,
     weightTiers: {
@@ -433,6 +448,7 @@ export const FISH_DATABASE: Fish[] = [
     rarity: 'epic',
     icon: '🐟',
     image: '/fish/grass_carp.png',
+    description: 'Мощный травоядный исполин, очищающий водоёмы от водорослей. Совершает паровозные рывки при поклёвке. Обожает кукурузу, тесто и хлеб в тёплую ясную погоду.',
     basePricePerKg: 34,
     baseExpPerKg: 125,
     weightTiers: {
@@ -460,6 +476,7 @@ export const FISH_DATABASE: Fish[] = [
     rarity: 'epic',
     icon: '🐟',
     image: '/fish/silver_carp.png',
+    description: 'Крупная стайная рыба, фильтрующая фитопланктон в толще воды. Отличается низкой посадкой глаз и колоссальной силой. Предпочитает растительные насадки.',
     basePricePerKg: 30,
     baseExpPerKg: 110,
     weightTiers: {
@@ -486,6 +503,7 @@ export const FISH_DATABASE: Fish[] = [
     name: 'Сазан',
     rarity: 'legendary',
     icon: '👑',
+    description: 'Дикий золотой царь быстрых рек и глубоких ям. Настоящий дикарь с железными мышцами и зазубренным лучом на плавнике. Любит кукурузу, червя и тёплый вечер.',
     basePricePerKg: 48,
     baseExpPerKg: 160,
     weightTiers: {
@@ -512,6 +530,7 @@ export const FISH_DATABASE: Fish[] = [
     name: 'Сом',
     rarity: 'legendary',
     icon: '🐉',
+    description: 'Царь речных глубин и хозяин омутов. Способен ломать слабые удилища и рвать леску. Выходит на охоту в вечерних сумерках, ночью и во время грозового дождя.',
     basePricePerKg: 55,
     baseExpPerKg: 200,
     weightTiers: {
@@ -539,6 +558,7 @@ export const JUNK_ITEMS: Fish[] = [
     name: 'Консервная банка',
     rarity: 'common',
     icon: '🥫',
+    description: 'Ржавая банка со дна водоёма. В кулинарии бесполезна, но водоём стал чуточку чище!',
     basePricePerKg: 1,
     baseExpPerKg: 1,
     weightTiers: {
@@ -556,6 +576,7 @@ export const JUNK_ITEMS: Fish[] = [
     name: 'Озёрная ветка',
     rarity: 'common',
     icon: '🪵',
+    description: 'Затонувшая ветка коряжника. При подсечке напугала рыбака тяжестью на том конце лески.',
     basePricePerKg: 1,
     baseExpPerKg: 1,
     weightTiers: {
@@ -573,6 +594,7 @@ export const JUNK_ITEMS: Fish[] = [
     name: 'Старый сапог',
     rarity: 'common',
     icon: '👢',
+    description: 'Древний протёкший сапог со следами ракушек. Не клюёт, но на подошве видно клеймо мастера.',
     basePricePerKg: 1,
     baseExpPerKg: 1,
     weightTiers: {
