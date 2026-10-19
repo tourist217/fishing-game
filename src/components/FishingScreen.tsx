@@ -30,7 +30,10 @@ interface FishingScreenProps {
   onDismissModal: () => void;
   onOpenMap: () => void;
   onOpenShop?: () => void;
+  onOpenKeepnet?: () => void;
   onBackToHub?: () => void;
+  inventoryCount?: number;
+  maxKeepnetCapacity?: number;
   getRarityLabel: (rarity: string) => { text: string; color: string };
 }
 
@@ -56,11 +59,15 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
   onDismissModal,
   onOpenMap: _onOpenMap,
   onOpenShop,
+  onOpenKeepnet,
   onBackToHub: _onBackToHub,
+  inventoryCount = 0,
+  maxKeepnetCapacity = 15,
   getRarityLabel: _getRarityLabel,
-}) => {
+}: FishingScreenProps) => {
   const currentBaitCount = baits[selectedBaitId] || 0;
-  const canCast = currentBaitCount > 0 && hasLineOnRod;
+  const isKeepnetFull = inventoryCount >= maxKeepnetCapacity;
+  const canCast = currentBaitCount > 0 && hasLineOnRod && !isKeepnetFull;
 
   return (
     <div
@@ -314,33 +321,49 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
         {/* Главная кнопка действия (всегда занимает одинаковую нижнюю позицию) */}
         {gameState === 'idle' && (
           <button
-            onClick={canCast ? onStartFishing : (!hasLineOnRod ? onOpenShop : undefined)}
-            disabled={!canCast && hasLineOnRod}
+            onClick={
+              canCast
+                ? onStartFishing
+                : isKeepnetFull
+                ? onOpenKeepnet
+                : !hasLineOnRod
+                ? onOpenShop
+                : undefined
+            }
+            disabled={!canCast && hasLineOnRod && !isKeepnetFull}
             style={{
               height: '52px',
               background: canCast
                 ? 'linear-gradient(180deg, #84cc16 0%, #65a30d 50%, #4d7c0f 100%)'
+                : isKeepnetFull
+                ? 'linear-gradient(180deg, #f59e0b 0%, #d97706 50%, #b45309 100%)'
                 : !hasLineOnRod
                 ? 'linear-gradient(180deg, #ef4444 0%, #dc2626 50%, #991b1b 100%)'
                 : 'rgba(255, 255, 255, 0.08)',
               border: canCast
                 ? '2px solid #bef264'
+                : isKeepnetFull
+                ? '2px solid #fde047'
                 : !hasLineOnRod
                 ? '2px solid #fca5a5'
                 : '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '24px',
-              color: canCast || !hasLineOnRod ? '#ffffff' : '#64748b',
+              color: canCast || isKeepnetFull || !hasLineOnRod ? '#ffffff' : '#64748b',
               fontSize: '15px',
               fontWeight: 900,
-              cursor: canCast || !hasLineOnRod ? 'pointer' : 'not-allowed',
+              cursor: canCast || isKeepnetFull || !hasLineOnRod ? 'pointer' : 'not-allowed',
               boxShadow: canCast
                 ? '0 0 24px rgba(132, 204, 22, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4)'
+                : isKeepnetFull
+                ? '0 0 24px rgba(245, 158, 11, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4)'
                 : 'none',
               letterSpacing: '0.5px',
             }}
           >
             {canCast
               ? 'ЗАБРОСИТЬ УДОЧКУ 🎣'
+              : isKeepnetFull
+              ? 'САДОК ПОЛОН (ПРОДАТЬ В САДКЕ 🧺)'
               : !hasLineOnRod
               ? 'НЕТ ЛЕСКИ (В МАГАЗИН) 🛒'
               : 'НЕТ НАЖИВКИ 🚫'}

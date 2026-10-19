@@ -82,6 +82,7 @@ export default function App() {
     },
     onLineBreak: gear.breakLine,
     triggerHaptic,
+    isKeepnetFull: player.isKeepnetFull,
   });
 
   const getRarityLabel = (rarity: string) => {
@@ -134,6 +135,12 @@ export default function App() {
             triggerHaptic('selection');
           }}
           onGoFishing={() => {
+            if (player.isKeepnetFull) {
+              setIsMapOpen(false);
+              setActiveTab('keepnet');
+              triggerHaptic('notification');
+              return;
+            }
             setIsMapOpen(false);
             setIsAtPond(true);
             setActiveTab('base');
@@ -158,6 +165,14 @@ export default function App() {
             rodMaterial={gear.currentRod.material}
             coins={player.coins}
             currentLocation={currentLocation}
+            inventoryCount={player.inventoryCount}
+            maxKeepnetCapacity={player.maxKeepnetCapacity}
+            onOpenKeepnet={() => {
+              fishing.resetToIdle();
+              setIsAtPond(false);
+              setActiveTab('keepnet');
+              triggerHaptic('selection');
+            }}
             onBackToHub={() => {
               fishing.resetToIdle();
               setIsAtPond(false);
@@ -214,8 +229,17 @@ export default function App() {
             onSelectBait={baits.selectBait}
             onEquipRod={gear.equipRod}
             onGoFishing={() => {
+              if (player.isKeepnetFull) {
+                setActiveTab('keepnet');
+                triggerHaptic('notification');
+                return;
+              }
               setIsAtPond(true);
               triggerHaptic('notification');
+            }}
+            onOpenKeepnet={() => {
+              setActiveTab('keepnet');
+              triggerHaptic('selection');
             }}
             onOpenMap={() => {
               setActiveTab('map');

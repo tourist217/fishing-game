@@ -241,6 +241,7 @@ interface HomeScreenProps {
   onOpenMap: () => void;
   onOpenShop: () => void;
   onOpenInventory: () => void;
+  onOpenKeepnet?: () => void;
   journal?: FishJournal;
   hasClaimedAllSpeciesReward?: boolean;
   onClaimAllSpeciesReward?: () => boolean;
@@ -267,6 +268,8 @@ export const HomeScreen = ({
   gems: _gems = 120,
   energy,
   maxEnergy,
+  inventoryCount = 0,
+  maxKeepnetCapacity = 15,
   selectedBaitId,
   baits,
   journal = {},
@@ -277,6 +280,7 @@ export const HomeScreen = ({
   onGoFishing,
   onOpenMap: _onOpenMap,
   onOpenShop,
+  onOpenKeepnet,
   onResetProgress,
   resetModalSignal,
   dailyQuests = [],
@@ -923,59 +927,76 @@ export const HomeScreen = ({
           </div>
         </div>
 
-        {/* Кнопка «ЗАБРОСИТЬ» (по центру, сочная лаймовая с волнами поплавка) */}
-        <button
-          onClick={onGoFishing}
-          style={{
-            flex: 1,
-            height: '62px',
-            background: 'linear-gradient(180deg, #84cc16 0%, #65a30d 50%, #4d7c0f 100%)',
-            border: '2.5px solid #bef264',
-            borderRadius: '31px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '10px',
-            color: '#ffffff',
-            fontSize: '18px',
-            fontWeight: 900,
-            letterSpacing: '0.8px',
-            textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
-            boxShadow:
-              '0 0 28px rgba(132, 204, 22, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 8px 24px rgba(0, 0, 0, 0.45)',
-            cursor: 'pointer',
-            transition: 'transform 0.1s ease',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
-            <span
+        {/* Кнопка «ЗАБРОСИТЬ» или «САДОК ПОЛОН» */}
+        {(() => {
+          const isKeepnetFull = inventoryCount >= maxKeepnetCapacity;
+          return (
+            <button
+              onClick={isKeepnetFull ? (onOpenKeepnet || onGoFishing) : onGoFishing}
               style={{
-                position: 'absolute',
-                left: '-8px',
-                fontSize: '14px',
-                color: 'rgba(255, 255, 255, 0.75)',
+                flex: 1,
+                height: '62px',
+                background: isKeepnetFull
+                  ? 'linear-gradient(180deg, #f59e0b 0%, #d97706 50%, #b45309 100%)'
+                  : 'linear-gradient(180deg, #84cc16 0%, #65a30d 50%, #4d7c0f 100%)',
+                border: isKeepnetFull ? '2.5px solid #fde047' : '2.5px solid #bef264',
+                borderRadius: '31px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                color: '#ffffff',
+                fontSize: isKeepnetFull ? '14px' : '18px',
                 fontWeight: 900,
-                lineHeight: 1,
+                letterSpacing: '0.8px',
+                textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+                boxShadow: isKeepnetFull
+                  ? '0 0 28px rgba(245, 158, 11, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 8px 24px rgba(0, 0, 0, 0.45)'
+                  : '0 0 28px rgba(132, 204, 22, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 8px 24px rgba(0, 0, 0, 0.45)',
+                cursor: 'pointer',
+                transition: 'transform 0.1s ease',
               }}
             >
-              ((
-            </span>
-            <BobberIcon size={34} />
-            <span
-              style={{
-                position: 'absolute',
-                right: '-8px',
-                fontSize: '14px',
-                color: 'rgba(255, 255, 255, 0.75)',
-                fontWeight: 900,
-                lineHeight: 1,
-              }}
-            >
-              ))
-            </span>
-          </div>
-          <span>ЗАБРОСИТЬ</span>
-        </button>
+              {isKeepnetFull ? (
+                <>
+                  <span style={{ fontSize: '24px' }}>🧺</span>
+                  <span>САДОК ПОЛОН ({inventoryCount}/{maxKeepnetCapacity})</span>
+                </>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+                    <span
+                      style={{
+                        position: 'absolute',
+                        left: '-8px',
+                        fontSize: '14px',
+                        color: 'rgba(255, 255, 255, 0.75)',
+                        fontWeight: 900,
+                        lineHeight: 1,
+                      }}
+                    >
+                      ((
+                    </span>
+                    <BobberIcon size={34} />
+                    <span
+                      style={{
+                        position: 'absolute',
+                        right: '-8px',
+                        fontSize: '14px',
+                        color: 'rgba(255, 255, 255, 0.75)',
+                        fontWeight: 900,
+                        lineHeight: 1,
+                      }}
+                    >
+                      ))
+                    </span>
+                  </div>
+                  <span>ЗАБРОСИТЬ</span>
+                </>
+              )}
+            </button>
+          );
+        })()}
 
         {/* Наживка (справа, вертикальная карточка в точности по референсу) */}
         <div

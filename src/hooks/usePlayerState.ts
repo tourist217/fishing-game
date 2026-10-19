@@ -66,7 +66,7 @@ export function usePlayerState() {
       if (!saved) return [];
       const parsed = JSON.parse(saved);
       if (!Array.isArray(parsed)) return [];
-      return parsed.map((item: any, idx: number) => ({
+      return parsed.slice(0, maxKeepnetCapacity).map((item: any, idx: number) => ({
         ...item,
         uid: item.uid || `fish_${Date.now()}_${idx}`,
         price: Number(item.price) > 0 ? Number(item.price) : 5,
@@ -75,6 +75,11 @@ export function usePlayerState() {
       return [];
     }
   });
+
+  const inventoryRef = useRef(inventory);
+  useEffect(() => {
+    inventoryRef.current = inventory;
+  }, [inventory]);
 
   const expToNextLevel = Math.round(150 * Math.pow(1.25, level - 1));
 
@@ -169,8 +174,13 @@ export function usePlayerState() {
     localStorage.setItem('fg_inventory', JSON.stringify(inventory));
   }, [inventory]);
 
-  // Добавление пойманной рыбы
+  // Добавление пойманной рыбы (строго с проверкой вместимости садка)
   const addCaughtFish = useCallback((fish: CaughtFishItem, gainedExp: number) => {
+    if (inventoryRef.current.length >= maxKeepnetCapacity) {
+      console.warn('Садок полон! Нельзя добавить рыбу сверх нормы.');
+      return false;
+    }
+
     const safeFish: CaughtFishItem = {
       ...fish,
       uid: fish.uid || Math.random().toString(36).substring(2, 9),
@@ -178,7 +188,12 @@ export function usePlayerState() {
       caughtAt: fish.caughtAt || Date.now(),
     };
 
-    setInventory((prev) => [safeFish, ...prev]);
+    setInventory((prev) => {
+      if (prev.length >= maxKeepnetCapacity) {
+        return prev;
+      }
+      return [safeFish, ...prev];
+    });
 
     // Обновляем рыболовный журнал (энциклопедию)
     setJournal((prevJournal) => {
@@ -313,6 +328,7 @@ export function usePlayerState() {
     energy,
     maxEnergy,
     maxKeepnetCapacity,
+    isKeepnetFull: inventory.length >= maxKeepnetCapacity,
     spendEnergy,
     restoreEnergy,
     inventory,

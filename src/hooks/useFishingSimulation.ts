@@ -26,6 +26,7 @@ interface UseFishingSimulationProps {
   onFishCaught: (fish: CaughtFishItem, exp: number) => void;
   onLineBreak?: () => void;
   triggerHaptic?: (type: 'impact' | 'notification' | 'selection') => void;
+  isKeepnetFull?: boolean;
 }
 
 export function useFishingSimulation({
@@ -41,6 +42,7 @@ export function useFishingSimulation({
   onFishCaught,
   onLineBreak,
   triggerHaptic,
+  isKeepnetFull,
 }: UseFishingSimulationProps) {
   const [gameState, setGameState] = useState<GameState>('idle');
   const [currentFish, setCurrentFish] = useState<ActiveFishState | null>(null);
@@ -140,6 +142,11 @@ export function useFishingSimulation({
 
   // Запуск процесса ловли
   const startFishing = () => {
+    if (isKeepnetFull) {
+      triggerHapticRef.current?.('notification');
+      return;
+    }
+
     if (lineTensileRef.current <= 0) {
       triggerHapticRef.current?.('notification');
       return;
