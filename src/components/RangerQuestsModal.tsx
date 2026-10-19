@@ -82,8 +82,19 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
             alignItems: 'center',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-            <span style={{ fontSize: '26px' }}>🕵️‍♂️</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img
+              src="/assets/icons/ranger_quests.png"
+              alt="Егерь"
+              style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '10px',
+                objectFit: 'cover',
+                border: '1.5px solid rgba(251, 191, 36, 0.4)',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+              }}
+            />
             <div>
               <div style={{ fontSize: '15.5px', fontWeight: 900, color: '#ffffff', lineHeight: 1.1 }}>
                 Заказы Егеря

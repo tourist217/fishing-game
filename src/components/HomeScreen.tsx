@@ -577,82 +577,77 @@ export const HomeScreen = ({
             onClick={() => setActiveModal('quests')}
             style={{
               width: '74px',
-              background: 'rgba(28, 36, 48, 0.85)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              border: '1.5px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '18px',
-              padding: '7px 4px 6px 4px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
+              height: '74px',
+              borderRadius: '20px',
               cursor: 'pointer',
-              boxShadow: '0 6px 20px rgba(0, 0, 0, 0.45)',
               position: 'relative',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.55)',
               transition: 'transform 0.12s ease',
+              overflow: 'hidden',
+              background: '#152232',
+              border: '1.5px solid rgba(251, 191, 36, 0.4)',
             }}
           >
-            {questUnclaimedCount > 0 || canClaimBonus ? (
+            <img
+              src="/assets/icons/ranger_quests.png"
+              alt="Заказы егеря"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
+              }}
+            />
+            {/* Динамический бейдж при наличии готовых наград или прогресса > 0 */}
+            {(questUnclaimedCount > 0 || canClaimBonus) ? (
               <span
                 style={{
                   position: 'absolute',
-                  top: '-4px',
-                  right: '-4px',
-                  minWidth: '16px',
-                  height: '16px',
+                  top: '2px',
+                  right: '2px',
+                  minWidth: '20px',
+                  height: '20px',
                   padding: '0 4px',
-                  borderRadius: '8px',
+                  borderRadius: '10px',
                   background: 'linear-gradient(135deg, #22c55e, #16a34a)',
                   color: '#fff',
-                  fontSize: '9.5px',
+                  fontSize: '11px',
                   fontWeight: 900,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 0 10px rgba(34, 197, 94, 0.9)',
-                  border: '1px solid rgba(255, 255, 255, 0.4)',
+                  boxShadow: '0 0 12px rgba(34, 197, 94, 0.95)',
+                  border: '1.5px solid rgba(255, 255, 255, 0.7)',
+                  zIndex: 2,
                 }}
               >
                 {canClaimBonus ? '🎁' : questUnclaimedCount}
               </span>
-            ) : (
+            ) : questCompletedCount > 0 ? (
               <span
                 style={{
                   position: 'absolute',
-                  top: '-4px',
-                  right: '-4px',
+                  top: '4px',
+                  right: '4px',
                   padding: '2px 5px',
-                  borderRadius: '7px',
+                  borderRadius: '8px',
                   background: questCompletedCount === 3
                     ? 'linear-gradient(135deg, #10b981, #059669)'
-                    : 'rgba(51, 65, 85, 0.9)',
+                    : 'linear-gradient(135deg, #b91c1c, #991b1b)',
                   color: '#fff',
-                  fontSize: '8.5px',
+                  fontSize: '9px',
                   fontWeight: 900,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  border: '1.5px solid rgba(255, 255, 255, 0.6)',
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.6)',
+                  zIndex: 2,
                 }}
               >
                 {questCompletedCount}/3
               </span>
-            )}
-            <div style={{ fontSize: '26px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>
-              🕵️‍♂️
-            </div>
-            <div
-              style={{
-                fontSize: '9.5px',
-                fontWeight: 800,
-                color: '#ffffff',
-                marginTop: '3px',
-                textAlign: 'center',
-                lineHeight: 1.15,
-              }}
-            >
-              Заказы<br />егеря
-            </div>
+            ) : null}
           </div>
 
           {/* 2. Рыболовный журнал и энциклопедия */}
