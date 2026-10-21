@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   type DailyQuestsState,
+  type DailyQuest,
   getTodayDateString,
   generateDailyQuests,
+  FISH_MIN_LEVELS,
   DAILY_BONUS_REWARD,
 } from '../types/quests';
 import type { CaughtFishItem } from '../components/InventoryScreen';
@@ -12,9 +14,29 @@ interface UseDailyQuestsProps {
   onAddCoins: (amount: number) => void;
   onAddExp: (amount: number) => void;
   onAddGems: (amount: number) => void;
+  playerLevel?: number;
 }
 
 const STORAGE_KEY = 'fg_daily_quests';
+
+function isQuestValidForPlayer(q: DailyQuest, playerLevel: number): boolean {
+  // 1. Исключаем устаревшие категории («Крупная»)
+  if (q.description.includes('категори') || q.targetSizeCategory === 'large' || q.id.includes('size_large')) {
+    return false;
+  }
+  // 2. Исключаем некорректные описания с «глубокими участками»
+  if (q.description.includes('глубок')) {
+    return false;
+  }
+  // 3. Исключаем рыбу, водоём с которой ещё не открыт для текущего уровня игрока
+  if (q.targetFishId) {
+    const minLvl = FISH_MIN_LEVELS[q.targetFishId] || 1;
+    if (minLvl > playerLevel) {
+      return false;
+    }
+  }
+  return true;
+}
 
 function getTimeUntilMidnight(): string {
   const now = new Date();
@@ -29,7 +51,7 @@ function getTimeUntilMidnight(): string {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
-export function useDailyQuests({ onAddCoins, onAddExp, onAddGems }: UseDailyQuestsProps) {
+export function useDailyQuests({ onAddCoins, onAddExp, onAddGems, playerLevel = 1 }: UseDailyQuestsProps) {
   const today = getTodayDateString();
 
   const [state, setState] = useState<DailyQuestsState>(() => {
@@ -37,7 +59,13 @@ export function useDailyQuests({ onAddCoins, onAddExp, onAddGems }: UseDailyQues
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed: DailyQuestsState = JSON.parse(saved);
-        if (parsed && parsed.date === today && Array.isArray(parsed.quests) && parsed.quests.length === 3) {
+        if (
+          parsed &&
+          parsed.date === today &&
+          Array.isArray(parsed.quests) &&
+          parsed.quests.length === 3 &&
+          parsed.quests.every((q) => isQuestValidForPlayer(q, playerLevel))
+        ) {
           return parsed;
         }
       }
@@ -45,8 +73,8 @@ export function useDailyQuests({ onAddCoins, onAddExp, onAddGems }: UseDailyQues
       // fallback
     }
 
-    // Новый день или первый запуск
-    const newQuests = generateDailyQuests(today);
+    // Новый день, первый запуск или миграция с устаревших квестов
+    const newQuests = generateDailyQuests(today, playerLevel);
     const initial: DailyQuestsState = {
       date: today,
       quests: newQuests,
@@ -59,6 +87,24 @@ export function useDailyQuests({ onAddCoins, onAddExp, onAddGems }: UseDailyQues
     }
     return initial;
   });
+
+  // Автоматическая проверка при изменении уровня игрока
+  useEffect(() => {
+    const hasInvalidQuests = state.quests.some((q) => !isQuestValidForPlayer(q, playerLevel));
+    if (hasInvalidQuests) {
+      const freshQuests = generateDailyQuests(state.date, playerLevel);
+      const nextState: DailyQuestsState = {
+        ...state,
+        quests: freshQuests,
+      };
+      setState(nextState);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+      } catch {
+        // ignore
+      }
+    }
+  }, [playerLevel, state]);
 
   const [timeUntilMidnight, setTimeUntilMidnight] = useState<string>(getTimeUntilMidnight);
 
@@ -116,7 +162,21 @@ export function useDailyQuests({ onAddCoins, onAddExp, onAddGems }: UseDailyQues
             break;
 
           case 'catch_species':
-            if (q.targetFishId && caughtItem.fish.id === q.targetFishId) {
+            if (q.targetFishId) {
+              const isMatch =
+                caughtItem.fish.id === q.targetFishId ||
+                (q.targetFishId === 'crucian' && caughtItem.fish.id === 'crucian_carp') ||
+                (q.targetFishId === 'crucian_carp' && caughtItem.fish.id === 'crucian');
+              if (isMatch) {
+                if (!q.targetMinWeight || caughtItem.weight >= q.targetMinWeight) {
+                  shouldIncrement = true;
+                }
+              }
+            }
+            break;
+
+          case 'catch_trophy':
+            if (caughtItem.sizeCategory === 'trophy') {
               shouldIncrement = true;
             }
             break;

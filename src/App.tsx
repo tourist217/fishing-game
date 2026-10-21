@@ -63,6 +63,7 @@ export default function App() {
     onAddCoins: player.addCoins,
     onAddExp: player.addExp,
     onAddGems: (amount) => player.setGems((prev) => prev + amount),
+    playerLevel: player.level,
   });
 
   // 5. Физика рыбалки и игровой цикл
