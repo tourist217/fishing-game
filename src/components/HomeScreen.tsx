@@ -782,35 +782,27 @@ export const HomeScreen = ({
             onClick={() => setActiveModal('leaderboard')}
             style={{
               width: '74px',
-              background: 'rgba(28, 36, 48, 0.85)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              border: '1.5px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '18px',
-              padding: '7px 4px 6px 4px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
+              height: '74px',
+              borderRadius: '20px',
               cursor: 'pointer',
-              boxShadow: '0 6px 20px rgba(0, 0, 0, 0.45)',
+              position: 'relative',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.55)',
               transition: 'transform 0.12s ease',
+              overflow: 'hidden',
+              background: '#152232',
+              border: '1.5px solid rgba(251, 191, 36, 0.4)',
             }}
           >
-            <div style={{ fontSize: '26px', filter: 'drop-shadow(0 2px 6px rgba(245, 158, 11, 0.5))' }}>
-              🥇
-            </div>
-            <div
+            <img
+              src="/assets/icons/leaderboard.png"
+              alt="Лидерборд"
               style={{
-                fontSize: '9.5px',
-                fontWeight: 800,
-                color: '#ffffff',
-                marginTop: '4px',
-                textAlign: 'center',
-                lineHeight: 1.15,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
               }}
-            >
-              Лидерборд
-            </div>
+            />
           </div>
         </div>
       </div>
@@ -1298,7 +1290,20 @@ export const HomeScreen = ({
               textAlign: 'center',
             }}
           >
-            <div style={{ fontSize: '42px', marginBottom: '8px' }}>🥇</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
+              <img
+                src="/assets/icons/leaderboard.png"
+                alt="Лидерборд"
+                style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '16px',
+                  objectFit: 'cover',
+                  border: '1.5px solid rgba(251, 191, 36, 0.4)',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.5)',
+                }}
+              />
+            </div>
             <div style={{ fontSize: '17px', fontWeight: 800, color: '#fbbf24', marginBottom: '6px' }}>
               Клуб и Лидерборд
             </div>
