@@ -228,7 +228,7 @@ export const FISH_DATABASE: Fish[] = [
       large: { minKg: 0.450, maxKg: 1.100, priceMultiplier: 2.0, expMultiplier: 1.9, label: 'Крупный' },
       trophy: { minKg: 1.100, maxKg: 2.200, priceMultiplier: 4.0, expMultiplier: 3.5, label: 'ТРОФЕЙ' },
     },
-    baitPreferences: { livebait: 1.0, worm: 0.9, bloodworm: 0.7, maggot: 0.5 },
+    baitPreferences: { livebait: 1.2, worm: 0.9, bloodworm: 0.3, maggot: 0.2 },
     timePreferences: { morning: 1.5, day: 0.8, evening: 1.4, night: 0.2 },
     weatherPreferences: { clear: 0.7, fog: 1.1, overcast: 1.4, rain: 1.4 },
     fightBehavior: { pullForce: 1.3, jerkFrequency: 1.3 },
@@ -679,11 +679,14 @@ export function getRandomFish(
     selectedFish = candidates[Math.floor(Math.random() * candidates.length)];
   }
 
-  // 3. Выбираем весовую категорию с учётом водоёма и мощности удочки
+  // 3. Выбираем весовую категорию с учётом водоёма, мощности удочки И НАЖИВКИ!
   const availableCategories = selectedFish.habitats[locationId] || ['small'];
   const effectiveRodStrength = rodStrengthKg > 0 ? rodStrengthKg : 0.4;
 
-  // Взвешиваем категории: вероятность поклёвки рыбы, превышающей удочку, должна быть низкой (~6-7%)
+  const isPredator = selectedFish.id === 'perch' || selectedFish.id === 'pike' || selectedFish.id === 'zander' || selectedFish.id === 'wels_catfish';
+  const isBigCyprinid = selectedFish.id === 'carp' || selectedFish.id === 'wild_carp' || selectedFish.id === 'grass_carp' || selectedFish.id === 'bream';
+
+  // Взвешиваем категории с учётом размера насадки:
   const categoryWeights: { category: FishSizeCategory; weight: number }[] = [];
   for (const cat of availableCategories) {
     if (cat === 'trophy') continue; // Трофеи обрабатываются отдельно
@@ -691,17 +694,50 @@ export function getRandomFish(
     const catTier = selectedFish.weightTiers[cat];
     if (!catTier) continue;
 
+    let baseCatWeight = 1.0;
     if (catTier.maxKg <= effectiveRodStrength) {
-      // Категория полностью по силам удочке
-      categoryWeights.push({ category: cat, weight: 1.0 });
+      baseCatWeight = 1.0;
     } else if (catTier.minKg <= effectiveRodStrength) {
-      // Категория перекрывает предел удочки (например, 1.4 - 3.2 кг при удочке 2.5 кг)
-      categoryWeights.push({ category: cat, weight: 0.75 });
+      baseCatWeight = 0.75;
     } else {
-      // Категория заведомо превышает предел удочки (например, 3.2 - 7.5 кг при удочке 2.5 кг)
-      // Шанс такой поклёвки низкий (~6%)
-      categoryWeights.push({ category: cat, weight: 0.06 });
+      baseCatWeight = 0.06;
     }
+
+    // Влияние наживки на размер рыбы:
+    // А) ХИЩНИКИ (Окунь, Щука, Судак, Сом):
+    if (isPredator) {
+      if (baitId === 'livebait') {
+        // На живца мелкий матросик/шнурок не клюёт (не может заглотить), а крупный берет жадно!
+        if (cat === 'small') baseCatWeight *= 0.05;
+        if (cat === 'medium') baseCatWeight *= 0.8;
+        if (cat === 'large') baseCatWeight *= 3.2;
+      } else if (baitId === 'worm') {
+        // На червя клюёт некрупный и средний хищник
+        if (cat === 'small') baseCatWeight *= 1.6;
+        if (cat === 'medium') baseCatWeight *= 1.2;
+        if (cat === 'large') baseCatWeight *= 0.2;
+      } else if (baitId === 'bloodworm' || baitId === 'maggot') {
+        // На мелких личинок вешается почти исключительно мелкий матросик
+        if (cat === 'small') baseCatWeight *= 3.0;
+        if (cat === 'medium') baseCatWeight *= 0.2;
+        if (cat === 'large') baseCatWeight *= 0.01;
+      }
+    }
+
+    // Б) КАРПОВЫЕ (Карп, Сазан, Белый амур, Лещ):
+    if (isBigCyprinid) {
+      if (baitId === 'corn') {
+        // Сладкая кукуруза отсекает мелочь и привлекает тяжеловесов
+        if (cat === 'small') baseCatWeight *= 0.1;
+        if (cat === 'medium') baseCatWeight *= 0.8;
+        if (cat === 'large') baseCatWeight *= 2.5;
+      } else if (baitId === 'bread' || baitId === 'dough') {
+        if (cat === 'small') baseCatWeight *= 1.5;
+        if (cat === 'large') baseCatWeight *= 0.3;
+      }
+    }
+
+    categoryWeights.push({ category: cat, weight: baseCatWeight });
   }
 
   let sizeCategory: FishSizeCategory = 'small';
@@ -730,6 +766,13 @@ export function getRandomFish(
 
   if (isIdealTime && isIdealWeather && isIdealBait) {
     trophyChance *= 1.20; // +20% к шансу трофея в идеальных условиях
+  }
+
+  // Бонус к шансу трофея при ловле на профильную насадку
+  if (isPredator && baitId === 'livebait') {
+    trophyChance *= 2.2; // На живца шанс трофейного окуня или щуки более чем в 2 раза выше!
+  } else if (isBigCyprinid && baitId === 'corn') {
+    trophyChance *= 1.8;
   }
 
   if (availableCategories.includes('trophy') && !lastCaughtWasTrophy && Math.random() < trophyChance) {

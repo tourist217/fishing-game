@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import * as GearData from '../gearData';
 import type { RodTier, ReelTier, LineTier } from '../gearData';
-import { AVAILABLE_BAITS, type UpgradesState } from '../hooks/useBaitState';
+import { AVAILABLE_BAITS, BAIT_CAPACITY_TIERS, type UpgradesState } from '../hooks/useBaitState';
 import { CoinIcon } from './CoinIcon';
 
 interface GearState {
@@ -562,26 +562,26 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
             const currentCount = baits[bait.id] || 0;
             const spaceLeft = Math.max(0, baitCapacity - currentCount);
             const isFull = spaceLeft <= 0;
+            const isLocked = level < (bait.levelReq || 1);
 
-            const basePackPrice = bait.price;
-            const countToBuy = Math.min(5, spaceLeft);
-            const pricePerUnit = basePackPrice / 5;
-            const actualPrice =
-              countToBuy > 0 ? Math.max(1, Math.round(countToBuy * pricePerUnit)) : basePackPrice;
-
+            const countToBuy = Math.min(spaceLeft, 3);
+            const actualPrice = countToBuy * bait.price;
             const canAfford = coins >= actualPrice;
 
             return (
               <div
                 key={bait.id}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
+                  background: isLocked ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.05)',
                   borderRadius: '14px',
                   padding: '12px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  border: isLocked
+                    ? '1px dashed rgba(255, 255, 255, 0.06)'
+                    : '1px solid rgba(255, 255, 255, 0.08)',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
+                  opacity: isLocked ? 0.6 : 1,
                 }}
               >
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -592,8 +592,12 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                       borderRadius: '12px',
                       overflow: 'hidden',
                       flexShrink: 0,
-                      border: '1.5px solid rgba(251, 191, 36, 0.35)',
+                      border: isLocked
+                        ? '1.5px solid rgba(148, 163, 184, 0.2)'
+                        : '1.5px solid rgba(251, 191, 36, 0.35)',
                       boxShadow: '0 4px 10px rgba(0, 0, 0, 0.4)',
+                      position: 'relative',
+                      filter: isLocked ? 'grayscale(0.6)' : 'none',
                     }}
                   >
                     <img
@@ -606,51 +610,95 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                         display: 'block',
                       }}
                     />
+                    {isLocked && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          background: 'rgba(0,0,0,0.5)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '18px',
+                        }}
+                      >
+                        🔒
+                      </div>
+                    )}
                   </div>
                   <div>
-                    <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>
-                      {bait.name}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>
+                        {bait.name}
+                      </span>
+                      {isLocked && (
+                        <span
+                          style={{
+                            fontSize: '10px',
+                            fontWeight: 800,
+                            color: '#fbbf24',
+                            background: 'rgba(251, 191, 36, 0.15)',
+                            padding: '1px 6px',
+                            borderRadius: '6px',
+                            border: '1px solid rgba(251, 191, 36, 0.3)',
+                          }}
+                        >
+                          С {bait.levelReq} ур.
+                        </span>
+                      )}
                     </div>
                     <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                      В банке:{' '}
-                      <span style={{ color: isFull ? '#ef4444' : '#38bdf8', fontWeight: 'bold' }}>
-                        {currentCount}
-                      </span>
-                      /{baitCapacity} шт.
+                      {isLocked ? (
+                        bait.description
+                      ) : (
+                        <>
+                          В банке:{' '}
+                          <span style={{ color: isFull ? '#ef4444' : '#38bdf8', fontWeight: 'bold' }}>
+                            {currentCount}
+                          </span>
+                          /{baitCapacity} шт.
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span
-                    style={{
-                      fontWeight: 'bold',
-                      color: isFull ? '#64748b' : '#fbbf24',
-                      fontSize: '13px',
-                    }}
-                  >
-                    {isFull ? '—' : (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                        {actualPrice} <CoinIcon size={14} />
-                      </span>
-                    )}
-                  </span>
+                  {!isLocked && (
+                    <span
+                      style={{
+                        fontWeight: 'bold',
+                        color: isFull ? '#64748b' : '#fbbf24',
+                        fontSize: '13px',
+                      }}
+                    >
+                      {isFull ? '—' : (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                          {actualPrice} <CoinIcon size={14} />
+                        </span>
+                      )}
+                    </span>
+                  )}
                   <button
-                    disabled={!canAfford || isFull}
-                    onClick={() => onBuyBait(bait.id, 5, basePackPrice)}
+                    disabled={isLocked || !canAfford || isFull}
+                    onClick={() => onBuyBait(bait.id, countToBuy, actualPrice)}
                     style={{
                       padding: '8px 12px',
                       borderRadius: '8px',
                       border: 'none',
-                      background: canAfford && !isFull ? '#2563eb' : '#334155',
-                      color: canAfford && !isFull ? '#fff' : '#64748b',
+                      background: isLocked
+                        ? '#1e293b'
+                        : canAfford && !isFull
+                        ? '#2563eb'
+                        : '#334155',
+                      color: isLocked || !canAfford || isFull ? '#64748b' : '#fff',
                       fontWeight: 'bold',
                       fontSize: '12px',
-                      cursor: canAfford && !isFull ? 'pointer' : 'not-allowed',
-                      minWidth: '75px',
+                      cursor: isLocked || !canAfford || isFull ? 'not-allowed' : 'pointer',
+                      minWidth: '78px',
                     }}
                   >
-                    {isFull ? 'Полно' : `+${countToBuy} шт.`}
+                    {isLocked ? '🔒 Замок' : isFull ? 'Полно' : `+${countToBuy} шт.`}
                   </button>
                 </div>
               </div>
@@ -662,9 +710,15 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
           <>
             {/* 1. Вместимость банок */}
             {(() => {
-              const lvl = upgrades?.baitCapacityLevel || 0;
-              const cost = getUpgradeCost(lvl);
+              const currentLvl = upgrades?.baitCapacityLevel || 0;
+              const nextTier = BAIT_CAPACITY_TIERS[currentLvl + 1];
+              const isMax = !nextTier;
+
+              const reqLvl = nextTier?.reqPlayerLevel || 1;
+              const cost = nextTier?.cost || 0;
+              const hasLevel = level >= reqLvl;
               const canAfford = coins >= cost;
+
               return (
                 <div
                   style={{
@@ -684,28 +738,54 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                         Вместимость банок
                       </div>
                       <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                        Ур. {lvl} • Лимит: <span style={{ color: '#38bdf8' }}>{baitCapacity} шт.</span> (+15 к банке)
+                        {isMax ? (
+                          <span style={{ color: '#4ade80' }}>Максимальный лимит: 15 шт.</span>
+                        ) : (
+                          <>
+                            Ур. {currentLvl} • Лимит: <span style={{ color: '#38bdf8' }}>{baitCapacity}</span> ➔ <span style={{ color: '#4ade80', fontWeight: 'bold' }}>{nextTier.capacity} шт.</span>
+                            {!hasLevel && (
+                              <span style={{ color: '#f59e0b', marginLeft: '6px' }}>
+                                (С {reqLvl} ур.)
+                              </span>
+                            )}
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
 
                   <button
-                    disabled={!canAfford}
+                    disabled={isMax || !hasLevel || !canAfford}
                     onClick={() => onBuyUpgrade('baitCapacityLevel', cost)}
                     style={{
                       padding: '8px 12px',
                       borderRadius: '8px',
                       border: 'none',
-                      background: canAfford ? '#10b981' : '#334155',
-                      color: canAfford ? '#fff' : '#64748b',
+                      background: isMax
+                        ? '#334155'
+                        : !hasLevel
+                        ? '#1e293b'
+                        : canAfford
+                        ? '#10b981'
+                        : '#334155',
+                      color: isMax || !hasLevel || !canAfford ? '#64748b' : '#fff',
                       fontWeight: 'bold',
                       fontSize: '12px',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '4px',
+                      cursor: isMax || !hasLevel || !canAfford ? 'not-allowed' : 'pointer',
                     }}
                   >
-                    {cost} <CoinIcon size={14} />
+                    {isMax ? (
+                      'МАКС.'
+                    ) : !hasLevel ? (
+                      `С ${reqLvl} ур.`
+                    ) : (
+                      <>
+                        {cost} <CoinIcon size={14} />
+                      </>
+                    )}
                   </button>
                 </div>
               );

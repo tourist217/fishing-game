@@ -20,6 +20,7 @@ interface FishingScreenProps {
   canDismissModal: boolean;
   selectedBaitId: string;
   baits: Record<string, number>;
+  playerLevel?: number;
   hasLineOnRod?: boolean;
   rodMaterial?: string;
   coins?: number;
@@ -49,6 +50,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
   canDismissModal,
   selectedBaitId,
   baits,
+  playerLevel = 1,
   hasLineOnRod = true,
   rodMaterial = 'bamboo',
   coins: _coins,
@@ -280,7 +282,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
             pointerEvents: gameState === 'idle' ? 'auto' : 'none',
           }}
         >
-          {AVAILABLE_BAITS.map((b) => {
+          {AVAILABLE_BAITS.filter((b) => (b.levelReq || 1) <= playerLevel || (baits[b.id] || 0) > 0).map((b) => {
             const count = baits[b.id] || 0;
             const isSelected = selectedBaitId === b.id;
             return (

@@ -162,6 +162,7 @@ export default function App() {
             canDismissModal={fishing.canDismissModal}
             selectedBaitId={baits.selectedBaitId}
             baits={baits.baits}
+            playerLevel={player.level}
             hasLineOnRod={gear.hasLineOnRod}
             rodMaterial={gear.currentRod.material}
             coins={player.coins}

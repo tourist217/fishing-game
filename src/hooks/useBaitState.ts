@@ -4,20 +4,41 @@ export interface BaitItem {
   id: string;
   name: string;
   price: number;
+  levelReq: number;
   icon: string;
   image: string;
   description: string;
 }
 
 export const AVAILABLE_BAITS: BaitItem[] = [
-  { id: 'worm', name: 'Червь', price: 5, icon: '🪱', image: '/assets/baits/worm.png', description: 'Универсальная наживка для любой рыбы' },
-  { id: 'bread', name: 'Хлеб', price: 3, icon: '🍞', image: '/assets/baits/bread.png', description: 'Отлично подходит для белой рыбы' },
-  { id: 'dough', name: 'Тесто', price: 4, icon: '🥟', image: '/assets/baits/dough.png', description: 'Любимое лакомство карася и плотвы' },
-  { id: 'corn', name: 'Кукуруза', price: 8, icon: '🌽', image: '/assets/baits/corn.png', description: 'Привлекает карпа, сазана и амура' },
-  { id: 'maggot', name: 'Опарыш', price: 6, icon: '🐛', image: '/assets/baits/maggot.png', description: 'Бойкая личинка для плотвы и леща' },
-  { id: 'bloodworm', name: 'Мотыль', price: 7, icon: '🦟', image: '/assets/baits/bloodworm.png', description: 'Деликатес для пескаря и мелкой рыбы' },
-  { id: 'livebait', name: 'Живец', price: 15, icon: '🐟', image: '/assets/baits/livebait.png', description: 'Наживка для хищников: щука, окунь, судак, сом' },
+  { id: 'worm', name: 'Червь', price: 2, levelReq: 1, icon: '🪱', image: '/assets/baits/worm.png', description: 'Универсальная насадка для карася, плотвы, некрупного окуня' },
+  { id: 'bread', name: 'Хлеб', price: 1, levelReq: 1, icon: '🍞', image: '/assets/baits/bread.png', description: 'Отлично подходит для некрупной белой рыбы' },
+  { id: 'dough', name: 'Тесто', price: 2, levelReq: 1, icon: '🥟', image: '/assets/baits/dough.png', description: 'Любимое лакомство карася и плотвы' },
+  { id: 'maggot', name: 'Опарыш', price: 3, levelReq: 3, icon: '🐛', image: '/assets/baits/maggot.png', description: 'Бойкая личинка для плотвы, краснопёрки и подлещика' },
+  { id: 'bloodworm', name: 'Мотыль', price: 3, levelReq: 3, icon: '🦟', image: '/assets/baits/bloodworm.png', description: 'Нежный деликатес для пескаря и мелкого окуня-матросика' },
+  { id: 'livebait', name: 'Живец', price: 8, levelReq: 6, icon: '🐟', image: '/assets/baits/livebait.png', description: 'Живой малёк для отборных хищников: щука, крупный окунь, судак' },
+  { id: 'corn', name: 'Кукуруза', price: 5, levelReq: 9, icon: '🌽', image: '/assets/baits/corn.png', description: 'Сладкие зерна для карпа, сазана и крупного амура' },
 ];
+
+export interface BaitCapacityTier {
+  level: number;
+  capacity: number;
+  reqPlayerLevel: number;
+  cost: number;
+}
+
+export const BAIT_CAPACITY_TIERS: BaitCapacityTier[] = [
+  { level: 0, capacity: 3, reqPlayerLevel: 1, cost: 0 },
+  { level: 1, capacity: 5, reqPlayerLevel: 3, cost: 1200 },
+  { level: 2, capacity: 8, reqPlayerLevel: 6, cost: 3500 },
+  { level: 3, capacity: 11, reqPlayerLevel: 10, cost: 7500 },
+  { level: 4, capacity: 15, reqPlayerLevel: 15, cost: 15000 },
+];
+
+export function getBaitCapacity(upgradeLevel: number): number {
+  const safeLvl = Math.max(0, Math.min(upgradeLevel, BAIT_CAPACITY_TIERS.length - 1));
+  return BAIT_CAPACITY_TIERS[safeLvl].capacity;
+}
 
 export interface UpgradesState {
   baitCapacityLevel: number;
@@ -87,15 +108,15 @@ export function useBaitState(
     localStorage.setItem('fg_upgrades', JSON.stringify(upgrades));
   }, [upgrades]);
 
-  // Вместимость одной банки (30 базово + 15 за каждый уровень прокачки)
-  const currentBaitCapacity = 30 + upgrades.baitCapacityLevel * 15;
+  // Вместимость одной банки (3 шт. на старте, до 15 шт. на макс. уровне)
+  const currentBaitCapacity = getBaitCapacity(upgrades.baitCapacityLevel);
 
   const baitsRef = useRef(baits);
   baitsRef.current = baits;
 
   // Умная покупка наживки (с частичным добором до лимита)
   const buyBait = useCallback(
-    (baitId: string, requestedCount: number = 5, packPrice?: number): boolean => {
+    (baitId: string, requestedCount: number = 3, packPrice?: number): boolean => {
       const currentCount = baitsRef.current[baitId] || 0;
       const spaceLeft = Math.max(0, currentBaitCapacity - currentCount);
 
@@ -108,16 +129,12 @@ export function useBaitState(
       // Определяем, сколько реально покупаем (не больше свободного места)
       const countToAdd = Math.min(requestedCount, spaceLeft);
 
-      // Рассчитываем базовую цену за пачку
-      let fullPackCost = packPrice;
-      if (typeof fullPackCost !== 'number') {
-        const item = AVAILABLE_BAITS.find((b) => b.id === baitId);
-        fullPackCost = item ? item.price : 20;
-      }
-
-      // Пропорциональный расчёт цены: (цена пачки / размер пачки) * реальное количество
-      const pricePerUnit = fullPackCost / requestedCount;
-      const actualCost = Math.max(1, Math.round(countToAdd * pricePerUnit));
+      // Расчёт цены
+      const item = AVAILABLE_BAITS.find((b) => b.id === baitId);
+      const unitPrice = item ? item.price : 2;
+      const actualCost = typeof packPrice === 'number'
+        ? Math.max(1, Math.round(countToAdd * (packPrice / requestedCount)))
+        : countToAdd * unitPrice;
 
       // Проверяем баланс
       if (typeof coins === 'number' && coins < actualCost) {

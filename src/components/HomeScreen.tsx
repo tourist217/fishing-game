@@ -1187,10 +1187,12 @@ export const HomeScreen = ({
               {AVAILABLE_BAITS.map((b) => {
                 const count = baits[b.id] || 0;
                 const isSelected = selectedBaitId === b.id;
+                const isLocked = level < (b.levelReq || 1) && count === 0;
                 return (
                   <div
                     key={b.id}
                     onClick={() => {
+                      if (isLocked) return;
                       onSelectBait(b.id);
                       setActiveModal(null);
                     }}
@@ -1200,7 +1202,8 @@ export const HomeScreen = ({
                       gap: '12px',
                       padding: '10px 12px',
                       borderRadius: '16px',
-                      cursor: 'pointer',
+                      cursor: isLocked ? 'not-allowed' : 'pointer',
+                      opacity: isLocked ? 0.5 : 1,
                       background: isSelected
                         ? 'linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(2, 132, 199, 0.08))'
                         : 'rgba(255, 255, 255, 0.04)',
@@ -1227,6 +1230,8 @@ export const HomeScreen = ({
                           : '1.5px solid rgba(251, 191, 36, 0.35)',
                         background: 'rgba(0, 0, 0, 0.5)',
                         boxShadow: '0 4px 10px rgba(0, 0, 0, 0.5)',
+                        position: 'relative',
+                        filter: isLocked ? 'grayscale(0.6)' : 'none',
                       }}
                     >
                       <img
@@ -1239,6 +1244,21 @@ export const HomeScreen = ({
                           display: 'block',
                         }}
                       />
+                      {isLocked && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            inset: 0,
+                            background: 'rgba(0,0,0,0.5)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '18px',
+                          }}
+                        >
+                          🔒
+                        </div>
+                      )}
                     </div>
 
                     {/* Название и описание наживки */}
@@ -1247,6 +1267,21 @@ export const HomeScreen = ({
                         <span style={{ fontSize: '15px', fontWeight: 800, color: '#ffffff' }}>
                           {b.name}
                         </span>
+                        {isLocked && (
+                          <span
+                            style={{
+                              fontSize: '9px',
+                              fontWeight: 800,
+                              color: '#fbbf24',
+                              background: 'rgba(251, 191, 36, 0.15)',
+                              padding: '2px 6px',
+                              borderRadius: '6px',
+                              border: '1px solid rgba(251, 191, 36, 0.3)',
+                            }}
+                          >
+                            С {b.levelReq} ур. 🔒
+                          </span>
+                        )}
                         {isSelected && (
                           <span
                             style={{
@@ -1282,7 +1317,7 @@ export const HomeScreen = ({
                       style={{
                         fontSize: '13px',
                         fontWeight: 900,
-                        color: count > 0 ? '#4ade80' : '#ef4444',
+                        color: count > 0 ? '#4ade80' : isLocked ? '#64748b' : '#ef4444',
                         background: 'rgba(15, 23, 42, 0.7)',
                         padding: '4px 10px',
                         borderRadius: '8px',
@@ -1290,7 +1325,7 @@ export const HomeScreen = ({
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {count > 0 ? `${count} шт.` : 'Нет'}
+                      {count > 0 ? `${count} шт.` : isLocked ? '🔒' : 'Нет'}
                     </div>
                   </div>
                 );
