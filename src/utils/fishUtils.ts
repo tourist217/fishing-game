@@ -76,34 +76,51 @@ export function getFishDifficultyConfig(
     baseWidth = 15;
   }
 
-  // 2. Влияние прочности снасти на ширину зоны (loadRatio)
+  // 2. Влияние прочности снасти на ширину зоны и рывки (принцип слабого звена: удочка + леска)
   const rodLimit = rodStrengthKg > 0 ? rodStrengthKg : 0.25;
   const lineLimit = lineTensileKg > 0 ? lineTensileKg : 0.4;
+  // Леска отдельно от удочки не работает: нагрузку определяет самое слабое звено снасти
   const gearLimit = Math.min(rodLimit, lineLimit);
 
   const loadRatio = weightKg / gearLimit;
 
   let widthMultiplier = 1.0;
+  let finalIntervalMs = 1500;
 
   if (loadRatio < 0.35) {
-    widthMultiplier = 1.2;
-  } else if (loadRatio <= 0.65) {
+    widthMultiplier = 1.25;
+    finalIntervalMs = 1800; // Спокойная рыба под мощную снасть
+  } else if (loadRatio <= 0.70) {
     widthMultiplier = 1.0;
-  } else if (loadRatio <= 0.85) {
-    widthMultiplier = 0.82;
+    finalIntervalMs = 1500;
+  } else if (loadRatio <= 0.95) {
+    widthMultiplier = 0.80;
+    finalIntervalMs = 1300;
+  } else if (loadRatio <= 1.20) {
+    // Небольшой перегруз снасти (на 10-20% выше предела)
+    widthMultiplier = 0.48;
+    finalIntervalMs = 950;
+  } else if (loadRatio <= 1.50) {
+    // Существенный перегруз снасти (на 20-50% выше предела)
+    widthMultiplier = 0.28;
+    finalIntervalMs = 750;
   } else {
-    widthMultiplier = 0.65;
+    // Экстремальный перегруз снасти (> 1.5x) - например 4.4 кг на 2.5 кг удочку
+    widthMultiplier = 0.16;
+    finalIntervalMs = 550; // Зона мечется каждые 0.55 сек, рыба яростно бьётся
   }
 
-  const sharpenBonus = hookSharpenLevel * 3;
+  // Бонус заточки крючка: при перегрузе снасти крючок не может бесконечно расширять зону
+  const maxSharpenBonus = loadRatio > 1.5 ? 2 : loadRatio > 1.0 ? 3 : 8;
+  const sharpenBonus = Math.min(hookSharpenLevel * 2, maxSharpenBonus);
+
+  // Минимальная ширина зоны: при перегрузе зона становится ооочень маленькой (6-8%)
+  const minAllowedWidth = loadRatio > 1.5 ? 7 : loadRatio > 1.0 ? 10 : 15;
 
   const finalWidth = Math.max(
-    14,
+    minAllowedWidth,
     Math.min(65, Math.round(baseWidth * widthMultiplier + sharpenBonus))
   );
-
-  // Смещение зеленой зоны строго 1 раз в 1.5 секунды (1500 мс)
-  const finalIntervalMs = 1500;
 
   return {
     zoneWidth: finalWidth,

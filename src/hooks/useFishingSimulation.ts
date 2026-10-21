@@ -254,17 +254,27 @@ export function useFishingSimulation({
       const active = currentFishRef.current;
       const pullForce = active?.fish.fightBehavior?.pullForce || 1.0;
       const lineLimit = lineTensileRef.current;
+      const rodLimit = rodStrengthRef.current;
+      // Леска отдельно от удочки не работает: нагрузку определяет самое слабое звено снасти
+      const gearLimit = Math.min(
+        rodLimit > 0 ? rodLimit : 0.25,
+        lineLimit > 0 ? lineLimit : 0.4
+      );
+      const isOverloaded = Boolean(active && gearLimit > 0 && active.weight > gearLimit);
       const isLineOverloaded = Boolean(active && lineLimit > 0 && active.weight > lineLimit);
+      const overloadRatio = (active && gearLimit > 0) ? active.weight / gearLimit : 1.0;
 
       if (isPullingRef.current) {
         let pullSpeed = 1.9;
-        if (isLineOverloaded && lineLimit > 0 && active) {
-          const overload = active.weight / lineLimit;
-          pullSpeed += Math.min(22, (overload - 1) * 10.0);
+        if (isOverloaded && active) {
+          // При перегрузе снасти натяжение зашкаливает при зажатии в разы быстрее
+          pullSpeed += Math.min(24, (overloadRatio - 1) * 14.0);
         }
         tensionRef.current += pullSpeed;
       } else {
-        tensionRef.current -= 1.8 * pullForce;
+        // При перегрузе тяжелая рыба стремительно тянет снасть вниз
+        const releaseMultiplier = Math.max(1.0, Math.min(3.2, overloadRatio * 1.35));
+        tensionRef.current -= 1.8 * pullForce * releaseMultiplier;
       }
 
       const diffConfig = active
@@ -291,8 +301,14 @@ export function useFishingSimulation({
         sizeSpeedModifier = 0.625; // +60% дольше
       }
 
+      // При перегрузе снасти смотка рыбы даётся с огромным трудом
+      const overloadProgressMod = isOverloaded ? Math.max(0.32, 1.0 / (overloadRatio * 1.5)) : 1.0;
+      const outOfZoneDrain = isOverloaded ? -0.65 : -0.4;
+
       const inZone = tensionRef.current >= curStart && tensionRef.current <= curEnd;
-      progressRef.current += inZone ? 1.0 * reelSpeedRef.current * sizeSpeedModifier : -0.4;
+      progressRef.current += inZone
+        ? 1.0 * reelSpeedRef.current * sizeSpeedModifier * overloadProgressMod
+        : outOfZoneDrain;
 
       if (tensionRef.current >= 100 || tensionRef.current <= 0 || progressRef.current <= 0) {
         clearInterval(interval);

@@ -679,9 +679,46 @@ export function getRandomFish(
     selectedFish = candidates[Math.floor(Math.random() * candidates.length)];
   }
 
-  // 3. Выбираем весовую категорию, доступную строго в этом водоёме
+  // 3. Выбираем весовую категорию с учётом водоёма и мощности удочки
   const availableCategories = selectedFish.habitats[locationId] || ['small'];
-  let sizeCategory = availableCategories[Math.floor(Math.random() * availableCategories.length)];
+  const effectiveRodStrength = rodStrengthKg > 0 ? rodStrengthKg : 0.4;
+
+  // Взвешиваем категории: вероятность поклёвки рыбы, превышающей удочку, должна быть низкой (~6-7%)
+  const categoryWeights: { category: FishSizeCategory; weight: number }[] = [];
+  for (const cat of availableCategories) {
+    if (cat === 'trophy') continue; // Трофеи обрабатываются отдельно
+
+    const catTier = selectedFish.weightTiers[cat];
+    if (!catTier) continue;
+
+    if (catTier.maxKg <= effectiveRodStrength) {
+      // Категория полностью по силам удочке
+      categoryWeights.push({ category: cat, weight: 1.0 });
+    } else if (catTier.minKg <= effectiveRodStrength) {
+      // Категория перекрывает предел удочки (например, 1.4 - 3.2 кг при удочке 2.5 кг)
+      categoryWeights.push({ category: cat, weight: 0.75 });
+    } else {
+      // Категория заведомо превышает предел удочки (например, 3.2 - 7.5 кг при удочке 2.5 кг)
+      // Шанс такой поклёвки низкий (~6%)
+      categoryWeights.push({ category: cat, weight: 0.06 });
+    }
+  }
+
+  let sizeCategory: FishSizeCategory = 'small';
+  if (categoryWeights.length > 0) {
+    const totalCatWeight = categoryWeights.reduce((sum, item) => sum + item.weight, 0);
+    let r = Math.random() * totalCatWeight;
+    sizeCategory = categoryWeights[0].category;
+    for (const item of categoryWeights) {
+      r -= item.weight;
+      if (r <= 0) {
+        sizeCategory = item.category;
+        break;
+      }
+    }
+  } else {
+    sizeCategory = availableCategories[0] || 'small';
+  }
 
   // Трофейная рыба: защита от повтора подряд + базовый шанс 0.8%
   let trophyChance = 0.008;
@@ -695,20 +732,35 @@ export function getRandomFish(
     trophyChance *= 1.20; // +20% к шансу трофея в идеальных условиях
   }
 
-  if (sizeCategory === 'trophy') {
-    if (lastCaughtWasTrophy || Math.random() > trophyChance) {
-      sizeCategory = availableCategories.includes('large') ? 'large' : 'medium';
-    } else {
-      lastCaughtWasTrophy = true;
-    }
+  if (availableCategories.includes('trophy') && !lastCaughtWasTrophy && Math.random() < trophyChance) {
+    sizeCategory = 'trophy';
+    lastCaughtWasTrophy = true;
   } else {
     lastCaughtWasTrophy = false;
   }
 
   const tier = selectedFish.weightTiers[sizeCategory] || selectedFish.weightTiers.small;
 
-  // 4. Генерируем вес особи в пределах её категории
-  const rawWeight = tier.minKg + Math.random() * (tier.maxKg - tier.minKg);
+  // 4. Генерируем вес особи в пределах её категории с учётом мощности удочки
+  // Вероятность поклёвки рыбы тяжелее удочки низкая (~6-7%)
+  const allowOverload = Math.random() < 0.065;
+  let rawWeight: number;
+
+  if (sizeCategory === 'trophy') {
+    // Трофей сохраняет свой эпический вес
+    rawWeight = tier.minKg + Math.random() * (tier.maxKg - tier.minKg);
+  } else if (!allowOverload && tier.minKg < effectiveRodStrength && tier.maxKg > effectiveRodStrength) {
+    // Если категория перекрывает предел удочки, в 93.5% случаев ограничиваем вес пределом удочки
+    const maxAllowed = Math.min(tier.maxKg, effectiveRodStrength);
+    rawWeight = tier.minKg + Math.random() * (maxAllowed - tier.minKg);
+  } else if (!allowOverload && tier.minKg >= effectiveRodStrength) {
+    // Если даже минимум категории больше удочки, в 93.5% случаев держим вес в нижних 10%
+    rawWeight = tier.minKg + Math.random() * Math.max(0.1, tier.minKg * 0.1);
+  } else {
+    // Обычная генерация (или редкий 6.5% случай перегруза снасти)
+    rawWeight = tier.minKg + Math.random() * (tier.maxKg - tier.minKg);
+  }
+
   const weight = Math.round(rawWeight * 1000) / 1000;
 
   // 5. Расчёт стоимости и опыта
