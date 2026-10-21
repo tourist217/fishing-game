@@ -319,8 +319,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                       width: '100%',
                       height: '100%',
                       objectFit: 'cover',
-                      objectPosition: '20% 50%',
-                      transform: 'scale(1.2)',
+                      display: 'block',
                     }}
                   />
                 </div>

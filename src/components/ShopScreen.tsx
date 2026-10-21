@@ -603,8 +603,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                         width: '100%',
                         height: '100%',
                         objectFit: 'cover',
-                        objectPosition: '20% 50%',
-                        transform: 'scale(1.25)',
+                        display: 'block',
                       }}
                     />
                   </div>

@@ -146,6 +146,7 @@ export const BaitIcon = ({ baitId, size = 38 }: { baitId: string; size?: number 
           alignItems: 'center',
           justifyContent: 'center',
           boxShadow: '0 2px 6px rgba(0, 0, 0, 0.4)',
+          border: '1px solid rgba(251, 191, 36, 0.3)',
         }}
       >
         <img
@@ -155,8 +156,7 @@ export const BaitIcon = ({ baitId, size = 38 }: { baitId: string; size?: number 
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            objectPosition: '20% 50%',
-            transform: 'scale(1.3)',
+            display: 'block',
           }}
         />
       </div>
@@ -1195,68 +1195,102 @@ export const HomeScreen = ({
                       setActiveModal(null);
                     }}
                     style={{
-                      position: 'relative',
-                      height: '82px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '10px 12px',
                       borderRadius: '16px',
-                      overflow: 'hidden',
                       cursor: 'pointer',
+                      background: isSelected
+                        ? 'linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(2, 132, 199, 0.08))'
+                        : 'rgba(255, 255, 255, 0.04)',
                       border: isSelected
                         ? '2px solid #38bdf8'
-                        : '1px solid rgba(255, 255, 255, 0.14)',
+                        : '1px solid rgba(255, 255, 255, 0.1)',
                       boxShadow: isSelected
-                        ? '0 0 16px rgba(56, 189, 248, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4)'
-                        : '0 4px 12px rgba(0, 0, 0, 0.35)',
-                      transition: 'transform 0.12s ease',
+                        ? '0 0 16px rgba(56, 189, 248, 0.35), 0 4px 12px rgba(0, 0, 0, 0.4)'
+                        : '0 2px 8px rgba(0, 0, 0, 0.25)',
+                      transition: 'all 0.15s ease',
                       flexShrink: 0,
                     }}
                   >
-                    <img
-                      src={b.image}
-                      alt={b.name}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        display: 'block',
-                      }}
-                    />
-                    {/* Бейдж выбранной наживки */}
-                    {isSelected && (
-                      <span
-                        style={{
-                          position: 'absolute',
-                          top: '6px',
-                          right: '8px',
-                          background: 'linear-gradient(135deg, #38bdf8, #0284c7)',
-                          color: '#ffffff',
-                          fontSize: '10px',
-                          fontWeight: 900,
-                          padding: '2px 8px',
-                          borderRadius: '8px',
-                          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.6)',
-                          border: '1px solid rgba(255, 255, 255, 0.5)',
-                        }}
-                      >
-                        ✓ ВЫБРАНО
-                      </span>
-                    )}
-                    {/* Динамическое количество в наличии */}
+                    {/* 3D Иконка наживки */}
                     <div
                       style={{
-                        position: 'absolute',
-                        bottom: '8px',
-                        right: '12px',
+                        width: '56px',
+                        height: '56px',
+                        borderRadius: '14px',
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                        border: isSelected
+                          ? '1.5px solid #38bdf8'
+                          : '1.5px solid rgba(251, 191, 36, 0.35)',
+                        background: 'rgba(0, 0, 0, 0.5)',
+                        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.5)',
+                      }}
+                    >
+                      <img
+                        src={b.image}
+                        alt={b.name}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          display: 'block',
+                        }}
+                      />
+                    </div>
+
+                    {/* Название и описание наживки */}
+                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '15px', fontWeight: 800, color: '#ffffff' }}>
+                          {b.name}
+                        </span>
+                        {isSelected && (
+                          <span
+                            style={{
+                              background: 'linear-gradient(135deg, #38bdf8, #0284c7)',
+                              color: '#ffffff',
+                              fontSize: '9px',
+                              fontWeight: 900,
+                              padding: '2px 6px',
+                              borderRadius: '6px',
+                              letterSpacing: '0.5px',
+                            }}
+                          >
+                            ✓ ВЫБРАНО
+                          </span>
+                        )}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '11px',
+                          color: '#94a3b8',
+                          lineHeight: 1.3,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {b.description}
+                      </div>
+                    </div>
+
+                    {/* Количество в наличии */}
+                    <div
+                      style={{
                         fontSize: '13px',
                         fontWeight: 900,
                         color: count > 0 ? '#4ade80' : '#ef4444',
-                        textShadow: '0 2px 4px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.9)',
-                        background: 'rgba(15, 23, 42, 0.75)',
-                        padding: '2px 8px',
-                        borderRadius: '6px',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        background: 'rgba(15, 23, 42, 0.7)',
+                        padding: '4px 10px',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        whiteSpace: 'nowrap',
                       }}
                     >
-                      {count > 0 ? `${count} шт.` : 'Нет в наличии'}
+                      {count > 0 ? `${count} шт.` : 'Нет'}
                     </div>
                   </div>
                 );
