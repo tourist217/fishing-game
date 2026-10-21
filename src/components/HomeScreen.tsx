@@ -746,35 +746,49 @@ export const HomeScreen = ({
             onClick={() => setActiveModal('weather')}
             style={{
               width: '74px',
-              background: 'rgba(28, 36, 48, 0.85)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              border: '1.5px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '18px',
-              padding: '7px 4px 6px 4px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
+              height: '74px',
+              borderRadius: '20px',
               cursor: 'pointer',
-              boxShadow: '0 6px 20px rgba(0, 0, 0, 0.45)',
+              position: 'relative',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.55)',
               transition: 'transform 0.12s ease',
+              overflow: 'hidden',
+              background: '#152232',
+              border: '1.5px solid rgba(251, 191, 36, 0.4)',
             }}
           >
-            <div style={{ fontSize: '26px', filter: 'drop-shadow(0 2px 6px rgba(56, 189, 248, 0.6))' }}>
-              {WEATHER_CONFIGS[currentEnv.weather]?.icon || '🌤️'}
-            </div>
-            <div
+            <img
+              src="/assets/icons/weather.png"
+              alt="Погода"
               style={{
-                fontSize: '9.5px',
-                fontWeight: 800,
-                color: '#ffffff',
-                marginTop: '4px',
-                textAlign: 'center',
-                lineHeight: 1.15,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
+              }}
+            />
+            {/* Небольшой бейдж текущей погоды */}
+            <span
+              style={{
+                position: 'absolute',
+                top: '4px',
+                right: '4px',
+                padding: '2px 5px',
+                borderRadius: '8px',
+                background: 'rgba(15, 23, 42, 0.85)',
+                color: '#38bdf8',
+                fontSize: '11px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '2px',
+                border: '1px solid rgba(56, 189, 248, 0.5)',
+                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.6)',
+                zIndex: 2,
               }}
             >
-              Погода
-            </div>
+              {WEATHER_CONFIGS[currentEnv.weather]?.icon || '🌤️'}
+            </span>
           </div>
 
           {/* 3. Лидерборд */}
@@ -1565,8 +1579,19 @@ export const HomeScreen = ({
               boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
             }}
           >
-            <div style={{ fontSize: '42px', marginBottom: '4px' }}>
-              {WEATHER_CONFIGS[currentEnv.weather]?.icon || '🌤️'}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
+              <img
+                src="/assets/icons/weather.png"
+                alt="Погода"
+                style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '16px',
+                  objectFit: 'cover',
+                  border: '1.5px solid rgba(251, 191, 36, 0.4)',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.5)',
+                }}
+              />
             </div>
             <div style={{ fontSize: '17px', fontWeight: 800, color: '#bae6fd', marginBottom: '2px' }}>
               Сводка погоды и прогноз
