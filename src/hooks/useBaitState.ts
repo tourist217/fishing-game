@@ -5,17 +5,18 @@ export interface BaitItem {
   name: string;
   price: number;
   icon: string;
+  image: string;
   description: string;
 }
 
 export const AVAILABLE_BAITS: BaitItem[] = [
-  { id: 'worm', name: 'Червь', price: 5, icon: '🪱', description: 'Универсальная наживка для любой рыбы' },
-  { id: 'bread', name: 'Хлеб', price: 3, icon: '🍞', description: 'Отлично подходит для белой рыбы' },
-  { id: 'dough', name: 'Тесто', price: 4, icon: '🥟', description: 'Любимое лакомство карася и плотвы' },
-  { id: 'corn', name: 'Кукуруза', price: 8, icon: '🌽', description: 'Привлекает карпа, сазана и амура' },
-  { id: 'maggot', name: 'Опарыш', price: 6, icon: '🐛', description: 'Бойкая личинка для плотвы и леща' },
-  { id: 'bloodworm', name: 'Мотыль', price: 7, icon: '🦟', description: 'Деликатес для пескаря и мелкой рыбы' },
-  { id: 'livebait', name: 'Живец', price: 15, icon: '🐟', description: 'Наживка для хищников: щука, окунь, судак, сом' },
+  { id: 'worm', name: 'Червь', price: 5, icon: '🪱', image: '/assets/baits/worm.png', description: 'Универсальная наживка для любой рыбы' },
+  { id: 'bread', name: 'Хлеб', price: 3, icon: '🍞', image: '/assets/baits/bread.png', description: 'Отлично подходит для белой рыбы' },
+  { id: 'dough', name: 'Тесто', price: 4, icon: '🥟', image: '/assets/baits/dough.png', description: 'Любимое лакомство карася и плотвы' },
+  { id: 'corn', name: 'Кукуруза', price: 8, icon: '🌽', image: '/assets/baits/corn.png', description: 'Привлекает карпа, сазана и амура' },
+  { id: 'maggot', name: 'Опарыш', price: 6, icon: '🐛', image: '/assets/baits/maggot.png', description: 'Бойкая личинка для плотвы и леща' },
+  { id: 'bloodworm', name: 'Мотыль', price: 7, icon: '🦟', image: '/assets/baits/bloodworm.png', description: 'Деликатес для пескаря и мелкой рыбы' },
+  { id: 'livebait', name: 'Живец', price: 15, icon: '🐟', image: '/assets/baits/livebait.png', description: 'Наживка для хищников: щука, окунь, судак, сом' },
 ];
 
 export interface UpgradesState {

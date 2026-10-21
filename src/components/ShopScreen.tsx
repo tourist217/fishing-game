@@ -584,8 +584,30 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                   alignItems: 'center',
                 }}
               >
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <span style={{ fontSize: '28px' }}>{bait.icon}</span>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  <div
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      flexShrink: 0,
+                      border: '1.5px solid rgba(251, 191, 36, 0.35)',
+                      boxShadow: '0 4px 10px rgba(0, 0, 0, 0.4)',
+                    }}
+                  >
+                    <img
+                      src={bait.image}
+                      alt={bait.name}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        objectPosition: '20% 50%',
+                        transform: 'scale(1.25)',
+                      }}
+                    />
+                  </div>
                   <div>
                     <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>
                       {bait.name}

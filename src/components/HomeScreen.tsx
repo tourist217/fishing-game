@@ -132,92 +132,38 @@ export const RodIcon = ({ material = 'bamboo' }: { material?: string }) => {
   );
 };
 
-export const BaitIcon = ({ baitId }: { baitId: string }) => {
-  if (baitId === 'worm') {
+export const BaitIcon = ({ baitId, size = 38 }: { baitId: string; size?: number }) => {
+  const bait = AVAILABLE_BAITS.find((b) => b.id === baitId) || AVAILABLE_BAITS[0];
+  if (bait?.image) {
     return (
-      <svg
-        width="34"
-        height="34"
-        viewBox="0 0 36 36"
-        fill="none"
-        style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4))' }}
+      <div
+        style={{
+          width: `${size}px`,
+          height: `${size}px`,
+          borderRadius: '10px',
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.4)',
+        }}
       >
-        <path
-          d="M7 25 C 9 17, 14 16, 17 21 C 20 26, 26 26, 29 18 C 31 13, 27 10, 24 12"
-          stroke="#f43f5e"
-          strokeWidth="4.5"
-          strokeLinecap="round"
-          fill="none"
+        <img
+          src={bait.image}
+          alt={bait.name}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: '20% 50%',
+            transform: 'scale(1.3)',
+          }}
         />
-        <circle cx="24" cy="12" r="2.5" fill="#fb7185" />
-      </svg>
+      </div>
     );
   }
 
-  // По умолчанию: аппетитный батон / мякиш хлеба в точности как на референсе
-  return (
-    <svg
-      width="36"
-      height="36"
-      viewBox="0 0 36 36"
-      fill="none"
-      style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4))' }}
-    >
-      <ellipse
-        cx="18"
-        cy="18"
-        rx="13.5"
-        ry="9"
-        transform="rotate(-15 18 18)"
-        fill="url(#breadCrustGrad)"
-      />
-      <ellipse
-        cx="18"
-        cy="17"
-        rx="11.5"
-        ry="7"
-        transform="rotate(-15 18 17)"
-        fill="url(#breadInsideGrad)"
-      />
-      <line
-        x1="12"
-        y1="13"
-        x2="14"
-        y2="19"
-        stroke="#9a3412"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-      <line
-        x1="17"
-        y1="12"
-        x2="19"
-        y2="18"
-        stroke="#9a3412"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-      <line
-        x1="22"
-        y1="11"
-        x2="24"
-        y2="17"
-        stroke="#9a3412"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-      <defs>
-        <linearGradient id="breadCrustGrad" x1="6" y1="10" x2="30" y2="26" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#f59e0b" />
-          <stop offset="1" stopColor="#9a3412" />
-        </linearGradient>
-        <linearGradient id="breadInsideGrad" x1="8" y1="11" x2="28" y2="23" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#fef3c7" />
-          <stop offset="1" stopColor="#fde68a" />
-        </linearGradient>
-      </defs>
-    </svg>
-  );
+  return <span style={{ fontSize: `${Math.round(size * 0.7)}px` }}>{bait?.icon || '🪱'}</span>;
 };
 
 interface HomeScreenProps {
@@ -1228,47 +1174,91 @@ export const HomeScreen = ({
               </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+                maxHeight: '65vh',
+                overflowY: 'auto',
+                paddingRight: '4px',
+              }}
+            >
               {AVAILABLE_BAITS.map((b) => {
                 const count = baits[b.id] || 0;
                 const isSelected = selectedBaitId === b.id;
                 return (
-                  <button
+                  <div
                     key={b.id}
                     onClick={() => {
                       onSelectBait(b.id);
                       setActiveModal(null);
                     }}
                     style={{
-                      background: isSelected
-                        ? 'rgba(56, 189, 248, 0.2)'
-                        : 'rgba(255, 255, 255, 0.05)',
-                      border: isSelected
-                        ? '1px solid #38bdf8'
-                        : '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '14px',
-                      padding: '10px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
+                      position: 'relative',
+                      height: '82px',
+                      borderRadius: '16px',
+                      overflow: 'hidden',
                       cursor: 'pointer',
-                      color: '#fff',
+                      border: isSelected
+                        ? '2px solid #38bdf8'
+                        : '1px solid rgba(255, 255, 255, 0.14)',
+                      boxShadow: isSelected
+                        ? '0 0 16px rgba(56, 189, 248, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4)'
+                        : '0 4px 12px rgba(0, 0, 0, 0.35)',
+                      transition: 'transform 0.12s ease',
+                      flexShrink: 0,
                     }}
                   >
-                    <span style={{ fontSize: '24px' }}>{b.icon}</span>
-                    <div style={{ textAlign: 'left' }}>
-                      <div style={{ fontSize: '12px', fontWeight: 700 }}>{b.name}</div>
-                      <div
+                    <img
+                      src={b.image}
+                      alt={b.name}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block',
+                      }}
+                    />
+                    {/* Бейдж выбранной наживки */}
+                    {isSelected && (
+                      <span
                         style={{
+                          position: 'absolute',
+                          top: '6px',
+                          right: '8px',
+                          background: 'linear-gradient(135deg, #38bdf8, #0284c7)',
+                          color: '#ffffff',
                           fontSize: '10px',
-                          color: count > 0 ? '#4ade80' : '#ef4444',
-                          fontWeight: 600,
+                          fontWeight: 900,
+                          padding: '2px 8px',
+                          borderRadius: '8px',
+                          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.6)',
+                          border: '1px solid rgba(255, 255, 255, 0.5)',
                         }}
                       >
-                        {count > 0 ? `${count} шт.` : 'Нет в наличии'}
-                      </div>
+                        ✓ ВЫБРАНО
+                      </span>
+                    )}
+                    {/* Динамическое количество в наличии */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        bottom: '8px',
+                        right: '12px',
+                        fontSize: '13px',
+                        fontWeight: 900,
+                        color: count > 0 ? '#4ade80' : '#ef4444',
+                        textShadow: '0 2px 4px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.9)',
+                        background: 'rgba(15, 23, 42, 0.75)',
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                      }}
+                    >
+                      {count > 0 ? `${count} шт.` : 'Нет в наличии'}
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>

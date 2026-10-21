@@ -4,6 +4,7 @@ import type { ActiveFishState } from '../hooks/useFishingSimulation';
 import { formatWeight } from '../utils/fishUtils';
 import { FishingSceneCanvas } from './FishingSceneCanvas';
 import { TrophyCardModal } from './TrophyCardModal';
+import { AVAILABLE_BAITS } from '../hooks/useBaitState';
 import { CoinIcon } from './CoinIcon';
 
 export type GameState = 'idle' | 'waiting' | 'hooked' | 'reeling' | 'caught' | 'lost' | 'line_broken';
@@ -279,15 +280,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
             pointerEvents: gameState === 'idle' ? 'auto' : 'none',
           }}
         >
-          {[
-            { id: 'worm', name: 'Червь', icon: '🪱' },
-            { id: 'maggot', name: 'Опарыш', icon: '🐛' },
-            { id: 'bread', name: 'Хлеб', icon: '🍞' },
-            { id: 'dough', name: 'Тесто', icon: '🥟' },
-            { id: 'corn', name: 'Кукуруза', icon: '🌽' },
-            { id: 'bloodworm', name: 'Мотыль', icon: '🦟' },
-            { id: 'livebait', name: 'Живец', icon: '🐟' },
-          ].map((b) => {
+          {AVAILABLE_BAITS.map((b) => {
             const count = baits[b.id] || 0;
             const isSelected = selectedBaitId === b.id;
             return (
@@ -296,21 +289,43 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                 onClick={() => onSelectBait(b.id)}
                 style={{
                   flex: '0 0 auto',
-                  background: isSelected ? 'rgba(56, 189, 248, 0.2)' : 'rgba(0, 0, 0, 0.3)',
-                  border: isSelected ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '10px',
-                  padding: '5px 8px',
+                  background: isSelected ? 'rgba(56, 189, 248, 0.25)' : 'rgba(0, 0, 0, 0.4)',
+                  border: isSelected ? '1.5px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.12)',
+                  borderRadius: '12px',
+                  padding: '4px 8px',
                   color: '#fff',
                   fontSize: '11px',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '4px',
+                  gap: '6px',
+                  boxShadow: isSelected ? '0 0 10px rgba(56, 189, 248, 0.4)' : 'none',
                 }}
               >
-                <span>{b.icon}</span>
-                <span>{b.name}</span>
-                <span style={{ color: count > 0 ? '#38bdf8' : '#ef4444', fontWeight: 'bold' }}>
+                <div
+                  style={{
+                    width: '22px',
+                    height: '22px',
+                    borderRadius: '6px',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                  }}
+                >
+                  <img
+                    src={b.image}
+                    alt={b.name}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      objectPosition: '20% 50%',
+                      transform: 'scale(1.2)',
+                    }}
+                  />
+                </div>
+                <span style={{ fontWeight: 700 }}>{b.name}</span>
+                <span style={{ color: count > 0 ? '#38bdf8' : '#ef4444', fontWeight: 800 }}>
                   {count}
                 </span>
               </button>
