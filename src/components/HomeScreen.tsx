@@ -6,6 +6,7 @@ import { APP_VERSION } from '../version';
 import type { FishJournal } from '../hooks/usePlayerState';
 import { FishJournalModal } from './FishJournalModal';
 import { RangerQuestsModal } from './RangerQuestsModal';
+import { BaitSelectModal } from './BaitSelectModal';
 import type { DailyQuest } from '../types/quests';
 import { getCurrentWeather, getWeatherForecast, TIME_CONFIGS, WEATHER_CONFIGS } from '../utils/weatherTime';
 import { CoinIcon } from './CoinIcon';
@@ -1122,217 +1123,15 @@ export const HomeScreen = ({
         </div>
       )}
 
-      {/* Выбор наживки прямо на мостике */}
+      {/* Выбор наживки прямо на мостике (аутентичное деревянное меню по референсу) */}
       {activeModal === 'baitSelect' && (
-        <div
-          onClick={() => setActiveModal(null)}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.72)',
-            backdropFilter: 'blur(8px)',
-            zIndex: 50,
-            display: 'flex',
-            alignItems: 'flex-end',
-            padding: '12px',
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              width: '100%',
-              background: '#0f172a',
-              borderRadius: '24px',
-              padding: '16px',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <div style={{ fontSize: '15px', fontWeight: 800, color: '#fff' }}>
-                Выберите наживку
-              </div>
-              <button
-                onClick={() => setActiveModal(null)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#94a3b8',
-                  fontSize: '18px',
-                  cursor: 'pointer',
-                }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px',
-                maxHeight: '65vh',
-                overflowY: 'auto',
-                paddingRight: '4px',
-              }}
-            >
-              {AVAILABLE_BAITS.map((b) => {
-                const count = baits[b.id] || 0;
-                const isSelected = selectedBaitId === b.id;
-                const isLocked = level < (b.levelReq || 1) && count === 0;
-                return (
-                  <div
-                    key={b.id}
-                    onClick={() => {
-                      if (isLocked) return;
-                      onSelectBait(b.id);
-                      setActiveModal(null);
-                    }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '10px 12px',
-                      borderRadius: '16px',
-                      cursor: isLocked ? 'not-allowed' : 'pointer',
-                      opacity: isLocked ? 0.5 : 1,
-                      background: isSelected
-                        ? 'linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(2, 132, 199, 0.08))'
-                        : 'rgba(255, 255, 255, 0.04)',
-                      border: isSelected
-                        ? '2px solid #38bdf8'
-                        : '1px solid rgba(255, 255, 255, 0.1)',
-                      boxShadow: isSelected
-                        ? '0 0 16px rgba(56, 189, 248, 0.35), 0 4px 12px rgba(0, 0, 0, 0.4)'
-                        : '0 2px 8px rgba(0, 0, 0, 0.25)',
-                      transition: 'all 0.15s ease',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {/* 3D Иконка наживки */}
-                    <div
-                      style={{
-                        width: '56px',
-                        height: '56px',
-                        borderRadius: '14px',
-                        overflow: 'hidden',
-                        flexShrink: 0,
-                        border: isSelected
-                          ? '1.5px solid #38bdf8'
-                          : '1.5px solid rgba(251, 191, 36, 0.35)',
-                        background: 'rgba(0, 0, 0, 0.5)',
-                        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.5)',
-                        position: 'relative',
-                        filter: isLocked ? 'grayscale(0.6)' : 'none',
-                      }}
-                    >
-                      <img
-                        src={b.image}
-                        alt={b.name}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          display: 'block',
-                        }}
-                      />
-                      {isLocked && (
-                        <div
-                          style={{
-                            position: 'absolute',
-                            inset: 0,
-                            background: 'rgba(0,0,0,0.5)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '18px',
-                          }}
-                        >
-                          🔒
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Название и описание наживки */}
-                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '15px', fontWeight: 800, color: '#ffffff' }}>
-                          {b.name}
-                        </span>
-                        {isLocked && (
-                          <span
-                            style={{
-                              fontSize: '9px',
-                              fontWeight: 800,
-                              color: '#fbbf24',
-                              background: 'rgba(251, 191, 36, 0.15)',
-                              padding: '2px 6px',
-                              borderRadius: '6px',
-                              border: '1px solid rgba(251, 191, 36, 0.3)',
-                            }}
-                          >
-                            С {b.levelReq} ур. 🔒
-                          </span>
-                        )}
-                        {isSelected && (
-                          <span
-                            style={{
-                              background: 'linear-gradient(135deg, #38bdf8, #0284c7)',
-                              color: '#ffffff',
-                              fontSize: '9px',
-                              fontWeight: 900,
-                              padding: '2px 6px',
-                              borderRadius: '6px',
-                              letterSpacing: '0.5px',
-                            }}
-                          >
-                            ✓ ВЫБРАНО
-                          </span>
-                        )}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: '11px',
-                          color: '#94a3b8',
-                          lineHeight: 1.3,
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
-                        {b.description}
-                      </div>
-                    </div>
-
-                    {/* Количество в наличии */}
-                    <div
-                      style={{
-                        fontSize: '13px',
-                        fontWeight: 900,
-                        color: count > 0 ? '#4ade80' : isLocked ? '#64748b' : '#ef4444',
-                        background: 'rgba(15, 23, 42, 0.7)',
-                        padding: '4px 10px',
-                        borderRadius: '8px',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {count > 0 ? `${count} шт.` : isLocked ? '🔒' : 'Нет'}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+        <BaitSelectModal
+          onClose={() => setActiveModal(null)}
+          selectedBaitId={selectedBaitId}
+          onSelectBait={onSelectBait}
+          baits={baits}
+          playerLevel={level}
+        />
       )}
 
       {/* Лидерборд */}
