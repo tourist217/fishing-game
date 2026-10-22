@@ -91,7 +91,7 @@ export const BaitSelectModal: React.FC<BaitSelectModalProps> = ({
       style={{
         position: 'absolute',
         inset: 0,
-        background: 'rgba(0, 0, 0, 0.76)',
+        background: 'rgba(0, 0, 0, 0.78)',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
         zIndex: 60,
@@ -99,69 +99,22 @@ export const BaitSelectModal: React.FC<BaitSelectModalProps> = ({
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '16px 12px 64px 12px',
+        paddingTop:
+          'max(96px, var(--tg-content-safe-area-inset-top, calc(env(safe-area-inset-top, 44px) + 52px)))',
+        paddingBottom: 'calc(74px + env(safe-area-inset-bottom, 0px))',
+        paddingLeft: '12px',
+        paddingRight: '12px',
         animation: 'fadeInBaitModal 0.18s ease-out',
+        boxSizing: 'border-box',
       }}
     >
-      {/* Верхняя кнопка "Закрыть" (как в интерфейсе референса) */}
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '430px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '10px',
-          padding: '0 4px',
-        }}
-      >
-        <button
-          onClick={onClose}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: 'rgba(28, 17, 10, 0.85)',
-            border: '1.5px solid rgba(198, 146, 75, 0.4)',
-            borderRadius: '20px',
-            padding: '6px 14px',
-            color: '#fdf6e2',
-            fontSize: '13px',
-            fontWeight: 800,
-            cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
-            backdropFilter: 'blur(8px)',
-          }}
-        >
-          <span style={{ fontSize: '13px', opacity: 0.8 }}>✕</span>
-          <span>Закрыть</span>
-        </button>
-
-        <button
-          onClick={onClose}
-          style={{
-            background: 'rgba(28, 17, 10, 0.85)',
-            border: '1.5px solid rgba(198, 146, 75, 0.4)',
-            borderRadius: '20px',
-            padding: '6px 12px',
-            color: '#fdf6e2',
-            fontSize: '13px',
-            fontWeight: 800,
-            cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
-          }}
-        >
-          ⋯
-        </button>
-      </div>
-
       {/* Основная деревянная панель с бронзовой окантовкой и верёвками */}
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
           width: '100%',
           maxWidth: '430px',
-          maxHeight: 'calc(100vh - 120px)',
+          maxHeight: '100%',
           background: 'linear-gradient(180deg, #2b170e 0%, #1e0f08 50%, #150904 100%)',
           borderRadius: '26px',
           border: '3px solid #7d4924',
@@ -172,6 +125,7 @@ export const BaitSelectModal: React.FC<BaitSelectModalProps> = ({
           flexDirection: 'column',
           position: 'relative',
           overflow: 'visible',
+          boxSizing: 'border-box',
         }}
       >
         {/* Угловые витые верёвки на всех 4 углах рамы */}
@@ -188,6 +142,7 @@ export const BaitSelectModal: React.FC<BaitSelectModalProps> = ({
             alignItems: 'center',
             marginBottom: '14px',
             padding: '0 6px',
+            position: 'relative',
           }}
         >
           <div
@@ -209,12 +164,13 @@ export const BaitSelectModal: React.FC<BaitSelectModalProps> = ({
             onClick={onClose}
             style={{
               position: 'absolute',
-              right: '16px',
-              top: '16px',
+              right: '4px',
+              top: '50%',
+              transform: 'translateY(-50%)',
               width: '28px',
               height: '28px',
               borderRadius: '50%',
-              background: 'rgba(40, 22, 12, 0.8)',
+              background: 'rgba(40, 22, 12, 0.85)',
               border: '1.5px solid rgba(198, 146, 75, 0.5)',
               color: '#fae4b2',
               fontSize: '14px',
@@ -224,6 +180,7 @@ export const BaitSelectModal: React.FC<BaitSelectModalProps> = ({
               justifyContent: 'center',
               cursor: 'pointer',
               boxShadow: '0 2px 6px rgba(0, 0, 0, 0.5)',
+              zIndex: 15,
             }}
           >
             ✕
@@ -241,6 +198,8 @@ export const BaitSelectModal: React.FC<BaitSelectModalProps> = ({
             paddingBottom: '4px',
             scrollbarWidth: 'thin',
             scrollbarColor: '#7d4924 #1e0f08',
+            flex: 1,
+            minHeight: 0,
           }}
         >
           {AVAILABLE_BAITS.map((b) => {
