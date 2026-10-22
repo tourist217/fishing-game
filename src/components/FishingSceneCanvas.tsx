@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import type { FishingLocation } from '../locationsData';
 import type { GameState } from './FishingScreen';
 
@@ -63,9 +63,28 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
   const effectiveTime = propTimeOfDay || currentEnv.timeOfDay;
   const effectiveWeather = propWeather || currentEnv.weather;
 
-  // Состояние позиции заброса поплавка для текущего каста
-  const [castTarget, setCastTarget] = useState<{ x: number; y: number }>({ x: 0.5, y: 0.65 });
-  const [castProgress, setCastProgress] = useState<number>(1); // 0 -> 1 при забросе
+  // Рефы для непрерывного Canvas-цикла без сброса таймера анимаций
+  const locationRef = useRef(location);
+  useEffect(() => { locationRef.current = location; }, [location]);
+
+  const gameStateRef = useRef(gameState);
+  useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
+
+  const tensionRef = useRef(tension);
+  useEffect(() => { tensionRef.current = tension; }, [tension]);
+
+  const rodMaterialRef = useRef(rodMaterial);
+  useEffect(() => { rodMaterialRef.current = rodMaterial; }, [rodMaterial]);
+
+  const effectiveTimeRef = useRef(effectiveTime);
+  useEffect(() => { effectiveTimeRef.current = effectiveTime; }, [effectiveTime]);
+
+  const effectiveWeatherRef = useRef(effectiveWeather);
+  useEffect(() => { effectiveWeatherRef.current = effectiveWeather; }, [effectiveWeather]);
+
+  // Позиция заброса и прогресс полета поплавка (в рефах, не вызывает лишних ре-рендеров)
+  const castTargetRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.65 });
+  const castProgressRef = useRef<number>(1);
 
   // Генерируем новую случайную точку при переходе в заброс (waiting/hooked)
   useEffect(() => {
@@ -73,24 +92,14 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
       // Случайная точка на поверхности воды (по X: 35-65%, по Y: 58-72%)
       const rx = 0.35 + Math.random() * 0.3;
       const ry = 0.58 + Math.random() * 0.14;
-      setCastTarget({ x: rx, y: ry });
-      setCastProgress(0); // Стартуем анимацию полета
+      castTargetRef.current = { x: rx, y: ry };
+      castProgressRef.current = 0; // Стартуем анимацию полета
     } else if (gameState === 'idle') {
-      setCastProgress(1);
+      castProgressRef.current = 1;
     }
   }, [gameState]);
 
-  // Аниматор заброса
-  useEffect(() => {
-    if (castProgress < 1 && gameState !== 'idle') {
-      const timer = requestAnimationFrame(() => {
-        setCastProgress((prev) => Math.min(1, prev + 0.04));
-      });
-      return () => cancelAnimationFrame(timer);
-    }
-  }, [castProgress, gameState]);
-
-  // Главный 2D Canvas цикл отрисовки
+  // Главный 2D Canvas цикл отрисовки — работает непрерывно на 60 FPS
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -99,14 +108,27 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
     if (!ctx) return;
 
     let animationFrameId: number;
-    let startTime = Date.now();
+    const startTime = Date.now();
 
     const render = () => {
       const time = (Date.now() - startTime) / 1000;
       const width = canvas.width;
       const height = canvas.height;
 
-      const isVillagePond = location.id === 'loc_village_pond';
+      // Плавное продвижение полета поплавка при забросе (внутри Canvas-цикла)
+      if (castProgressRef.current < 1) {
+        castProgressRef.current = Math.min(1, castProgressRef.current + 0.035);
+      }
+      const curCastProgress = castProgressRef.current;
+      const curCastTarget = castTargetRef.current;
+      const curGameState = gameStateRef.current;
+      const curTension = tensionRef.current;
+      const curLocation = locationRef.current;
+      const curTime = effectiveTimeRef.current;
+      const curWeather = effectiveWeatherRef.current;
+      const curRodMaterial = rodMaterialRef.current;
+
+      const isVillagePond = curLocation.id === 'loc_village_pond';
 
       if (isVillagePond) {
         // Единое базовое изображение фонового водоема
@@ -121,23 +143,23 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
           drawImageCover(ctx, photoImg, width, height);
 
           // Динамическое наложение освещения по времени суток на единое фоновое изображение
-          if (effectiveTime === 'morning') {
+          if (curTime === 'morning') {
             // Утро: теплая золотисто-розовая утренняя дымка и рассвет
             ctx.fillStyle = 'rgba(251, 191, 36, 0.16)';
             ctx.fillRect(0, 0, width, height);
             ctx.fillStyle = 'rgba(244, 114, 182, 0.08)';
             ctx.fillRect(0, 0, width, height);
-          } else if (effectiveTime === 'day') {
+          } else if (curTime === 'day') {
             // День: нежный естественный свет
             ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
             ctx.fillRect(0, 0, width, height);
-          } else if (effectiveTime === 'evening') {
+          } else if (curTime === 'evening') {
             // Вечер: заходящий закатный пурпурно-оранжевый оттенок
             ctx.fillStyle = 'rgba(168, 63, 81, 0.28)';
             ctx.fillRect(0, 0, width, height);
             ctx.fillStyle = 'rgba(242, 142, 43, 0.16)';
             ctx.fillRect(0, 0, width, height);
-          } else if (effectiveTime === 'night') {
+          } else if (curTime === 'night') {
             // Ночь: глубокое синее ночное освещение
             ctx.fillStyle = 'rgba(5, 12, 28, 0.82)';
             ctx.fillRect(0, 0, width, height);
@@ -153,47 +175,47 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
             }
           }
         } else {
-          drawSky(ctx, width, height, effectiveTime, location);
-          drawBackgroundScenery(ctx, width, height, effectiveTime, location);
-          drawWaterSurface(ctx, width, height, height * 0.48, effectiveTime, location, time);
+          drawSky(ctx, width, height, curTime, curLocation);
+          drawBackgroundScenery(ctx, width, height, curTime, curLocation);
+          drawWaterSurface(ctx, width, height, height * 0.48, curTime, curLocation, time);
         }
       } else {
-        drawSky(ctx, width, height, effectiveTime, location);
-        drawWaterSurface(ctx, width, height, height * 0.48, effectiveTime, location, time);
+        drawSky(ctx, width, height, curTime, curLocation);
+        drawWaterSurface(ctx, width, height, height * 0.48, curTime, curLocation, time);
       }
 
       // 3.5. Отрисовка погодных эффектов на холсте (дождь с каплями и кругами, туман, пасмурно, солнце)
-      drawWeatherEffects(ctx, width, height, effectiveWeather, time);
+      drawWeatherEffects(ctx, width, height, curWeather, time);
 
       // 4. Позиция поплавка на экране
-      const targetX = width * castTarget.x;
-      const targetY = height * castTarget.y;
+      const targetX = width * curCastTarget.x;
+      const targetY = height * curCastTarget.y;
 
       let floatX = targetX;
       let floatY = targetY;
 
-      if (castProgress < 1) {
+      if (curCastProgress < 1) {
         // Полет поплавка по дуге (заброс)
         const startX = width * 0.85;
         const startY = height * 0.8;
-        const arcY = Math.sin(castProgress * Math.PI) * 120;
-        floatX = startX + (targetX - startX) * castProgress;
-        floatY = startY + (targetY - startY) * castProgress - arcY;
+        const arcY = Math.sin(curCastProgress * Math.PI) * 120;
+        floatX = startX + (targetX - startX) * curCastProgress;
+        floatY = startY + (targetY - startY) * curCastProgress - arcY;
       } else {
         // Покачивание на волнах в покое или рывки при поклевке/вываживании
         const waveBob = Math.sin(time * 2.5) * 3;
         let biteShake = 0;
-        if (gameState === 'hooked') {
+        if (curGameState === 'hooked') {
           biteShake = (Math.random() - 0.5) * 8 + Math.sin(time * 15) * 6; // Быстрая поклёвка
-        } else if (gameState === 'reeling') {
-          biteShake = Math.sin(time * 8) * (tension * 0.08); // Рывки при тяге
+        } else if (curGameState === 'reeling') {
+          biteShake = Math.sin(time * 8) * (curTension * 0.08); // Рывки при тяге
         }
         floatY += waveBob + biteShake;
       }
 
       // 5. Отрисовка Рипплов (Кругов на воде)
-      if (castProgress >= 1 && gameState !== 'idle') {
-        drawWaterRipples(ctx, floatX, floatY + 6, time, gameState);
+      if (curCastProgress >= 1 && curGameState !== 'idle') {
+        drawWaterRipples(ctx, floatX, floatY + 6, time, curGameState);
       }
 
       // 6. Вычисление Изгиба Удочки (Bending Rod)
@@ -205,22 +227,22 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
       let rodTipTargetY = height * 0.45;
 
       // Изгиб от натяжения лески в процессе вываживания
-      const bendFactor = gameState === 'reeling' ? Math.max(0, tension / 100) : 0;
+      const bendFactor = curGameState === 'reeling' ? Math.max(0, curTension / 100) : 0;
       const rodTipX = rodTipTargetX - bendFactor * 70;
       const rodTipY = rodTipTargetY + bendFactor * 110;
 
       // 7. Отрисовка Лески (Line)
-      if (gameState !== 'idle') {
-        drawFishingLine(ctx, rodTipX, rodTipY, floatX, floatY, bendFactor, gameState);
+      if (curGameState !== 'idle') {
+        drawFishingLine(ctx, rodTipX, rodTipY, floatX, floatY, bendFactor, curGameState);
       }
 
       // 8. Отрисовка Поплавка
-      if (gameState !== 'idle') {
-        drawFloat(ctx, floatX, floatY, effectiveTime, gameState);
+      if (curGameState !== 'idle') {
+        drawFloat(ctx, floatX, floatY, curTime, curGameState);
       }
 
       // 9. Отрисовка Удилища (Rod)
-      drawRod(ctx, rodBaseX, rodBaseY, rodTipX, rodTipY, bendFactor, rodMaterial);
+      drawRod(ctx, rodBaseX, rodBaseY, rodTipX, rodTipY, bendFactor, curRodMaterial);
 
       animationFrameId = requestAnimationFrame(render);
     };
@@ -228,7 +250,7 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
     render();
 
     return () => cancelAnimationFrame(animationFrameId);
-  }, [location, gameState, tension, rodMaterial, effectiveTime, effectiveWeather, castTarget, castProgress]);
+  }, []);
 
   // Автоматический ресайз холста под реальный размер родительского контейнера
   useEffect(() => {
