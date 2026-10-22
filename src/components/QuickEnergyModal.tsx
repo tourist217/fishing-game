@@ -8,6 +8,7 @@ import {
 } from '../data/provisionsData';
 import { CoinIcon } from './CoinIcon';
 import { EnergyIcon } from './EnergyIcon';
+import { GemIcon } from './GemIcon';
 
 interface QuickEnergyModalProps {
   onClose: () => void;
@@ -544,7 +545,7 @@ export const QuickEnergyModal: React.FC<QuickEnergyModalProps> = ({
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 900, fontSize: '12px' }}>
                   <span>{GEMS_ENERGY_DRINK_COST}</span>
-                  <span>💎</span>
+                  <GemIcon size={14} />
                 </div>
                 <span style={{ fontSize: '9.5px', fontWeight: 800 }}>
                   {isFull ? 'Сыт' : 'Полный бак'}
@@ -570,8 +571,8 @@ export const QuickEnergyModal: React.FC<QuickEnergyModalProps> = ({
               <CoinIcon size={14} />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ fontWeight: 800, color: '#a5b4fc' }}>{gems}</span>
-              <span style={{ fontSize: '12px' }}>💎</span>
+              <span style={{ fontWeight: 800, color: '#38bdf8' }}>{gems}</span>
+              <GemIcon size={14} />
             </div>
           </div>
           <span style={{ fontSize: '10.5px', color: '#a8a29e' }}>

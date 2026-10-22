@@ -19,6 +19,8 @@ export function useGearState(
   coins: number,
   playerLevel: number,
   spendCoins: (amount: number) => boolean,
+  gems: number = 0,
+  spendGems?: (amount: number) => boolean,
   triggerHaptic?: (type: 'impact' | 'notification' | 'selection') => void
 ) {
   const [gear, setGear] = useState<PlayerGearState>(() => {
@@ -83,8 +85,16 @@ export function useGearState(
       triggerHaptic?.('selection');
       return true;
     }
-    if (coins < rod.basePrice || playerLevel < rod.levelReq) return false;
-    if (!spendCoins(rod.basePrice)) return false;
+    if (playerLevel < rod.levelReq) return false;
+
+    const isGems = rod.currency === 'gems';
+    if (isGems) {
+      if (gems < rod.basePrice) return false;
+      if (!spendGems || !spendGems(rod.basePrice)) return false;
+    } else {
+      if (coins < rod.basePrice) return false;
+      if (!spendCoins(rod.basePrice)) return false;
+    }
 
     setGear((prev) => ({
       ...prev,
@@ -101,8 +111,15 @@ export function useGearState(
     const currentLvl = (gear.rodLevels && gear.rodLevels[rod.id]) || 1;
     if (currentLvl >= 5) return false;
     const cost = getRodUpgradeCost(rod, currentLvl + 1);
-    if (coins < cost) return false;
-    if (!spendCoins(cost)) return false;
+
+    const isGems = rod.currency === 'gems';
+    if (isGems) {
+      if (gems < cost) return false;
+      if (!spendGems || !spendGems(cost)) return false;
+    } else {
+      if (coins < cost) return false;
+      if (!spendCoins(cost)) return false;
+    }
 
     setGear((prev) => ({
       ...prev,
@@ -124,8 +141,16 @@ export function useGearState(
 
   // Действия: катушки
   const buyReel = (reel: ReelTier) => {
-    if (coins < reel.basePrice || playerLevel < reel.levelReq) return false;
-    if (!spendCoins(reel.basePrice)) return false;
+    if (playerLevel < reel.levelReq) return false;
+
+    const isGems = reel.currency === 'gems';
+    if (isGems) {
+      if (gems < reel.basePrice) return false;
+      if (!spendGems || !spendGems(reel.basePrice)) return false;
+    } else {
+      if (coins < reel.basePrice) return false;
+      if (!spendCoins(reel.basePrice)) return false;
+    }
 
     setGear((prev) => ({
       ...prev,
@@ -141,8 +166,15 @@ export function useGearState(
     const currentLvl = (gear.reelLevels && gear.reelLevels[reel.id]) || 1;
     if (currentLvl >= 3) return false;
     const cost = getReelUpgradeCost(reel, currentLvl + 1);
-    if (coins < cost) return false;
-    if (!spendCoins(cost)) return false;
+
+    const isGems = reel.currency === 'gems';
+    if (isGems) {
+      if (gems < cost) return false;
+      if (!spendGems || !spendGems(cost)) return false;
+    } else {
+      if (coins < cost) return false;
+      if (!spendCoins(cost)) return false;
+    }
 
     setGear((prev) => ({
       ...prev,
@@ -160,8 +192,16 @@ export function useGearState(
 
   // Действия: лески
   const buyLine = (line: LineTier) => {
-    if (coins < line.price || playerLevel < line.levelReq) return false;
-    if (!spendCoins(line.price)) return false;
+    if (playerLevel < line.levelReq) return false;
+
+    const isGems = line.currency === 'gems';
+    if (isGems) {
+      if (gems < line.price) return false;
+      if (!spendGems || !spendGems(line.price)) return false;
+    } else {
+      if (coins < line.price) return false;
+      if (!spendCoins(line.price)) return false;
+    }
 
     setGear((prev) => {
       const currentStock = (prev.lineStock && prev.lineStock[line.id]) || 0;

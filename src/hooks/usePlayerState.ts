@@ -511,35 +511,57 @@ export function usePlayerState() {
     return false;
   }, [maxEnergy, dailyProvisions, spendCoins, restoreEnergy]);
 
+  // Списание алмазов
+  const spendGems = useCallback((amount: number): boolean => {
+    if (gemsRef.current >= amount) {
+      const nextGems = gemsRef.current - amount;
+      gemsRef.current = nextGems;
+      setGems(nextGems);
+      localStorage.setItem('fg_gems', nextGems.toString());
+      return true;
+    }
+    return false;
+  }, []);
+
+  // Начисление алмазов
+  const addGems = useCallback((amount: number) => {
+    if (amount > 0) {
+      const nextGems = gemsRef.current + amount;
+      gemsRef.current = nextGems;
+      setGems(nextGems);
+      localStorage.setItem('fg_gems', nextGems.toString());
+    }
+  }, []);
+
   // Восстановление полного запаса энергии за кристаллы (20 💎)
   const buyEnergyWithGems = useCallback((): boolean => {
     if (energyRef.current >= maxEnergy) return false;
     if (gemsRef.current < GEMS_ENERGY_DRINK_COST) return false;
 
-    const nextGems = gemsRef.current - GEMS_ENERGY_DRINK_COST;
-    gemsRef.current = nextGems;
-    setGems(nextGems);
-    localStorage.setItem('fg_gems', nextGems.toString());
+    const success = spendGems(GEMS_ENERGY_DRINK_COST);
+    if (!success) return false;
 
     restoreEnergy(maxEnergy);
     return true;
-  }, [maxEnergy, restoreEnergy]);
+  }, [maxEnergy, spendGems, restoreEnergy]);
 
   const claimAllSpeciesReward = useCallback((): boolean => {
     if (hasClaimedAllSpeciesReward) return false;
     // Начисляем 5 000 монет и 100 кристаллов за закрытие всех видов
     addCoins(5000);
-    setGems((prev) => prev + 100);
+    addGems(100);
     setHasClaimedAllSpeciesReward(true);
     localStorage.setItem('fg_all_species_claimed', 'true');
     return true;
-  }, [hasClaimedAllSpeciesReward, addCoins]);
+  }, [hasClaimedAllSpeciesReward, addCoins, addGems]);
 
   return {
     userName,
     coins,
     gems,
     setGems,
+    spendGems,
+    addGems,
     exp,
     level,
     expToNextLevel,

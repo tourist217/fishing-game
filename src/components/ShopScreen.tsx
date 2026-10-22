@@ -10,6 +10,7 @@ import {
   MAX_DAILY_PROVISION_BUYS,
 } from '../data/provisionsData';
 import { CoinIcon } from './CoinIcon';
+import { GemIcon } from './GemIcon';
 
 interface GearState {
   ownedRods: string[];
@@ -183,22 +184,43 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
           </div>
         </div>
 
-        <div
-          style={{
-            background: 'rgba(251, 191, 36, 0.16)',
-            border: '1.5px solid rgba(251, 191, 36, 0.4)',
-            borderRadius: '14px',
-            padding: '6px 12px',
-            color: '#fbbf24',
-            fontWeight: 800,
-            fontSize: '13px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-          }}
-        >
-          <CoinIcon size={17} />
-          <span>{coins.toLocaleString('ru-RU')}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div
+            style={{
+              background: 'rgba(251, 191, 36, 0.16)',
+              border: '1.5px solid rgba(251, 191, 36, 0.4)',
+              borderRadius: '14px',
+              padding: '6px 11px',
+              color: '#fbbf24',
+              fontWeight: 800,
+              fontSize: '13px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+            }}
+          >
+            <CoinIcon size={17} />
+            <span>{coins.toLocaleString('ru-RU')}</span>
+          </div>
+
+          <div
+            style={{
+              background: 'rgba(56, 189, 248, 0.16)',
+              border: '1.5px solid rgba(56, 189, 248, 0.4)',
+              borderRadius: '14px',
+              padding: '6px 11px',
+              color: '#38bdf8',
+              fontWeight: 800,
+              fontSize: '13px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              boxShadow: '0 0 12px rgba(56, 189, 248, 0.15)',
+            }}
+          >
+            <GemIcon size={17} />
+            <span>{gems.toLocaleString('ru-RU')}</span>
+          </div>
         </div>
       </div>
 
@@ -267,7 +289,8 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
             const price = (rod as any).basePrice ?? (rod as any).price ?? 50;
             const lvlReq = (rod as any).levelReq ?? (rod as any).minLevel ?? 1;
             const isLevelUnlocked = level >= lvlReq;
-            const canAfford = coins >= price;
+            const isGems = rod.currency === 'gems';
+            const canAfford = isGems ? gems >= price : coins >= price;
             const strength = (rod as any).maxFishWeightKg ?? (rod as any).strength ?? (rod as any).maxWeight ?? rod.maxStrengthKg;
 
             return (
@@ -277,7 +300,11 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                   background: 'rgba(255, 255, 255, 0.05)',
                   borderRadius: '14px',
                   padding: '12px',
-                  border: isEquipped ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.08)',
+                  border: isEquipped
+                    ? '1px solid #10b981'
+                    : isGems
+                    ? '1px solid rgba(56, 189, 248, 0.35)'
+                    : '1px solid rgba(255, 255, 255, 0.08)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '8px',
@@ -287,15 +314,41 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <span style={{ fontSize: '24px' }}>🎣</span>
                     <div>
-                      <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>{rod.name}</div>
+                      <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>{rod.name}</span>
+                        {isGems && (
+                          <span
+                            style={{
+                              fontSize: '9px',
+                              fontWeight: 900,
+                              color: '#38bdf8',
+                              background: 'rgba(56, 189, 248, 0.18)',
+                              padding: '2px 5px',
+                              borderRadius: '6px',
+                              border: '1px solid rgba(56, 189, 248, 0.3)',
+                            }}
+                          >
+                            ПРЕМИУМ
+                          </span>
+                        )}
+                      </div>
                       <div style={{ fontSize: '11px', color: '#94a3b8' }}>
                         Прочность: <span style={{ color: '#38bdf8' }}>{strength} кг</span> • Ур. {lvlReq}
                       </div>
                     </div>
                   </div>
                   {!isOwned && (
-                    <span style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                      {price} <CoinIcon size={14} />
+                    <span
+                      style={{
+                        fontWeight: 'bold',
+                        color: isGems ? '#38bdf8' : '#fbbf24',
+                        fontSize: '13px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '3px',
+                      }}
+                    >
+                      {price} {isGems ? <GemIcon size={15} /> : <CoinIcon size={14} />}
                     </span>
                   )}
                 </div>
@@ -309,8 +362,12 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                         flex: 1,
                         padding: '10px',
                         borderRadius: '8px',
-                        border: 'none',
-                        background: canAfford && isLevelUnlocked ? '#2563eb' : '#334155',
+                        border: isGems && canAfford && isLevelUnlocked ? '1px solid #7dd3fc' : 'none',
+                        background: !isLevelUnlocked || !canAfford
+                          ? '#334155'
+                          : isGems
+                          ? 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'
+                          : '#2563eb',
                         color: canAfford && isLevelUnlocked ? '#fff' : '#64748b',
                         fontWeight: 'bold',
                         fontSize: '12px',
@@ -319,10 +376,11 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '4px',
+                        boxShadow: isGems && canAfford && isLevelUnlocked ? '0 0 12px rgba(2, 132, 199, 0.4)' : 'none',
                       }}
                     >
                       {!isLevelUnlocked ? `Требуется ${lvlReq} ур. 🔒` : (
-                        <>Купить за {price} <CoinIcon size={14} /></>
+                        <>Купить за {price} {isGems ? <GemIcon size={15} /> : <CoinIcon size={14} />}</>
                       )}
                     </button>
                   )}
@@ -375,7 +433,8 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
             const price = (reel as any).basePrice ?? (reel as any).price ?? 50;
             const lvlReq = (reel as any).levelReq ?? (reel as any).minLevel ?? 1;
             const isLevelUnlocked = level >= lvlReq;
-            const canAfford = coins >= price;
+            const isGems = reel.currency === 'gems';
+            const canAfford = isGems ? gems >= price : coins >= price;
             const speed = (reel as any).pullSpeedMultiplier ?? (reel as any).speed ?? reel.maxPullSpeed;
 
             return (
@@ -385,7 +444,11 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                   background: 'rgba(255, 255, 255, 0.05)',
                   borderRadius: '14px',
                   padding: '12px',
-                  border: isEquipped ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.08)',
+                  border: isEquipped
+                    ? '1px solid #10b981'
+                    : isGems
+                    ? '1px solid rgba(56, 189, 248, 0.35)'
+                    : '1px solid rgba(255, 255, 255, 0.08)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '8px',
@@ -395,15 +458,41 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <span style={{ fontSize: '24px' }}>⚙️</span>
                     <div>
-                      <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>{reel.name}</div>
+                      <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>{reel.name}</span>
+                        {isGems && (
+                          <span
+                            style={{
+                              fontSize: '9px',
+                              fontWeight: 900,
+                              color: '#38bdf8',
+                              background: 'rgba(56, 189, 248, 0.18)',
+                              padding: '2px 5px',
+                              borderRadius: '6px',
+                              border: '1px solid rgba(56, 189, 248, 0.3)',
+                            }}
+                          >
+                            ПРЕМИУМ
+                          </span>
+                        )}
+                      </div>
                       <div style={{ fontSize: '11px', color: '#94a3b8' }}>
                         Скорость подмотки: <span style={{ color: '#38bdf8' }}>x{Number(speed).toFixed(2)}</span> • Ур. {lvlReq}
                       </div>
                     </div>
                   </div>
                   {!isOwned && (
-                    <span style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                      {price} <CoinIcon size={14} />
+                    <span
+                      style={{
+                        fontWeight: 'bold',
+                        color: isGems ? '#38bdf8' : '#fbbf24',
+                        fontSize: '13px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '3px',
+                      }}
+                    >
+                      {price} {isGems ? <GemIcon size={15} /> : <CoinIcon size={14} />}
                     </span>
                   )}
                 </div>
@@ -417,8 +506,12 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                         flex: 1,
                         padding: '10px',
                         borderRadius: '8px',
-                        border: 'none',
-                        background: canAfford && isLevelUnlocked ? '#2563eb' : '#334155',
+                        border: isGems && canAfford && isLevelUnlocked ? '1px solid #7dd3fc' : 'none',
+                        background: !isLevelUnlocked || !canAfford
+                          ? '#334155'
+                          : isGems
+                          ? 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'
+                          : '#2563eb',
                         color: canAfford && isLevelUnlocked ? '#fff' : '#64748b',
                         fontWeight: 'bold',
                         fontSize: '12px',
@@ -427,10 +520,11 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '4px',
+                        boxShadow: isGems && canAfford && isLevelUnlocked ? '0 0 12px rgba(2, 132, 199, 0.4)' : 'none',
                       }}
                     >
                       {!isLevelUnlocked ? `Требуется ${lvlReq} ур. 🔒` : (
-                        <>Купить за {price} <CoinIcon size={14} /></>
+                        <>Купить за {price} {isGems ? <GemIcon size={15} /> : <CoinIcon size={14} />}</>
                       )}
                     </button>
                   )}
@@ -483,7 +577,8 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
             const price = (line as any).basePrice ?? (line as any).price ?? 50;
             const lvlReq = (line as any).levelReq ?? (line as any).minLevel ?? 1;
             const isLevelUnlocked = level >= lvlReq;
-            const canAfford = coins >= price;
+            const isGems = line.currency === 'gems';
+            const canAfford = isGems ? gems >= price : coins >= price;
             const tensile = (line as any).maxTensileKg ?? (line as any).tensile ?? (line as any).strength ?? 1;
 
             return (
@@ -493,7 +588,11 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                   background: 'rgba(255, 255, 255, 0.05)',
                   borderRadius: '14px',
                   padding: '12px',
-                  border: isEquipped ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.08)',
+                  border: isEquipped
+                    ? '1px solid #10b981'
+                    : isGems
+                    ? '1px solid rgba(56, 189, 248, 0.35)'
+                    : '1px solid rgba(255, 255, 255, 0.08)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '8px',
@@ -503,15 +602,42 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <span style={{ fontSize: '24px' }}>🧵</span>
                     <div>
-                      <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>{line.name}</div>
+                      <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>{line.name}</span>
+                        {isGems && (
+                          <span
+                            style={{
+                              fontSize: '9px',
+                              fontWeight: 900,
+                              color: '#38bdf8',
+                              background: 'rgba(56, 189, 248, 0.18)',
+                              padding: '2px 5px',
+                              borderRadius: '6px',
+                              border: '1px solid rgba(56, 189, 248, 0.3)',
+                            }}
+                          >
+                            ПРЕМИУМ
+                          </span>
+                        )}
+                      </div>
                       <div style={{ fontSize: '11px', color: '#94a3b8' }}>
                         Разрыв: <span style={{ color: '#38bdf8' }}>{tensile} кг</span> • Ур. {lvlReq}
                       </div>
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '3px' }}>
-                      {price} <CoinIcon size={14} />
+                    <div
+                      style={{
+                        fontWeight: 'bold',
+                        color: isGems ? '#38bdf8' : '#fbbf24',
+                        fontSize: '13px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-end',
+                        gap: '3px',
+                      }}
+                    >
+                      {price} {isGems ? <GemIcon size={14} /> : <CoinIcon size={14} />}
                     </div>
                     <div style={{ fontSize: '11px', color: stockCount > 0 ? '#34d399' : '#94a3b8', marginTop: '2px' }}>
                       В наличии: {stockCount} шт.
@@ -527,12 +653,17 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                       flex: 1,
                       padding: '10px',
                       borderRadius: '8px',
-                      border: 'none',
-                      background: canAfford && isLevelUnlocked ? '#2563eb' : '#334155',
+                      border: isGems && canAfford && isLevelUnlocked ? '1px solid #7dd3fc' : 'none',
+                      background: !isLevelUnlocked || !canAfford
+                        ? '#334155'
+                        : isGems
+                        ? 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'
+                        : '#2563eb',
                       color: canAfford && isLevelUnlocked ? '#fff' : '#64748b',
                       fontWeight: 'bold',
                       fontSize: '12px',
                       cursor: canAfford && isLevelUnlocked ? 'pointer' : 'not-allowed',
+                      boxShadow: isGems && canAfford && isLevelUnlocked ? '0 0 12px rgba(2, 132, 199, 0.4)' : 'none',
                     }}
                   >
                     {!isLevelUnlocked ? `Требуется ${lvlReq} ур. 🔒` : `Купить (+1 шт)`}

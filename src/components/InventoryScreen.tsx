@@ -1,6 +1,7 @@
 import type { Fish, FishSizeCategory } from '../fishData';
 import { formatWeight } from '../utils/fishUtils';
 import { CoinIcon } from './CoinIcon';
+import { GemIcon } from './GemIcon';
 
 export interface CaughtFishItem {
   fish: Fish;
@@ -113,30 +114,38 @@ export const InventoryScreen = ({
           </div>
         </div>
 
-        {inventory.length > 0 && (
-          <button
-            onClick={onSellAll}
-            style={{
-              background: 'linear-gradient(180deg, #84cc16 0%, #65a30d 50%, #4d7c0f 100%)',
-              border: '2px solid #bef264',
-              borderRadius: '18px',
-              padding: '9px 14px',
-              color: '#ffffff',
-              fontWeight: 900,
-              fontSize: '12px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              boxShadow: '0 0 16px rgba(132, 204, 22, 0.45), 0 4px 12px rgba(0, 0, 0, 0.4)',
-              transition: 'transform 0.1s ease',
-            }}
-          >
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              Продать всё за {totalValue} <CoinIcon size={16} />
-            </span>
-          </button>
-        )}
+        {inventory.length > 0 && (() => {
+          const trophyCount = inventory.filter((item) => item.sizeCategory === 'trophy').length;
+          return (
+            <button
+              onClick={onSellAll}
+              style={{
+                background: 'linear-gradient(180deg, #84cc16 0%, #65a30d 50%, #4d7c0f 100%)',
+                border: '2px solid #bef264',
+                borderRadius: '18px',
+                padding: '9px 14px',
+                color: '#ffffff',
+                fontWeight: 900,
+                fontSize: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 0 16px rgba(132, 204, 22, 0.45), 0 4px 12px rgba(0, 0, 0, 0.4)',
+                transition: 'transform 0.1s ease',
+              }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                Продать всё за {totalValue} <CoinIcon size={16} />
+                {trophyCount > 0 && (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', color: '#7dd3fc', marginLeft: '4px' }}>
+                    +{trophyCount * 5} <GemIcon size={15} />
+                  </span>
+                )}
+              </span>
+            </button>
+          );
+        })()}
       </div>
 
       {/* Список пойманных рыб */}
@@ -250,22 +259,33 @@ export const InventoryScreen = ({
                 <button
                   onClick={() => onSellFish(itemUid, itemPrice)}
                   style={{
-                    background: 'rgba(245, 158, 11, 0.16)',
-                    border: '1.5px solid rgba(245, 158, 11, 0.4)',
+                    background: item.sizeCategory === 'trophy'
+                      ? 'rgba(56, 189, 248, 0.18)'
+                      : 'rgba(245, 158, 11, 0.16)',
+                    border: item.sizeCategory === 'trophy'
+                      ? '1.5px solid rgba(56, 189, 248, 0.5)'
+                      : '1.5px solid rgba(245, 158, 11, 0.4)',
                     borderRadius: '13px',
                     padding: '7px 11px',
-                    color: '#fbbf24',
+                    color: item.sizeCategory === 'trophy' ? '#38bdf8' : '#fbbf24',
                     fontWeight: 800,
                     fontSize: '12px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '4px',
-                    boxShadow: '0 2px 8px rgba(245, 158, 11, 0.2)',
+                    boxShadow: item.sizeCategory === 'trophy'
+                      ? '0 2px 10px rgba(56, 189, 248, 0.3)'
+                      : '0 2px 8px rgba(245, 158, 11, 0.2)',
                     flexShrink: 0,
                   }}
                 >
                   +{itemPrice} <CoinIcon size={14} />
+                  {item.sizeCategory === 'trophy' && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', color: '#7dd3fc' }}>
+                      +5 <GemIcon size={13} />
+                    </span>
+                  )}
                 </button>
               </div>
             );

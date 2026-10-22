@@ -37,7 +37,14 @@ export default function App() {
   const player = usePlayerState();
 
   // 2. Снаряжение (удочки, катушки, лески)
-  const gear = useGearState(player.coins, player.level, player.spendCoins, triggerHaptic);
+  const gear = useGearState(
+    player.coins,
+    player.level,
+    player.spendCoins,
+    player.gems,
+    player.spendGems,
+    triggerHaptic
+  );
 
   // 3. Наживки и мастерская
   const baits = useBaitState(player.coins, player.spendCoins, triggerHaptic);
@@ -224,6 +231,7 @@ export default function App() {
             dailyProvisions={player.dailyProvisions}
             onBuyProvision={player.buyProvision}
             onBuyEnergyWithGems={player.buyEnergyWithGems}
+            onAddTestGems={player.addGems}
             inventoryCount={player.inventoryCount}
             maxKeepnetCapacity={player.maxKeepnetCapacity}
             selectedBaitId={baits.selectedBaitId}

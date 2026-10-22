@@ -13,6 +13,8 @@ import type { DailyQuest } from '../types/quests';
 import { getCurrentWeather, getWeatherForecast, TIME_CONFIGS, WEATHER_CONFIGS } from '../utils/weatherTime';
 import { CoinIcon } from './CoinIcon';
 import { EnergyIcon } from './EnergyIcon';
+import { GemIcon } from './GemIcon';
+import { GemsShopModal } from './GemsShopModal';
 
 // --- SVG-иконки для реалистичного визуала снастей из референса ---
 export const BobberIcon = ({ size = 32 }: { size?: number }) => (
@@ -208,6 +210,7 @@ interface HomeScreenProps {
   canClaimBonus?: boolean;
   onClaimQuestReward?: (questId: string) => boolean;
   onClaimDailyBonus?: () => boolean;
+  onAddTestGems?: (amount: number) => void;
 }
 
 export const HomeScreen = ({
@@ -225,6 +228,7 @@ export const HomeScreen = ({
   onBuyProvision,
   dailyProvisions,
   onBuyEnergyWithGems,
+  onAddTestGems,
   inventoryCount = 0,
   maxKeepnetCapacity = 15,
   selectedBaitId,
@@ -258,7 +262,7 @@ export const HomeScreen = ({
 
   // Интерактивные модальные окна
   const [activeModal, setActiveModal] = useState<
-    'quests' | 'tournament' | 'weather' | 'settings' | 'baitSelect' | 'rodSelect' | 'leaderboard' | 'achievements' | 'journal' | 'energy' | null
+    'quests' | 'tournament' | 'weather' | 'settings' | 'baitSelect' | 'rodSelect' | 'leaderboard' | 'achievements' | 'journal' | 'energy' | 'gems' | null
   >(null);
 
   // Закрытие всех модальных окон при клике на "База" или смене таба в нижнем меню
@@ -402,27 +406,27 @@ export const HomeScreen = ({
           </div>
         </div>
 
-        {/* Правая группа: Монеты, Термос энергии, Шестерёнка */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {/* Правая группа: Монеты, Алмазы, Термос энергии, Шестерёнка */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
           {/* Монеты */}
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '4px',
               background: 'rgba(28, 36, 48, 0.88)',
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
               border: '1.5px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '18px',
-              padding: '6px 11px 6px 8px',
+              borderRadius: '16px',
+              padding: '5px 8px 5px 6px',
               boxShadow: '0 6px 20px rgba(0, 0, 0, 0.4)',
             }}
           >
-            <CoinIcon size={19} />
+            <CoinIcon size={18} />
             <span
               style={{
-                fontSize: '12.5px',
+                fontSize: '11.5px',
                 fontWeight: 800,
                 color: '#ffffff',
                 letterSpacing: '0.2px',
@@ -434,6 +438,39 @@ export const HomeScreen = ({
             </span>
           </div>
 
+          {/* Алмазы */}
+          <div
+            onClick={() => setActiveModal('gems')}
+            title="Магазин алмазов 💎"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              background: 'rgba(28, 36, 48, 0.88)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: '1.5px solid rgba(56, 189, 248, 0.35)',
+              borderRadius: '16px',
+              padding: '5px 8px 5px 6px',
+              boxShadow: '0 6px 20px rgba(0, 0, 0, 0.4), 0 0 10px rgba(56, 189, 248, 0.15)',
+              cursor: 'pointer',
+            }}
+          >
+            <GemIcon size={17} />
+            <span
+              style={{
+                fontSize: '11.5px',
+                fontWeight: 800,
+                color: '#38bdf8',
+                letterSpacing: '0.2px',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                lineHeight: 1,
+              }}
+            >
+              {gems.toLocaleString('ru-RU')}
+            </span>
+          </div>
+
           {/* Фляга / Энергия */}
           <div
             onClick={() => setActiveModal('energy')}
@@ -441,22 +478,22 @@ export const HomeScreen = ({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '5px',
               background: 'rgba(28, 36, 48, 0.88)',
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
               border: '1.5px solid rgba(251, 191, 36, 0.35)',
-              borderRadius: '18px',
-              padding: '5px 10px 5px 6px',
+              borderRadius: '16px',
+              padding: '5px 8px 5px 6px',
               boxShadow: '0 6px 20px rgba(0, 0, 0, 0.4)',
               cursor: 'pointer',
             }}
           >
-            <EnergyIcon size={21} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5px' }}>
+            <EnergyIcon size={19} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
               <span
                 style={{
-                  fontSize: '11px',
+                  fontSize: '10.5px',
                   fontWeight: 800,
                   color: '#ffffff',
                   letterSpacing: '0.2px',
@@ -469,8 +506,8 @@ export const HomeScreen = ({
               {/* Шкала энергии с золотым градиентным наполнением */}
               <div
                 style={{
-                  width: '38px',
-                  height: '4px',
+                  width: '32px',
+                  height: '3.5px',
                   background: 'rgba(0, 0, 0, 0.55)',
                   borderRadius: '3px',
                   overflow: 'hidden',
@@ -496,8 +533,8 @@ export const HomeScreen = ({
             onClick={() => setActiveModal('settings')}
             title="Настройки"
             style={{
-              width: '34px',
-              height: '34px',
+              width: '32px',
+              height: '32px',
               borderRadius: '12px',
               background: 'rgba(28, 36, 48, 0.88)',
               backdropFilter: 'blur(16px)',
@@ -507,10 +544,11 @@ export const HomeScreen = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '16px',
+              fontSize: '15px',
               cursor: 'pointer',
               boxShadow: '0 6px 20px rgba(0, 0, 0, 0.4)',
               padding: 0,
+              flexShrink: 0,
             }}
           >
             ⚙️
@@ -1592,6 +1630,15 @@ export const HomeScreen = ({
             </button>
           </div>
         </div>
+      )}
+
+      {/* Магазин Алмазов */}
+      {activeModal === 'gems' && (
+        <GemsShopModal
+          onClose={() => setActiveModal(null)}
+          gems={gems}
+          onAddTestGems={onAddTestGems}
+        />
       )}
 
       {/* Настройки */}

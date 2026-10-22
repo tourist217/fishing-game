@@ -4,6 +4,7 @@ import { formatWeight } from '../utils/fishUtils';
 import { playTrophyFanfare } from '../utils/audio';
 import { triggerFishHaptic } from '../utils/haptics';
 import { CoinIcon } from './CoinIcon';
+import { GemIcon } from './GemIcon';
 
 interface TrophyCardModalProps {
   currentFish: ActiveFishState;
@@ -260,23 +261,31 @@ export const TrophyCardModal: React.FC<TrophyCardModalProps> = ({
             width: '100%',
             display: 'flex',
             justifyContent: 'center',
-            gap: '20px',
+            alignItems: 'center',
+            gap: '16px',
             marginTop: '8px',
             paddingTop: '12px',
             borderTop: '1px solid rgba(253, 224, 71, 0.2)',
-            fontSize: '14px',
+            fontSize: '13px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <span style={{ color: '#94a3b8' }}>Награда:</span>
-            <span style={{ color: '#fbbf24', fontWeight: 900, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '3px' }}>
-              +{currentFish.price} <CoinIcon size={15} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ color: '#94a3b8' }}>Цена:</span>
+            <span style={{ color: '#fbbf24', fontWeight: 900, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+              +{currentFish.price} <CoinIcon size={14} />
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ color: '#94a3b8' }}>Бонус:</span>
+            <span style={{ color: '#38bdf8', fontWeight: 900, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+              +5 <GemIcon size={14} />
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <span style={{ color: '#94a3b8' }}>Опыт:</span>
-            <span style={{ color: '#4ade80', fontWeight: 900, fontSize: '15px' }}>
+            <span style={{ color: '#4ade80', fontWeight: 900, fontSize: '14px' }}>
               +{currentFish.exp} XP
             </span>
           </div>
