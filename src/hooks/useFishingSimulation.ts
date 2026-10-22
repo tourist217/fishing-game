@@ -27,6 +27,7 @@ interface UseFishingSimulationProps {
   onLineBreak?: () => void;
   triggerHaptic?: (type: 'impact' | 'notification' | 'selection') => void;
   isKeepnetFull?: boolean;
+  spendEnergy?: (amount: number) => boolean;
 }
 
 export function useFishingSimulation({
@@ -43,6 +44,7 @@ export function useFishingSimulation({
   onLineBreak,
   triggerHaptic,
   isKeepnetFull,
+  spendEnergy,
 }: UseFishingSimulationProps) {
   const [gameState, setGameState] = useState<GameState>('idle');
   const [currentFish, setCurrentFish] = useState<ActiveFishState | null>(null);
@@ -80,6 +82,11 @@ export function useFishingSimulation({
   useEffect(() => {
     triggerHapticRef.current = triggerHaptic;
   }, [triggerHaptic]);
+
+  const spendEnergyRef = useRef(spendEnergy);
+  useEffect(() => {
+    spendEnergyRef.current = spendEnergy;
+  }, [spendEnergy]);
 
   const currentFishRef = useRef(currentFish);
   useEffect(() => {
@@ -157,6 +164,15 @@ export function useFishingSimulation({
 
     if (availableBait <= 0) {
       return;
+    }
+
+    // Проверка и списание энергии (5 единиц на заброс)
+    if (spendEnergyRef.current) {
+      const ok = spendEnergyRef.current(5);
+      if (!ok) {
+        triggerHapticRef.current?.('notification');
+        return;
+      }
     }
 
     const consumed = consumeBaitRef.current(currentBaitId);

@@ -22,7 +22,7 @@ export const Header = ({
   coins,
   exp,
   maxExp,
-  energy = 84,
+  energy = 100,
   maxEnergy = 100,
   onOpenSettings,
   onResetProgress,

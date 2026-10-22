@@ -84,6 +84,7 @@ export default function App() {
     onLineBreak: gear.breakLine,
     triggerHaptic,
     isKeepnetFull: player.isKeepnetFull,
+    spendEnergy: player.spendEnergy,
   });
 
   const getRarityLabel = (rarity: string) => {
@@ -169,6 +170,10 @@ export default function App() {
             currentLocation={currentLocation}
             inventoryCount={player.inventoryCount}
             maxKeepnetCapacity={player.maxKeepnetCapacity}
+            energy={player.energy}
+            maxEnergy={player.maxEnergy}
+            secondsToNextEnergy={player.secondsToNextEnergy}
+            onBuyProvision={player.buyProvision}
             onOpenKeepnet={() => {
               fishing.resetToIdle();
               setIsAtPond(false);
@@ -212,6 +217,8 @@ export default function App() {
             gems={player.gems}
             energy={player.energy}
             maxEnergy={player.maxEnergy}
+            secondsToNextEnergy={player.secondsToNextEnergy}
+            onBuyProvision={player.buyProvision}
             inventoryCount={player.inventoryCount}
             maxKeepnetCapacity={player.maxKeepnetCapacity}
             selectedBaitId={baits.selectedBaitId}
@@ -292,6 +299,9 @@ export default function App() {
           onEquipLine={gear.equipLine}
           onBuyBait={baits.buyBait}
           onBuyUpgrade={baits.buyUpgrade}
+          energy={player.energy}
+          maxEnergy={player.maxEnergy}
+          onBuyProvision={player.buyProvision}
         />
       )}
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { CaughtFishItem } from '../components/InventoryScreen';
+import { PROVISIONS } from '../data/provisionsData';
 
 export interface FishJournalEntry {
   fishId: string;
@@ -33,18 +34,49 @@ export function usePlayerState() {
     const parsed = Number(val);
     return !isNaN(parsed) && parsed >= 1 ? parsed : 1;
   });
+  const maxEnergy = 100;
+  const maxKeepnetCapacity = 15;
+  const ENERGY_REGEN_INTERVAL_MS = 60000; // 1 единица энергии в 60 секунд (1 минута)
+
+  const [lastEnergyTimestamp, setLastEnergyTimestamp] = useState<number>(() => {
+    const val = localStorage.getItem('fg_energy_timestamp');
+    const parsed = Number(val);
+    return !isNaN(parsed) && parsed > 0 ? parsed : Date.now();
+  });
+
   const [energy, setEnergy] = useState<number>(() => {
     const val = localStorage.getItem('fg_energy');
     const parsed = Number(val);
-    return !isNaN(parsed) && parsed >= 0 ? parsed : 84;
+    const initialEnergy = !isNaN(parsed) && parsed >= 0 ? parsed : 100;
+
+    // Расчёт оффлайн-восстановления энергии при загрузке игры
+    const tsVal = localStorage.getItem('fg_energy_timestamp');
+    const lastTs = Number(tsVal);
+    if (!isNaN(lastTs) && lastTs > 0 && initialEnergy < maxEnergy) {
+      const now = Date.now();
+      const elapsed = Math.max(0, now - lastTs);
+      const minutesPassed = Math.floor(elapsed / ENERGY_REGEN_INTERVAL_MS);
+      if (minutesPassed > 0) {
+        const restored = Math.min(maxEnergy, initialEnergy + minutesPassed);
+        const remainder = elapsed % ENERGY_REGEN_INTERVAL_MS;
+        const newTs = now - remainder;
+        localStorage.setItem('fg_energy_timestamp', newTs.toString());
+        localStorage.setItem('fg_energy', restored.toString());
+        return restored;
+      }
+    } else if (isNaN(lastTs) || lastTs <= 0) {
+      localStorage.setItem('fg_energy_timestamp', Date.now().toString());
+    }
+    return initialEnergy;
   });
+
+  const [secondsToNextEnergy, setSecondsToNextEnergy] = useState<number>(0);
+
   const [gems, setGems] = useState<number>(() => {
     const val = localStorage.getItem('fg_gems');
     const parsed = Number(val);
     return !isNaN(parsed) && parsed >= 0 ? parsed : 120;
   });
-  const maxEnergy = 100;
-  const maxKeepnetCapacity = 15;
 
   // Рыболовный журнал (Энциклопедия видов и трофеев)
   const [journal, setJournal] = useState<FishJournal>(() => {
@@ -82,6 +114,43 @@ export function usePlayerState() {
   }, [inventory]);
 
   const expToNextLevel = Math.round(150 * Math.pow(1.25, level - 1));
+
+  // Периодическое обновление энергии в реальном времени (+1 ед. каждые 60 секунд)
+  useEffect(() => {
+    const checkRegen = () => {
+      setEnergy((curr) => {
+        const now = Date.now();
+        if (curr >= maxEnergy) {
+          setSecondsToNextEnergy(0);
+          return curr;
+        }
+
+        const elapsed = Math.max(0, now - lastEnergyTimestamp);
+        const minutesPassed = Math.floor(elapsed / ENERGY_REGEN_INTERVAL_MS);
+
+        if (minutesPassed > 0) {
+          const nextVal = Math.min(maxEnergy, curr + minutesPassed);
+          const remainder = elapsed % ENERGY_REGEN_INTERVAL_MS;
+          const nextTs = now - remainder;
+          setLastEnergyTimestamp(nextTs);
+          localStorage.setItem('fg_energy_timestamp', nextTs.toString());
+          localStorage.setItem('fg_energy', nextVal.toString());
+
+          const secs = nextVal >= maxEnergy ? 0 : Math.ceil((ENERGY_REGEN_INTERVAL_MS - remainder) / 1000);
+          setSecondsToNextEnergy(secs);
+          return nextVal;
+        } else {
+          const secs = Math.ceil((ENERGY_REGEN_INTERVAL_MS - (elapsed % ENERGY_REGEN_INTERVAL_MS)) / 1000);
+          setSecondsToNextEnergy(secs);
+          return curr;
+        }
+      });
+    };
+
+    checkRegen();
+    const timer = setInterval(checkRegen, 1000);
+    return () => clearInterval(timer);
+  }, [lastEnergyTimestamp, maxEnergy]);
 
   // Синхронизация энергии с localStorage
   useEffect(() => {
@@ -225,11 +294,14 @@ export function usePlayerState() {
       const nextExp = prev + (gainedExp || 10);
       if (nextExp >= expToNextLevel) {
         setLevel((lvl) => lvl + 1);
+        // Бонус за уровень: мгновенное полное восстановление энергии!
+        setEnergy(maxEnergy);
+        localStorage.setItem('fg_energy', maxEnergy.toString());
         return nextExp - expToNextLevel;
       }
       return nextExp;
     });
-  }, [expToNextLevel]);
+  }, [expToNextLevel, maxEnergy]);
 
   // Продажа одной рыбы
   const sellFish = useCallback((uid: string, fallbackPrice?: number) => {
@@ -289,23 +361,59 @@ export function usePlayerState() {
       const nextExp = prev + amount;
       if (nextExp >= expToNextLevel) {
         setLevel((lvl) => lvl + 1);
+        // Бонус за уровень: мгновенное полное восстановление энергии!
+        setEnergy(maxEnergy);
+        localStorage.setItem('fg_energy', maxEnergy.toString());
         return nextExp - expToNextLevel;
       }
       return nextExp;
     });
-  }, [expToNextLevel]);
+  }, [expToNextLevel, maxEnergy]);
 
   const spendEnergy = useCallback((amount: number): boolean => {
-    if (energy >= amount) {
-      setEnergy((prev) => Math.max(0, prev - amount));
+    let success = false;
+    setEnergy((prev) => {
+      if (prev >= amount) {
+        success = true;
+        const next = Math.max(0, prev - amount);
+        if (prev >= maxEnergy) {
+          const now = Date.now();
+          setLastEnergyTimestamp(now);
+          localStorage.setItem('fg_energy_timestamp', now.toString());
+        }
+        localStorage.setItem('fg_energy', next.toString());
+        return next;
+      }
+      return prev;
+    });
+    return success;
+  }, [maxEnergy]);
+
+  const restoreEnergy = useCallback((amount: number) => {
+    setEnergy((prev) => {
+      const next = Math.min(maxEnergy, prev + amount);
+      if (next >= maxEnergy) {
+        const now = Date.now();
+        setLastEnergyTimestamp(now);
+        localStorage.setItem('fg_energy_timestamp', now.toString());
+      }
+      localStorage.setItem('fg_energy', next.toString());
+      return next;
+    });
+  }, [maxEnergy]);
+
+  const buyProvision = useCallback((provisionId: 'tea' | 'sandwich'): boolean => {
+    const item = PROVISIONS.find((p) => p.id === provisionId);
+    if (!item) return false;
+    if (energy >= maxEnergy) return false;
+    if (coins < item.price) return false;
+
+    if (spendCoins(item.price)) {
+      restoreEnergy(item.energyBonus);
       return true;
     }
     return false;
-  }, [energy]);
-
-  const restoreEnergy = useCallback((amount: number) => {
-    setEnergy((prev) => Math.min(maxEnergy, prev + amount));
-  }, []);
+  }, [coins, energy, maxEnergy, spendCoins, restoreEnergy]);
 
   const claimAllSpeciesReward = useCallback((): boolean => {
     if (hasClaimedAllSpeciesReward) return false;
@@ -327,10 +435,12 @@ export function usePlayerState() {
     expToNextLevel,
     energy,
     maxEnergy,
+    secondsToNextEnergy,
     maxKeepnetCapacity,
     isKeepnetFull: inventory.length >= maxKeepnetCapacity,
     spendEnergy,
     restoreEnergy,
+    buyProvision,
     inventory,
     inventoryCount: inventory.length,
     journal,

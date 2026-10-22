@@ -7,6 +7,7 @@ import type { FishJournal } from '../hooks/usePlayerState';
 import { FishJournalModal } from './FishJournalModal';
 import { RangerQuestsModal } from './RangerQuestsModal';
 import { BaitSelectModal } from './BaitSelectModal';
+import { QuickEnergyModal } from './QuickEnergyModal';
 import type { DailyQuest } from '../types/quests';
 import { getCurrentWeather, getWeatherForecast, TIME_CONFIGS, WEATHER_CONFIGS } from '../utils/weatherTime';
 import { CoinIcon } from './CoinIcon';
@@ -189,6 +190,8 @@ interface HomeScreenProps {
   onOpenShop: () => void;
   onOpenInventory: () => void;
   onOpenKeepnet?: () => void;
+  secondsToNextEnergy?: number;
+  onBuyProvision?: (id: 'tea' | 'sandwich') => boolean;
   journal?: FishJournal;
   hasClaimedAllSpeciesReward?: boolean;
   onClaimAllSpeciesReward?: () => boolean;
@@ -215,6 +218,8 @@ export const HomeScreen = ({
   gems: _gems = 120,
   energy,
   maxEnergy,
+  secondsToNextEnergy = 0,
+  onBuyProvision,
   inventoryCount = 0,
   maxKeepnetCapacity = 15,
   selectedBaitId,
@@ -248,7 +253,7 @@ export const HomeScreen = ({
 
   // Интерактивные модальные окна
   const [activeModal, setActiveModal] = useState<
-    'quests' | 'tournament' | 'weather' | 'settings' | 'baitSelect' | 'rodSelect' | 'leaderboard' | 'achievements' | 'journal' | null
+    'quests' | 'tournament' | 'weather' | 'settings' | 'baitSelect' | 'rodSelect' | 'leaderboard' | 'achievements' | 'journal' | 'energy' | null
   >(null);
 
   // Закрытие всех модальных окон при клике на "База" или смене таба в нижнем меню
@@ -426,7 +431,8 @@ export const HomeScreen = ({
 
           {/* Фляга / Энергия */}
           <div
-            title="Энергия рыбака"
+            onClick={() => setActiveModal('energy')}
+            title="Пополнить энергию ☕"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -434,10 +440,11 @@ export const HomeScreen = ({
               background: 'rgba(28, 36, 48, 0.88)',
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
-              border: '1.5px solid rgba(255, 255, 255, 0.12)',
+              border: '1.5px solid rgba(251, 191, 36, 0.35)',
               borderRadius: '18px',
               padding: '5px 10px 5px 6px',
               boxShadow: '0 6px 20px rgba(0, 0, 0, 0.4)',
+              cursor: 'pointer',
             }}
           >
             <EnergyIcon size={21} />
@@ -851,31 +858,52 @@ export const HomeScreen = ({
           </div>
         </div>
 
-        {/* Кнопка «ЗАБРОСИТЬ» или «САДОК ПОЛОН» */}
+        {/* Кнопка «ЗАБРОСИТЬ» или «САДОК ПОЛОН» или «МАЛО ЭНЕРГИИ» */}
         {(() => {
           const isKeepnetFull = inventoryCount >= maxKeepnetCapacity;
+          const hasEnoughEnergy = energy >= 5;
+
+          const handleBridgeAction = () => {
+            if (isKeepnetFull) {
+              if (onOpenKeepnet) onOpenKeepnet();
+              else onGoFishing();
+            } else if (!hasEnoughEnergy) {
+              setActiveModal('energy');
+            } else {
+              onGoFishing();
+            }
+          };
+
           return (
             <button
-              onClick={isKeepnetFull ? (onOpenKeepnet || onGoFishing) : onGoFishing}
+              onClick={handleBridgeAction}
               style={{
                 flex: 1,
                 height: '62px',
                 background: isKeepnetFull
                   ? 'linear-gradient(180deg, #f59e0b 0%, #d97706 50%, #b45309 100%)'
+                  : !hasEnoughEnergy
+                  ? 'linear-gradient(180deg, #d97706 0%, #b45309 50%, #78350f 100%)'
                   : 'linear-gradient(180deg, #84cc16 0%, #65a30d 50%, #4d7c0f 100%)',
-                border: isKeepnetFull ? '2.5px solid #fde047' : '2.5px solid #bef264',
+                border: isKeepnetFull
+                  ? '2.5px solid #fde047'
+                  : !hasEnoughEnergy
+                  ? '2.5px solid #fbbf24'
+                  : '2.5px solid #bef264',
                 borderRadius: '31px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
                 color: '#ffffff',
-                fontSize: isKeepnetFull ? '14px' : '18px',
+                fontSize: isKeepnetFull || !hasEnoughEnergy ? '14px' : '18px',
                 fontWeight: 900,
                 letterSpacing: '0.8px',
                 textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
                 boxShadow: isKeepnetFull
                   ? '0 0 28px rgba(245, 158, 11, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 8px 24px rgba(0, 0, 0, 0.45)'
+                  : !hasEnoughEnergy
+                  ? '0 0 28px rgba(251, 191, 36, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 8px 24px rgba(0, 0, 0, 0.45)'
                   : '0 0 28px rgba(132, 204, 22, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 8px 24px rgba(0, 0, 0, 0.45)',
                 cursor: 'pointer',
                 transition: 'transform 0.1s ease',
@@ -885,6 +913,11 @@ export const HomeScreen = ({
                 <>
                   <span style={{ fontSize: '24px' }}>🧺</span>
                   <span>САДОК ПОЛОН ({inventoryCount}/{maxKeepnetCapacity})</span>
+                </>
+              ) : !hasEnoughEnergy ? (
+                <>
+                  <span style={{ fontSize: '22px' }}>⚡</span>
+                  <span>МАЛО ЭНЕРГИИ (НУЖНО 5)</span>
                 </>
               ) : (
                 <>
@@ -1131,6 +1164,18 @@ export const HomeScreen = ({
           onSelectBait={onSelectBait}
           baits={baits}
           playerLevel={level}
+        />
+      )}
+
+      {/* Быстрое пополнение энергии / перекус */}
+      {activeModal === 'energy' && onBuyProvision && (
+        <QuickEnergyModal
+          onClose={() => setActiveModal(null)}
+          energy={energy}
+          maxEnergy={maxEnergy}
+          secondsToNextEnergy={secondsToNextEnergy || 0}
+          coins={coins}
+          onBuyProvision={onBuyProvision}
         />
       )}
 

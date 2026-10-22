@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import * as GearData from '../gearData';
 import type { RodTier, ReelTier, LineTier } from '../gearData';
 import { AVAILABLE_BAITS, BAIT_CAPACITY_TIERS, type UpgradesState } from '../hooks/useBaitState';
+import { PROVISIONS } from '../data/provisionsData';
 import { CoinIcon } from './CoinIcon';
 
 interface GearState {
@@ -44,9 +45,12 @@ export interface ShopScreenProps {
   onEquipReel?: (id: string | null) => void;
   onBuyLine?: (line: LineTier) => boolean | void;
   onEquipLine?: (id: string) => void;
+  energy?: number;
+  maxEnergy?: number;
+  onBuyProvision?: (id: 'tea' | 'sandwich') => boolean | void;
 }
 
-type ShopTab = 'rods' | 'reels' | 'lines' | 'baits' | 'upgrades';
+type ShopTab = 'rods' | 'reels' | 'lines' | 'baits' | 'upgrades' | 'provisions';
 
 export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
   const {
@@ -64,6 +68,9 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
     onEquipReel,
     onBuyLine,
     onEquipLine,
+    energy = 100,
+    maxEnergy = 100,
+    onBuyProvision,
   } = props;
 
   const [shopTab, setShopTab] = useState<ShopTab>('rods');
@@ -198,6 +205,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
           { id: 'lines' as ShopTab, label: 'Лески 🧵' },
           { id: 'baits' as ShopTab, label: 'Наживки 🍞' },
           { id: 'upgrades' as ShopTab, label: 'Мастерская 🛠️' },
+          { id: 'provisions' as ShopTab, label: 'Провизия ☕' },
         ].map((tab) => {
           const isActive = shopTab === tab.id;
           return (
@@ -894,6 +902,137 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                 </div>
               );
             })()}
+          </>
+        )}
+
+        {/* Провизия (Чай и Бутерброды для энергии) */}
+        {shopTab === 'provisions' && (
+          <>
+            <div
+              style={{
+                background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.06))',
+                borderRadius: '16px',
+                padding: '12px 14px',
+                border: '1px solid rgba(245, 158, 11, 0.25)',
+                marginBottom: '8px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 800, color: '#fef3c7' }}>
+                  Запас энергии рыболова
+                </div>
+                <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                  Расход: 5 ⚡ за заброс удочки • +1 ⚡ в минуту
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontSize: '15px', fontWeight: 900, color: '#fbbf24' }}>
+                  {energy} / {maxEnergy} ⚡
+                </span>
+              </div>
+            </div>
+
+            {PROVISIONS.map((item) => {
+              const canAfford = coins >= item.price;
+              const isFull = energy >= maxEnergy;
+              const isDisabled = !canAfford || isFull;
+
+              return (
+                <div
+                  key={item.id}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: '16px',
+                    padding: '14px',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: '12px',
+                  }}
+                >
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        width: '52px',
+                        height: '52px',
+                        borderRadius: '14px',
+                        background: 'rgba(0, 0, 0, 0.4)',
+                        border: '1.5px solid rgba(245, 158, 11, 0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '28px',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {item.icon}
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                        <span style={{ fontWeight: 800, fontSize: '15px', color: '#fff' }}>
+                          {item.name}
+                        </span>
+                        <span
+                          style={{
+                            background: 'rgba(34, 197, 94, 0.2)',
+                            color: '#4ade80',
+                            border: '1px solid rgba(34, 197, 94, 0.4)',
+                            borderRadius: '6px',
+                            padding: '1px 6px',
+                            fontSize: '10px',
+                            fontWeight: 900,
+                          }}
+                        >
+                          +{item.energyBonus} ⚡
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8', lineHeight: 1.3 }}>
+                        {item.description}
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    disabled={isDisabled}
+                    onClick={() => onBuyProvision && onBuyProvision(item.id)}
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      background: isDisabled
+                        ? '#334155'
+                        : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      color: isDisabled ? '#64748b' : '#fff',
+                      fontWeight: 800,
+                      fontSize: '13px',
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '2px',
+                      boxShadow: isDisabled
+                        ? 'none'
+                        : '0 4px 12px rgba(16, 185, 129, 0.4)',
+                      flexShrink: 0,
+                      minWidth: '82px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span>{item.price}</span>
+                      <CoinIcon size={13} />
+                    </div>
+                    <span style={{ fontSize: '10px', opacity: 0.9 }}>
+                      {isFull ? 'Сыт' : item.id === 'tea' ? 'Выпить' : 'Съесть'}
+                    </span>
+                  </button>
+                </div>
+              );
+            })}
           </>
         )}
       </div>

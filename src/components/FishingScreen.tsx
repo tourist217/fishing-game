@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { FishingLocation } from '../locationsData';
 import type { ActiveFishState } from '../hooks/useFishingSimulation';
 import { formatWeight } from '../utils/fishUtils';
 import { FishingSceneCanvas } from './FishingSceneCanvas';
 import { TrophyCardModal } from './TrophyCardModal';
 import { AVAILABLE_BAITS } from '../hooks/useBaitState';
+import { QuickEnergyModal } from './QuickEnergyModal';
 import { CoinIcon } from './CoinIcon';
 
 export type GameState = 'idle' | 'waiting' | 'hooked' | 'reeling' | 'caught' | 'lost' | 'line_broken';
@@ -36,6 +37,10 @@ interface FishingScreenProps {
   onBackToHub?: () => void;
   inventoryCount?: number;
   maxKeepnetCapacity?: number;
+  energy?: number;
+  maxEnergy?: number;
+  secondsToNextEnergy?: number;
+  onBuyProvision?: (id: 'tea' | 'sandwich') => boolean;
   getRarityLabel: (rarity: string) => { text: string; color: string };
 }
 
@@ -53,7 +58,11 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
   playerLevel = 1,
   hasLineOnRod = true,
   rodMaterial = 'bamboo',
-  coins: _coins,
+  coins = 0,
+  energy = 100,
+  maxEnergy = 100,
+  secondsToNextEnergy = 0,
+  onBuyProvision,
   onSelectBait,
   onStartFishing,
   onStartReeling,
@@ -68,9 +77,11 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
   maxKeepnetCapacity = 15,
   getRarityLabel: _getRarityLabel,
 }: FishingScreenProps) => {
+  const [isEnergyModalOpen, setIsEnergyModalOpen] = useState(false);
   const currentBaitCount = baits[selectedBaitId] || 0;
   const isKeepnetFull = inventoryCount >= maxKeepnetCapacity;
-  const canCast = currentBaitCount > 0 && hasLineOnRod && !isKeepnetFull;
+  const hasEnoughEnergy = energy >= 5;
+  const canCast = currentBaitCount > 0 && hasLineOnRod && !isKeepnetFull && hasEnoughEnergy;
 
   return (
     <div
@@ -110,7 +121,32 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
           rodMaterial={rodMaterial}
         />
 
-        {/* Компактные информирующие бейджи сверху холста */}
+        {/* Компактный индикатор энергии на водоеме */}
+        <div
+          onClick={() => setIsEnergyModalOpen(true)}
+          style={{
+            position: 'absolute',
+            top: '8px',
+            right: '8px',
+            zIndex: 10,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            background: 'rgba(15, 23, 42, 0.75)',
+            border: '1px solid rgba(251, 191, 36, 0.4)',
+            borderRadius: '16px',
+            padding: '4px 8px',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(6px)',
+          }}
+          title="Пополнить энергию ☕"
+        >
+          <span style={{ fontSize: '12px' }}>⚡</span>
+          <span style={{ fontSize: '11px', fontWeight: 800, color: '#fbbf24' }}>
+            {energy}/{maxEnergy}
+          </span>
+        </div>
 
 
         {gameState === 'hooked' && (
@@ -340,17 +376,21 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
             onClick={
               canCast
                 ? onStartFishing
+                : !hasEnoughEnergy
+                ? () => setIsEnergyModalOpen(true)
                 : isKeepnetFull
                 ? onOpenKeepnet
                 : !hasLineOnRod
                 ? onOpenShop
                 : undefined
             }
-            disabled={!canCast && hasLineOnRod && !isKeepnetFull}
+            disabled={!canCast && hasLineOnRod && !isKeepnetFull && hasEnoughEnergy}
             style={{
               height: '52px',
               background: canCast
                 ? 'linear-gradient(180deg, #84cc16 0%, #65a30d 50%, #4d7c0f 100%)'
+                : !hasEnoughEnergy
+                ? 'linear-gradient(180deg, #d97706 0%, #b45309 50%, #78350f 100%)'
                 : isKeepnetFull
                 ? 'linear-gradient(180deg, #f59e0b 0%, #d97706 50%, #b45309 100%)'
                 : !hasLineOnRod
@@ -358,18 +398,22 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                 : 'rgba(255, 255, 255, 0.08)',
               border: canCast
                 ? '2px solid #bef264'
+                : !hasEnoughEnergy
+                ? '2px solid #fbbf24'
                 : isKeepnetFull
                 ? '2px solid #fde047'
                 : !hasLineOnRod
                 ? '2px solid #fca5a5'
                 : '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '24px',
-              color: canCast || isKeepnetFull || !hasLineOnRod ? '#ffffff' : '#64748b',
+              color: canCast || !hasEnoughEnergy || isKeepnetFull || !hasLineOnRod ? '#ffffff' : '#64748b',
               fontSize: '15px',
               fontWeight: 900,
-              cursor: canCast || isKeepnetFull || !hasLineOnRod ? 'pointer' : 'not-allowed',
+              cursor: canCast || !hasEnoughEnergy || isKeepnetFull || !hasLineOnRod ? 'pointer' : 'not-allowed',
               boxShadow: canCast
                 ? '0 0 24px rgba(132, 204, 22, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4)'
+                : !hasEnoughEnergy
+                ? '0 0 24px rgba(251, 191, 36, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4)'
                 : isKeepnetFull
                 ? '0 0 24px rgba(245, 158, 11, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4)'
                 : 'none',
@@ -378,6 +422,8 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
           >
             {canCast
               ? 'ЗАБРОСИТЬ УДОЧКУ 🎣'
+              : !hasEnoughEnergy
+              ? '⚡ МАЛО ЭНЕРГИИ (ПОДКРЕПИТЬСЯ ☕)'
               : isKeepnetFull
               ? 'САДОК ПОЛОН (ПРОДАТЬ В САДКЕ 🧺)'
               : !hasLineOnRod
@@ -665,6 +711,17 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
             )}
           </div>
         </div>
+      )}
+      {/* Окно быстрой провизии на водоёме */}
+      {isEnergyModalOpen && onBuyProvision && (
+        <QuickEnergyModal
+          onClose={() => setIsEnergyModalOpen(false)}
+          energy={energy}
+          maxEnergy={maxEnergy}
+          secondsToNextEnergy={secondsToNextEnergy}
+          coins={coins}
+          onBuyProvision={onBuyProvision}
+        />
       )}
     </div>
   );
