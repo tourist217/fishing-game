@@ -404,6 +404,16 @@ export function usePlayerState() {
     coinsRef.current = coins;
   }, [coins]);
 
+  const energyRef = useRef(energy);
+  useEffect(() => {
+    energyRef.current = energy;
+  }, [energy]);
+
+  const gemsRef = useRef(gems);
+  useEffect(() => {
+    gemsRef.current = gems;
+  }, [gems]);
+
   // Списание монет
   const spendCoins = useCallback((amount: number): boolean => {
     if (coinsRef.current >= amount) {
@@ -433,6 +443,7 @@ export function usePlayerState() {
         setLevel((lvl) => lvl + 1);
         // Бонус за уровень: мгновенное полное восстановление энергии!
         setEnergy(maxEnergy);
+        energyRef.current = maxEnergy;
         localStorage.setItem('fg_energy', maxEnergy.toString());
         return nextExp - expToNextLevel;
       }
@@ -441,39 +452,36 @@ export function usePlayerState() {
   }, [expToNextLevel, maxEnergy]);
 
   const spendEnergy = useCallback((amount: number): boolean => {
-    let success = false;
-    setEnergy((prev) => {
-      if (prev >= amount) {
-        success = true;
-        const next = Math.max(0, prev - amount);
-        if (prev >= maxEnergy) {
-          const now = Date.now();
-          setLastEnergyTimestamp(now);
-          localStorage.setItem('fg_energy_timestamp', now.toString());
-        }
-        localStorage.setItem('fg_energy', next.toString());
-        return next;
-      }
-      return prev;
-    });
-    return success;
-  }, [maxEnergy]);
-
-  const restoreEnergy = useCallback((amount: number) => {
-    setEnergy((prev) => {
-      const next = Math.min(maxEnergy, prev + amount);
-      if (next >= maxEnergy) {
+    if (energyRef.current >= amount) {
+      const prev = energyRef.current;
+      const next = Math.max(0, prev - amount);
+      energyRef.current = next;
+      setEnergy(next);
+      if (prev >= maxEnergy) {
         const now = Date.now();
         setLastEnergyTimestamp(now);
         localStorage.setItem('fg_energy_timestamp', now.toString());
       }
       localStorage.setItem('fg_energy', next.toString());
-      return next;
-    });
+      return true;
+    }
+    return false;
+  }, [maxEnergy]);
+
+  const restoreEnergy = useCallback((amount: number) => {
+    const next = Math.min(maxEnergy, energyRef.current + amount);
+    energyRef.current = next;
+    setEnergy(next);
+    if (next >= maxEnergy) {
+      const now = Date.now();
+      setLastEnergyTimestamp(now);
+      localStorage.setItem('fg_energy_timestamp', now.toString());
+    }
+    localStorage.setItem('fg_energy', next.toString());
   }, [maxEnergy]);
 
   const buyProvision = useCallback((provisionId: 'tea' | 'sandwich'): boolean => {
-    if (energy >= maxEnergy) return false;
+    if (energyRef.current >= maxEnergy) return false;
 
     const today = getTodayDateString();
     let currentProvisions = dailyProvisions;
@@ -484,7 +492,7 @@ export function usePlayerState() {
     const boughtCount = provisionId === 'tea' ? currentProvisions.teaBoughtCount : currentProvisions.sandwichBoughtCount;
     const price = getProvisionPrice(provisionId, boughtCount);
     if (price === null) return false; // Лимит 5 покупок на сегодня исчерпан
-    if (coins < price) return false;
+    if (coinsRef.current < price) return false;
 
     if (spendCoins(price)) {
       const config = PROVISION_CONFIGS[provisionId];
@@ -501,22 +509,21 @@ export function usePlayerState() {
       return true;
     }
     return false;
-  }, [coins, energy, maxEnergy, dailyProvisions, spendCoins, restoreEnergy]);
+  }, [maxEnergy, dailyProvisions, spendCoins, restoreEnergy]);
 
   // Восстановление полного запаса энергии за кристаллы (20 💎)
   const buyEnergyWithGems = useCallback((): boolean => {
-    if (energy >= maxEnergy) return false;
-    if (gems < GEMS_ENERGY_DRINK_COST) return false;
+    if (energyRef.current >= maxEnergy) return false;
+    if (gemsRef.current < GEMS_ENERGY_DRINK_COST) return false;
 
-    setGems((prev) => {
-      const nextGems = prev - GEMS_ENERGY_DRINK_COST;
-      localStorage.setItem('fg_gems', nextGems.toString());
-      return nextGems;
-    });
+    const nextGems = gemsRef.current - GEMS_ENERGY_DRINK_COST;
+    gemsRef.current = nextGems;
+    setGems(nextGems);
+    localStorage.setItem('fg_gems', nextGems.toString());
 
     restoreEnergy(maxEnergy);
     return true;
-  }, [gems, energy, maxEnergy, restoreEnergy]);
+  }, [maxEnergy, restoreEnergy]);
 
   const claimAllSpeciesReward = useCallback((): boolean => {
     if (hasClaimedAllSpeciesReward) return false;

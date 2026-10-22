@@ -170,19 +170,22 @@ export function useBaitState(
   // Синхронный расход наживки при забросе удочки
   const consumeBait = useCallback(
     (baitId: string): boolean => {
-      const currentCount = baits[baitId] || 0;
+      const currentCount = baitsRef.current[baitId] || 0;
       if (currentCount <= 0) {
         return false;
       }
 
-      setBaits((prevBaits) => ({
-        ...prevBaits,
-        [baitId]: Math.max(0, (prevBaits[baitId] || 0) - 1),
-      }));
+      const nextBaits = {
+        ...baitsRef.current,
+        [baitId]: Math.max(0, currentCount - 1),
+      };
+      baitsRef.current = nextBaits;
+      setBaits(nextBaits);
+      localStorage.setItem('fg_baits', JSON.stringify(nextBaits));
 
       return true;
     },
-    [baits]
+    []
   );
 
   // Выбор наживки

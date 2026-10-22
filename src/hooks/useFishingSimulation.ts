@@ -163,21 +163,24 @@ export function useFishingSimulation({
     const availableBait = baitsRef.current[currentBaitId] || 0;
 
     if (availableBait <= 0) {
+      triggerHapticRef.current?.('notification');
       return;
     }
 
-    // Проверка и списание энергии (5 единиц на заброс)
+    // Сначала списываем наживку
+    const consumed = consumeBaitRef.current(currentBaitId);
+    if (!consumed) {
+      triggerHapticRef.current?.('notification');
+      return;
+    }
+
+    // Затем списываем энергию (5 единиц на заброс)
     if (spendEnergyRef.current) {
       const ok = spendEnergyRef.current(5);
       if (!ok) {
         triggerHapticRef.current?.('notification');
         return;
       }
-    }
-
-    const consumed = consumeBaitRef.current(currentBaitId);
-    if (!consumed) {
-      return;
     }
 
     isPullingRef.current = false;
@@ -188,30 +191,35 @@ export function useFishingSimulation({
 
     const waitTime = Math.random() * 2000 + 1500;
     setTimeout(() => {
-      const generated = getRandomFish(
-        rodStrengthRef.current,
-        lineTensileRef.current,
-        currentBaitId,
-        currentLocationRef.current.id,
-        currentLocationRef.current.weightModifier
-      );
+      try {
+        const generated = getRandomFish(
+          rodStrengthRef.current,
+          lineTensileRef.current,
+          currentBaitId,
+          currentLocationRef.current?.id || 'loc_village_pond',
+          currentLocationRef.current?.weightModifier || 1.0
+        );
 
-      const readyFish: ActiveFishState = {
-        fish: generated.fish,
-        weight: generated.weight,
-        price: generated.price,
-        exp: generated.exp,
-        sizeCategory: generated.sizeCategory,
-        categoryLabel: generated.categoryLabel,
-        uid: Math.random().toString(36).substring(2, 9),
-        caughtAt: Date.now(),
-        rodBrokenRisk: generated.rodBrokenRisk,
-      };
+        const readyFish: ActiveFishState = {
+          fish: generated.fish,
+          weight: generated.weight,
+          price: generated.price,
+          exp: generated.exp,
+          sizeCategory: generated.sizeCategory,
+          categoryLabel: generated.categoryLabel,
+          uid: Math.random().toString(36).substring(2, 9),
+          caughtAt: Date.now(),
+          rodBrokenRisk: generated.rodBrokenRisk,
+        };
 
-      setCurrentFish(readyFish);
-      currentFishRef.current = readyFish;
-      setGameState('hooked');
-      triggerFishHaptic(readyFish.weight, readyFish.sizeCategory, 'hook');
+        setCurrentFish(readyFish);
+        currentFishRef.current = readyFish;
+        setGameState('hooked');
+        triggerFishHaptic(readyFish.weight, readyFish.sizeCategory, 'hook');
+      } catch (err) {
+        console.error('Error during fish bite generation:', err);
+        setGameState('idle');
+      }
     }, waitTime);
   };
 
