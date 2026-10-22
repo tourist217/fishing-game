@@ -617,7 +617,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                   mixBlendMode: 'screen',
                 }}
               >
-                {/* Анизотропный золотистый блик */}
+                {/* Анизотропный золотистый блик (плавная визуальная скорость вращения катушки) */}
                 <div
                   style={{
                     position: 'absolute',
@@ -625,7 +625,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                     borderRadius: '50%',
                     background:
                       'conic-gradient(from 0deg, rgba(255, 235, 170, 0.85) 0deg, transparent 45deg, rgba(255, 215, 100, 0.95) 90deg, transparent 135deg, rgba(255, 235, 170, 0.85) 180deg, transparent 225deg, rgba(255, 215, 100, 0.95) 270deg, transparent 315deg, rgba(255, 235, 170, 0.85) 360deg)',
-                    animation: isPulling ? 'reelSpoolSpin 0.22s linear infinite' : 'none',
+                    animation: isPulling ? 'reelSpoolSpin 0.75s linear infinite' : 'none',
                     filter: 'blur(1px)',
                   }}
                 />
@@ -637,7 +637,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                     borderRadius: '50%',
                     border: '1.5px dashed rgba(253, 224, 71, 0.75)',
                     boxShadow: 'inset 0 0 6px rgba(245, 158, 11, 0.6)',
-                    animation: isPulling ? 'reelSpoolSpin 0.16s linear infinite reverse' : 'none',
+                    animation: isPulling ? 'reelSpoolSpin 0.6s linear infinite reverse' : 'none',
                   }}
                 />
               </div>
