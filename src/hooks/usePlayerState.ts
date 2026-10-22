@@ -45,6 +45,15 @@ export function usePlayerState() {
   });
 
   const [energy, setEnergy] = useState<number>(() => {
+    // Единовременная инициализация для новых игроков и обновления версии:
+    const hasInit = localStorage.getItem('fg_energy_v1_init') === 'true';
+    if (!hasInit) {
+      localStorage.setItem('fg_energy_v1_init', 'true');
+      localStorage.setItem('fg_energy', '100');
+      localStorage.setItem('fg_energy_timestamp', Date.now().toString());
+      return 100;
+    }
+
     const val = localStorage.getItem('fg_energy');
     const parsed = Number(val);
     const initialEnergy = !isNaN(parsed) && parsed >= 0 ? parsed : 100;
