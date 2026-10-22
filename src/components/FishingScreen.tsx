@@ -572,7 +572,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
             }}
             title="Зажмите и удерживайте, чтобы тянуть леску"
           >
-            {/* 3D Катушка слева на кнопке (ракурс с торца, чуть выше и левее) */}
+            {/* 3D Катушка слева на кнопке (вид от первого лица / крепёж к камере-удочке) */}
             <div
               style={{
                 position: 'absolute',
@@ -588,7 +588,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
               }}
             >
               <img
-                src="/assets/ui/reel_angle_isometric.png"
+                src="/assets/ui/reel_angle_rear_handle.png"
                 alt="Катушка"
                 draggable={false}
                 style={{
@@ -605,11 +605,11 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
               <div
                 style={{
                   position: 'absolute',
-                  left: '50%',
-                  top: '44%',
+                  left: '58%',
+                  top: '48%',
                   transform: 'translate(-50%, -50%)',
-                  width: '32px',
-                  height: '32px',
+                  width: '30px',
+                  height: '30px',
                   borderRadius: '50%',
                   pointerEvents: 'none',
                   opacity: isPulling ? 1 : 0,
@@ -629,7 +629,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                     filter: 'blur(1px)',
                   }}
                 />
-                {/* Внутренние кольца шпули */}
+                {/* Внутренние кольца */}
                 <div
                   style={{
                     position: 'absolute',
