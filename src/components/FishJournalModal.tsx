@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FISH_DATABASE, type Fish, type FishRarity } from '../fishData';
+import { FISH_DATABASE, type Fish } from '../fishData';
 import { LOCATIONS } from '../locationsData';
 import { formatWeight } from '../utils/fishUtils';
 import type { FishJournal } from '../hooks/usePlayerState';
@@ -24,7 +24,6 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
   onClose,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('species');
-  const [rarityFilter, setRarityFilter] = useState<FishRarity | 'all'>('all');
   const [inspectedFish, setInspectedFish] = useState<Fish | null>(null);
 
   const totalSpecies = FISH_DATABASE.length;
@@ -32,25 +31,6 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
   const trophyCount = Object.values(journal).filter((j) => j.hasTrophy).length;
   const progressPercent = Math.min(100, Math.round((caughtSpeciesCount / totalSpecies) * 100));
   const isAllCaught = caughtSpeciesCount >= totalSpecies;
-
-  const filteredFishes = FISH_DATABASE.filter((fish) => {
-    if (rarityFilter === 'all') return true;
-    return fish.rarity === rarityFilter;
-  });
-
-  const getRarityBadge = (rarity: FishRarity) => {
-    switch (rarity) {
-      case 'legendary':
-        return { label: 'Легендарная', color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.15)' };
-      case 'epic':
-        return { label: 'Эпическая', color: '#c084fc', bg: 'rgba(192, 132, 252, 0.15)' };
-      case 'rare':
-        return { label: 'Редкая', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.15)' };
-      case 'common':
-      default:
-        return { label: 'Обычная', color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.15)' };
-    }
-  };
 
   const getActivityBadge = (coeff: number = 1.0) => {
     if (coeff >= 1.3) return { label: 'Жор', color: '#f87171', bg: 'rgba(239, 68, 68, 0.18)', icon: '🔥' };
@@ -303,44 +283,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
         {/* ВКЛАДКА 1: ЭНЦИКЛОПЕДИЯ ВСЕХ ВИДОВ */}
         {activeTab === 'species' && (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            {/* Фильтр редкости */}
-            <div
-              style={{
-                display: 'flex',
-                gap: '6px',
-                padding: '8px 14px',
-                overflowX: 'auto',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-              }}
-            >
-              {[
-                { id: 'all', label: 'Все' },
-                { id: 'common', label: 'Обычные' },
-                { id: 'rare', label: 'Редкие' },
-                { id: 'epic', label: 'Эпические' },
-                { id: 'legendary', label: 'Легендарные' },
-              ].map((rf) => (
-                <button
-                  key={rf.id}
-                  onClick={() => setRarityFilter(rf.id as any)}
-                  style={{
-                    padding: '3px 9px',
-                    borderRadius: '8px',
-                    border: rarityFilter === rf.id ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.08)',
-                    background: rarityFilter === rf.id ? 'rgba(56, 189, 248, 0.15)' : 'rgba(15, 23, 42, 0.5)',
-                    color: rarityFilter === rf.id ? '#38bdf8' : '#94a3b8',
-                    fontSize: '10.5px',
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {rf.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Сетка карточек рыб */}
+            {/* Сетка карточек всех видов рыб */}
             <div
               style={{
                 flex: 1,
@@ -352,10 +295,9 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                 alignContent: 'start',
               }}
             >
-              {filteredFishes.map((fish) => {
+              {FISH_DATABASE.map((fish) => {
                 const entry = journal[fish.id];
                 const isDiscovered = Boolean(entry);
-                const rarity = getRarityBadge(fish.rarity);
 
                 return (
                   <div
@@ -373,7 +315,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                       border: isDiscovered
                         ? entry.hasTrophy
                           ? '1.5px solid #fde047'
-                          : `1px solid ${rarity.color}35`
+                          : '1px solid rgba(56, 189, 248, 0.25)'
                         : '1px dashed rgba(255, 255, 255, 0.08)',
                       display: 'flex',
                       flexDirection: 'column',
@@ -735,7 +677,6 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
         {inspectedFish && (() => {
           const entry = journal[inspectedFish.id];
           const isDiscovered = Boolean(entry);
-          const rarity = getRarityBadge(inspectedFish.rarity);
           const times: TimeOfDay[] = ['morning', 'day', 'evening', 'night'];
           const weathers: WeatherType[] = ['clear', 'fog', 'overcast', 'rain'];
 
@@ -765,7 +706,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                   borderRadius: '24px',
                   border: isDiscovered && entry?.hasTrophy
                     ? '1.5px solid #facc15'
-                    : `1.5px solid ${rarity.color}60`,
+                    : '1.5px solid rgba(56, 189, 248, 0.35)',
                   padding: '16px 14px',
                   display: 'flex',
                   flexDirection: 'column',
@@ -905,20 +846,22 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                     {isDiscovered ? inspectedFish.name : '??? (Неизвестный вид)'}
                   </div>
 
-                  <div
-                    style={{
-                      marginTop: '4px',
-                      background: rarity.bg,
-                      color: rarity.color,
-                      border: `1px solid ${rarity.color}40`,
-                      borderRadius: '8px',
-                      padding: '2px 8px',
-                      fontSize: '10.5px',
-                      fontWeight: 800,
-                    }}
-                  >
-                    {rarity.label}
-                  </div>
+                  {isDiscovered && entry?.hasTrophy && (
+                    <div
+                      style={{
+                        marginTop: '4px',
+                        background: 'rgba(251, 191, 36, 0.15)',
+                        color: '#fbbf24',
+                        border: '1px solid rgba(251, 191, 36, 0.4)',
+                        borderRadius: '8px',
+                        padding: '2px 8px',
+                        fontSize: '10.5px',
+                        fontWeight: 800,
+                      }}
+                    >
+                      🏆 Трофейный экземпляр
+                    </div>
+                  )}
                 </div>
 
                 {/* 3. Личная статистика игрока */}
