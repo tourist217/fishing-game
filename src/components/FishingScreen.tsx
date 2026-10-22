@@ -572,15 +572,15 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
             }}
             title="Зажмите и удерживайте, чтобы тянуть леску"
           >
-            {/* 3D Катушка слева на кнопке */}
+            {/* 3D Катушка слева на кнопке (ракурс с торца, чуть выше и левее) */}
             <div
               style={{
                 position: 'absolute',
                 left: '8px',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                width: '40px',
-                height: '40px',
+                width: '42px',
+                height: '42px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -588,7 +588,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
               }}
             >
               <img
-                src="/assets/ui/reel_angle_side.png"
+                src="/assets/ui/reel_angle_isometric.png"
                 alt="Катушка"
                 draggable={false}
                 style={{
@@ -596,7 +596,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                   height: '100%',
                   objectFit: 'contain',
                   filter: isPulling
-                    ? 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.9))'
+                    ? 'drop-shadow(0 0 10px rgba(251, 191, 36, 0.95))'
                     : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5))',
                 }}
               />
@@ -605,7 +605,11 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
               <div
                 style={{
                   position: 'absolute',
-                  inset: '2px',
+                  left: '50%',
+                  top: '44%',
+                  transform: 'translate(-50%, -50%)',
+                  width: '32px',
+                  height: '32px',
                   borderRadius: '50%',
                   pointerEvents: 'none',
                   opacity: isPulling ? 1 : 0,
@@ -625,11 +629,11 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                     filter: 'blur(1px)',
                   }}
                 />
-                {/* Шпуля */}
+                {/* Внутренние кольца шпули */}
                 <div
                   style={{
                     position: 'absolute',
-                    inset: '6px',
+                    inset: '4px',
                     borderRadius: '50%',
                     border: '1.5px dashed rgba(253, 224, 71, 0.75)',
                     boxShadow: 'inset 0 0 6px rgba(245, 158, 11, 0.6)',
