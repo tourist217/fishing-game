@@ -8,6 +8,7 @@ import { FishJournalModal } from './FishJournalModal';
 import { RangerQuestsModal } from './RangerQuestsModal';
 import { BaitSelectModal } from './BaitSelectModal';
 import { QuickEnergyModal } from './QuickEnergyModal';
+import type { DailyProvisionsState } from '../data/provisionsData';
 import type { DailyQuest } from '../types/quests';
 import { getCurrentWeather, getWeatherForecast, TIME_CONFIGS, WEATHER_CONFIGS } from '../utils/weatherTime';
 import { CoinIcon } from './CoinIcon';
@@ -192,6 +193,8 @@ interface HomeScreenProps {
   onOpenKeepnet?: () => void;
   secondsToNextEnergy?: number;
   onBuyProvision?: (id: 'tea' | 'sandwich') => boolean;
+  dailyProvisions?: DailyProvisionsState;
+  onBuyEnergyWithGems?: () => boolean;
   journal?: FishJournal;
   hasClaimedAllSpeciesReward?: boolean;
   onClaimAllSpeciesReward?: () => boolean;
@@ -215,11 +218,13 @@ export const HomeScreen = ({
   exp,
   maxExp,
   coins,
-  gems: _gems = 120,
+  gems = 120,
   energy,
   maxEnergy,
   secondsToNextEnergy = 0,
   onBuyProvision,
+  dailyProvisions,
+  onBuyEnergyWithGems,
   inventoryCount = 0,
   maxKeepnetCapacity = 15,
   selectedBaitId,
@@ -1175,7 +1180,10 @@ export const HomeScreen = ({
           maxEnergy={maxEnergy}
           secondsToNextEnergy={secondsToNextEnergy || 0}
           coins={coins}
+          gems={gems}
+          dailyProvisions={dailyProvisions}
           onBuyProvision={onBuyProvision}
+          onBuyEnergyWithGems={onBuyEnergyWithGems}
         />
       )}
 

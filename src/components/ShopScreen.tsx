@@ -2,7 +2,13 @@ import React, { useState } from 'react';
 import * as GearData from '../gearData';
 import type { RodTier, ReelTier, LineTier } from '../gearData';
 import { AVAILABLE_BAITS, BAIT_CAPACITY_TIERS, type UpgradesState } from '../hooks/useBaitState';
-import { PROVISIONS } from '../data/provisionsData';
+import {
+  getProvisionPrice,
+  PROVISION_CONFIGS,
+  type DailyProvisionsState,
+  GEMS_ENERGY_DRINK_COST,
+  MAX_DAILY_PROVISION_BUYS,
+} from '../data/provisionsData';
 import { CoinIcon } from './CoinIcon';
 
 interface GearState {
@@ -47,7 +53,10 @@ export interface ShopScreenProps {
   onEquipLine?: (id: string) => void;
   energy?: number;
   maxEnergy?: number;
+  gems?: number;
+  dailyProvisions?: DailyProvisionsState;
   onBuyProvision?: (id: 'tea' | 'sandwich') => boolean | void;
+  onBuyEnergyWithGems?: () => boolean | void;
 }
 
 type ShopTab = 'rods' | 'reels' | 'lines' | 'baits' | 'upgrades' | 'provisions';
@@ -70,7 +79,10 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
     onEquipLine,
     energy = 100,
     maxEnergy = 100,
+    gems = 0,
+    dailyProvisions = { date: '', teaBoughtCount: 0, sandwichBoughtCount: 0 },
     onBuyProvision,
+    onBuyEnergyWithGems,
   } = props;
 
   const [shopTab, setShopTab] = useState<ShopTab>('rods');
@@ -935,14 +947,18 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
               </div>
             </div>
 
-            {PROVISIONS.map((item) => {
-              const canAfford = coins >= item.price;
+            {/* 1. Чай из термоса со ступенчатой ценой */}
+            {(() => {
+              const config = PROVISION_CONFIGS.tea;
+              const count = dailyProvisions.teaBoughtCount;
+              const price = getProvisionPrice('tea', count);
+              const isLimit = price === null;
               const isFull = energy >= maxEnergy;
-              const isDisabled = !canAfford || isFull;
+              const canAfford = price !== null && coins >= price;
+              const isDisabled = isFull || isLimit || !canAfford;
 
               return (
                 <div
-                  key={item.id}
                   style={{
                     background: 'rgba(255, 255, 255, 0.05)',
                     borderRadius: '16px',
@@ -969,13 +985,13 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                         flexShrink: 0,
                       }}
                     >
-                      {item.icon}
+                      {config.icon}
                     </div>
 
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
                         <span style={{ fontWeight: 800, fontSize: '15px', color: '#fff' }}>
-                          {item.name}
+                          {config.name}
                         </span>
                         <span
                           style={{
@@ -988,18 +1004,18 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                             fontWeight: 900,
                           }}
                         >
-                          +{item.energyBonus} ⚡
+                          +{config.energyBonus} ⚡
                         </span>
                       </div>
                       <div style={{ fontSize: '11px', color: '#94a3b8', lineHeight: 1.3 }}>
-                        {item.description}
+                        Сегодня куплено: <strong style={{ color: count >= MAX_DAILY_PROVISION_BUYS ? '#ef4444' : '#86efac' }}>{count}/{MAX_DAILY_PROVISION_BUYS}</strong> • +5 забросов
                       </div>
                     </div>
                   </div>
 
                   <button
                     disabled={isDisabled}
-                    onClick={() => onBuyProvision && onBuyProvision(item.id)}
+                    onClick={() => onBuyProvision && onBuyProvision('tea')}
                     style={{
                       padding: '10px 14px',
                       borderRadius: '12px',
@@ -1019,20 +1035,227 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                         ? 'none'
                         : '0 4px 12px rgba(16, 185, 129, 0.4)',
                       flexShrink: 0,
-                      minWidth: '82px',
+                      minWidth: '88px',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span>{item.price}</span>
-                      <CoinIcon size={13} />
-                    </div>
-                    <span style={{ fontSize: '10px', opacity: 0.9 }}>
-                      {isFull ? 'Сыт' : item.id === 'tea' ? 'Выпить' : 'Съесть'}
-                    </span>
+                    {isLimit ? (
+                      <span style={{ fontSize: '11px', fontWeight: 900, color: '#f87171' }}>Лимит (5/5)</span>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span>{price}</span>
+                          <CoinIcon size={13} />
+                        </div>
+                        <span style={{ fontSize: '10px', opacity: 0.9 }}>
+                          {isFull ? 'Сыт' : 'Выпить'}
+                        </span>
+                      </>
+                    )}
                   </button>
                 </div>
               );
-            })}
+            })()}
+
+            {/* 2. Бутерброд с ветчиной со ступенчатой ценой */}
+            {(() => {
+              const config = PROVISION_CONFIGS.sandwich;
+              const count = dailyProvisions.sandwichBoughtCount;
+              const price = getProvisionPrice('sandwich', count);
+              const isLimit = price === null;
+              const isFull = energy >= maxEnergy;
+              const canAfford = price !== null && coins >= price;
+              const isDisabled = isFull || isLimit || !canAfford;
+
+              return (
+                <div
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: '16px',
+                    padding: '14px',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: '12px',
+                  }}
+                >
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        width: '52px',
+                        height: '52px',
+                        borderRadius: '14px',
+                        background: 'rgba(0, 0, 0, 0.4)',
+                        border: '1.5px solid rgba(245, 158, 11, 0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '28px',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {config.icon}
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                        <span style={{ fontWeight: 800, fontSize: '15px', color: '#fff' }}>
+                          {config.name}
+                        </span>
+                        <span
+                          style={{
+                            background: 'rgba(34, 197, 94, 0.2)',
+                            color: '#4ade80',
+                            border: '1px solid rgba(34, 197, 94, 0.4)',
+                            borderRadius: '6px',
+                            padding: '1px 6px',
+                            fontSize: '10px',
+                            fontWeight: 900,
+                          }}
+                        >
+                          +{config.energyBonus} ⚡
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8', lineHeight: 1.3 }}>
+                        Сегодня куплено: <strong style={{ color: count >= MAX_DAILY_PROVISION_BUYS ? '#ef4444' : '#86efac' }}>{count}/{MAX_DAILY_PROVISION_BUYS}</strong> • +10 забросов
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    disabled={isDisabled}
+                    onClick={() => onBuyProvision && onBuyProvision('sandwich')}
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      background: isDisabled
+                        ? '#334155'
+                        : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      color: isDisabled ? '#64748b' : '#fff',
+                      fontWeight: 800,
+                      fontSize: '13px',
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '2px',
+                      boxShadow: isDisabled
+                        ? 'none'
+                        : '0 4px 12px rgba(16, 185, 129, 0.4)',
+                      flexShrink: 0,
+                      minWidth: '88px',
+                    }}
+                  >
+                    {isLimit ? (
+                      <span style={{ fontSize: '11px', fontWeight: 900, color: '#f87171' }}>Лимит (5/5)</span>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span>{price}</span>
+                          <CoinIcon size={13} />
+                        </div>
+                        <span style={{ fontSize: '10px', opacity: 0.9 }}>
+                          {isFull ? 'Сыт' : 'Съесть'}
+                        </span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              );
+            })()}
+
+            {/* 3. Особый энергетик за Алмазы (безлимитно) */}
+            {onBuyEnergyWithGems && (
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(79, 70, 229, 0.08))',
+                  borderRadius: '16px',
+                  padding: '14px',
+                  border: '1.5px solid rgba(99, 102, 241, 0.4)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: '12px',
+                }}
+              >
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      width: '52px',
+                      height: '52px',
+                      borderRadius: '14px',
+                      background: 'rgba(30, 27, 75, 0.6)',
+                      border: '1.5px solid rgba(99, 102, 241, 0.5)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '28px',
+                      flexShrink: 0,
+                    }}
+                  >
+                    ⚡
+                  </div>
+
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                      <span style={{ fontWeight: 800, fontSize: '15px', color: '#e0e7ff' }}>
+                        Энергетик егеря
+                      </span>
+                      <span
+                        style={{
+                          background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                          color: '#fff',
+                          borderRadius: '6px',
+                          padding: '1px 6px',
+                          fontSize: '10px',
+                          fontWeight: 900,
+                        }}
+                      >
+                        +100 ⚡ (МАКС)
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#c7d2fe', lineHeight: 1.3 }}>
+                      Полный бак энергии • Доступно без ограничений в день
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  disabled={energy >= maxEnergy || gems < GEMS_ENERGY_DRINK_COST}
+                  onClick={() => onBuyEnergyWithGems()}
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: energy >= maxEnergy || gems < GEMS_ENERGY_DRINK_COST
+                      ? '#334155'
+                      : 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                    color: energy >= maxEnergy || gems < GEMS_ENERGY_DRINK_COST ? '#64748b' : '#fff',
+                    fontWeight: 800,
+                    fontSize: '13px',
+                    cursor: energy >= maxEnergy || gems < GEMS_ENERGY_DRINK_COST ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '2px',
+                    boxShadow: energy >= maxEnergy || gems < GEMS_ENERGY_DRINK_COST
+                      ? 'none'
+                      : '0 4px 12px rgba(99, 102, 241, 0.4)',
+                    flexShrink: 0,
+                    minWidth: '88px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>{GEMS_ENERGY_DRINK_COST}</span>
+                    <span>💎</span>
+                  </div>
+                  <span style={{ fontSize: '10px', opacity: 0.9 }}>
+                    {energy >= maxEnergy ? 'Сыт' : 'Полный бак'}
+                  </span>
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

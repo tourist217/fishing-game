@@ -6,6 +6,7 @@ import { FishingSceneCanvas } from './FishingSceneCanvas';
 import { TrophyCardModal } from './TrophyCardModal';
 import { AVAILABLE_BAITS } from '../hooks/useBaitState';
 import { QuickEnergyModal } from './QuickEnergyModal';
+import type { DailyProvisionsState } from '../data/provisionsData';
 import { CoinIcon } from './CoinIcon';
 
 export type GameState = 'idle' | 'waiting' | 'hooked' | 'reeling' | 'caught' | 'lost' | 'line_broken';
@@ -40,7 +41,10 @@ interface FishingScreenProps {
   energy?: number;
   maxEnergy?: number;
   secondsToNextEnergy?: number;
+  gems?: number;
+  dailyProvisions?: DailyProvisionsState;
   onBuyProvision?: (id: 'tea' | 'sandwich') => boolean;
+  onBuyEnergyWithGems?: () => boolean;
   getRarityLabel: (rarity: string) => { text: string; color: string };
 }
 
@@ -59,10 +63,13 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
   hasLineOnRod = true,
   rodMaterial = 'bamboo',
   coins = 0,
+  gems = 0,
   energy = 100,
   maxEnergy = 100,
   secondsToNextEnergy = 0,
+  dailyProvisions,
   onBuyProvision,
+  onBuyEnergyWithGems,
   onSelectBait,
   onStartFishing,
   onStartReeling,
@@ -720,7 +727,10 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
           maxEnergy={maxEnergy}
           secondsToNextEnergy={secondsToNextEnergy}
           coins={coins}
+          gems={gems}
+          dailyProvisions={dailyProvisions}
           onBuyProvision={onBuyProvision}
+          onBuyEnergyWithGems={onBuyEnergyWithGems}
         />
       )}
     </div>

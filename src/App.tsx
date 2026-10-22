@@ -167,13 +167,16 @@ export default function App() {
             hasLineOnRod={gear.hasLineOnRod}
             rodMaterial={gear.currentRod.material}
             coins={player.coins}
+            gems={player.gems}
             currentLocation={currentLocation}
             inventoryCount={player.inventoryCount}
             maxKeepnetCapacity={player.maxKeepnetCapacity}
             energy={player.energy}
             maxEnergy={player.maxEnergy}
             secondsToNextEnergy={player.secondsToNextEnergy}
+            dailyProvisions={player.dailyProvisions}
             onBuyProvision={player.buyProvision}
+            onBuyEnergyWithGems={player.buyEnergyWithGems}
             onOpenKeepnet={() => {
               fishing.resetToIdle();
               setIsAtPond(false);
@@ -218,7 +221,9 @@ export default function App() {
             energy={player.energy}
             maxEnergy={player.maxEnergy}
             secondsToNextEnergy={player.secondsToNextEnergy}
+            dailyProvisions={player.dailyProvisions}
             onBuyProvision={player.buyProvision}
+            onBuyEnergyWithGems={player.buyEnergyWithGems}
             inventoryCount={player.inventoryCount}
             maxKeepnetCapacity={player.maxKeepnetCapacity}
             selectedBaitId={baits.selectedBaitId}
@@ -301,7 +306,10 @@ export default function App() {
           onBuyUpgrade={baits.buyUpgrade}
           energy={player.energy}
           maxEnergy={player.maxEnergy}
+          gems={player.gems}
+          dailyProvisions={player.dailyProvisions}
           onBuyProvision={player.buyProvision}
+          onBuyEnergyWithGems={player.buyEnergyWithGems}
         />
       )}
 

@@ -1,5 +1,11 @@
 import React from 'react';
-import { PROVISIONS } from '../data/provisionsData';
+import {
+  getProvisionPrice,
+  PROVISION_CONFIGS,
+  type DailyProvisionsState,
+  GEMS_ENERGY_DRINK_COST,
+  MAX_DAILY_PROVISION_BUYS,
+} from '../data/provisionsData';
 import { CoinIcon } from './CoinIcon';
 import { EnergyIcon } from './EnergyIcon';
 
@@ -9,7 +15,10 @@ interface QuickEnergyModalProps {
   maxEnergy: number;
   secondsToNextEnergy: number;
   coins: number;
+  gems?: number;
+  dailyProvisions?: DailyProvisionsState;
   onBuyProvision: (id: 'tea' | 'sandwich') => boolean;
+  onBuyEnergyWithGems?: () => boolean;
 }
 
 // Угловые верёвки и латунные заклёпки (в едином стиле с меню наживок)
@@ -53,7 +62,10 @@ export const QuickEnergyModal: React.FC<QuickEnergyModalProps> = ({
   maxEnergy,
   secondsToNextEnergy,
   coins,
+  gems = 0,
+  dailyProvisions = { date: '', teaBoughtCount: 0, sandwichBoughtCount: 0 },
   onBuyProvision,
+  onBuyEnergyWithGems,
 }) => {
   const percent = Math.min(100, Math.max(0, (energy / maxEnergy) * 100));
 
@@ -62,6 +74,16 @@ export const QuickEnergyModal: React.FC<QuickEnergyModalProps> = ({
     const s = sec % 60;
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
+
+  const teaCount = dailyProvisions.teaBoughtCount;
+  const teaPrice = getProvisionPrice('tea', teaCount);
+  const isTeaLimit = teaPrice === null;
+
+  const sandwichCount = dailyProvisions.sandwichBoughtCount;
+  const sandwichPrice = getProvisionPrice('sandwich', sandwichCount);
+  const isSandwichLimit = sandwichPrice === null;
+
+  const isFull = energy >= maxEnergy;
 
   return (
     <div
@@ -90,7 +112,7 @@ export const QuickEnergyModal: React.FC<QuickEnergyModalProps> = ({
         onClick={(e) => e.stopPropagation()}
         style={{
           width: '100%',
-          maxWidth: '410px',
+          maxWidth: '420px',
           background: 'linear-gradient(180deg, #2b170e 0%, #1e0f08 50%, #150904 100%)',
           borderRadius: '26px',
           border: '3px solid #7d4924',
@@ -168,7 +190,7 @@ export const QuickEnergyModal: React.FC<QuickEnergyModalProps> = ({
             border: '1.5px solid #5a351b',
             borderRadius: '16px',
             padding: '12px 14px',
-            marginBottom: '14px',
+            marginBottom: '12px',
             boxShadow: 'inset 0 2px 6px rgba(0, 0, 0, 0.7)',
             display: 'flex',
             flexDirection: 'column',
@@ -235,21 +257,21 @@ export const QuickEnergyModal: React.FC<QuickEnergyModalProps> = ({
           </div>
         </div>
 
-        {/* Список провизии */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
-          {PROVISIONS.map((item) => {
-            const canAfford = coins >= item.price;
-            const isFull = energy >= maxEnergy;
-            const isDisabled = !canAfford || isFull;
+        {/* Список провизии со ступенчатой ценой */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', marginBottom: '12px' }}>
+          {/* 1. Чай из термоса */}
+          {(() => {
+            const config = PROVISION_CONFIGS.tea;
+            const canAfford = teaPrice !== null && coins >= teaPrice;
+            const isDisabled = isFull || isTeaLimit || !canAfford;
 
             return (
               <div
-                key={item.id}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
-                  padding: '10px 12px',
+                  gap: '10px',
+                  padding: '9px 12px',
                   borderRadius: '16px',
                   background: 'linear-gradient(180deg, #6c3b1b 0%, #512a12 50%, #3e1e0b 100%)',
                   border: '1.5px solid #2f170a',
@@ -257,70 +279,58 @@ export const QuickEnergyModal: React.FC<QuickEnergyModalProps> = ({
                     'inset 0 1px 0 rgba(255, 235, 190, 0.22), inset 0 -2px 0 rgba(0, 0, 0, 0.55), 0 3px 8px rgba(0, 0, 0, 0.45)',
                 }}
               >
-                {/* Иконка */}
                 <div
                   style={{
-                    width: '50px',
-                    height: '50px',
-                    borderRadius: '14px',
+                    width: '46px',
+                    height: '46px',
+                    borderRadius: '13px',
                     background: 'radial-gradient(circle at 50% 50%, #1c0e07 0%, #0d0603 100%)',
                     border: '1.5px solid #3d2110',
                     boxShadow: 'inset 0 3px 6px rgba(0, 0, 0, 0.8)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '28px',
+                    fontSize: '24px',
                     flexShrink: 0,
                   }}
                 >
-                  {item.icon}
+                  {config.icon}
                 </div>
 
-                {/* Название и описание */}
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: 800, color: '#fef3c7' }}>
-                      {item.name}
+                    <span style={{ fontSize: '14px', fontWeight: 800, color: '#fef3c7' }}>
+                      {config.name}
                     </span>
                     <span
                       style={{
                         background: 'linear-gradient(135deg, #16a34a, #15803d)',
                         color: '#fff',
-                        fontSize: '9.5px',
+                        fontSize: '9px',
                         fontWeight: 900,
-                        padding: '2px 6px',
+                        padding: '1px 5px',
                         borderRadius: '6px',
-                        boxShadow: '0 2px 4px rgba(22, 163, 74, 0.4)',
                       }}
                     >
-                      +{item.energyBonus} ⚡
+                      +{config.energyBonus} ⚡
                     </span>
                   </div>
-                  <div
-                    style={{
-                      fontSize: '11px',
-                      color: '#d6c0a9',
-                      lineHeight: 1.25,
-                    }}
-                  >
-                    {item.description}
+                  <div style={{ fontSize: '10.5px', color: '#d6c0a9', lineHeight: 1.2 }}>
+                    Сегодня: <strong style={{ color: teaCount >= MAX_DAILY_PROVISION_BUYS ? '#ef4444' : '#86efac' }}>{teaCount}/{MAX_DAILY_PROVISION_BUYS}</strong> • +5 забросов
                   </div>
                 </div>
 
-                {/* Кнопка покупки / применения */}
                 <button
-                  onClick={() => onBuyProvision(item.id)}
+                  onClick={() => onBuyProvision('tea')}
                   disabled={isDisabled}
                   style={{
                     flexShrink: 0,
                     background: isDisabled
                       ? 'rgba(40, 24, 15, 0.8)'
                       : 'linear-gradient(180deg, #f59e0b 0%, #d97706 50%, #b45309 100%)',
-                    border: isDisabled
-                      ? '1.5px solid #3d2110'
-                      : '1.5px solid #fde047',
+                    border: isDisabled ? '1.5px solid #3d2110' : '1.5px solid #fde047',
                     borderRadius: '12px',
-                    padding: '8px 10px',
+                    padding: '7px 8px',
                     color: isDisabled ? '#78716c' : '#ffffff',
                     cursor: isDisabled ? 'not-allowed' : 'pointer',
                     display: 'flex',
@@ -330,23 +340,221 @@ export const QuickEnergyModal: React.FC<QuickEnergyModalProps> = ({
                     boxShadow: isDisabled
                       ? 'none'
                       : '0 0 12px rgba(245, 158, 11, 0.4), 0 2px 6px rgba(0, 0, 0, 0.4)',
-                    minWidth: '72px',
+                    minWidth: '76px',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 900, fontSize: '12px' }}>
-                    <span>{item.price}</span>
-                    <CoinIcon size={12} />
-                  </div>
-                  <span style={{ fontSize: '10px', fontWeight: 800 }}>
-                    {isFull ? 'Сыт' : item.id === 'tea' ? 'Выпить' : 'Съесть'}
-                  </span>
+                  {isTeaLimit ? (
+                    <span style={{ fontSize: '10px', fontWeight: 900, color: '#f87171' }}>Лимит (5/5)</span>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 900, fontSize: '12px' }}>
+                        <span>{teaPrice}</span>
+                        <CoinIcon size={12} />
+                      </div>
+                      <span style={{ fontSize: '9.5px', fontWeight: 800 }}>
+                        {isFull ? 'Сыт' : 'Выпить'}
+                      </span>
+                    </>
+                  )}
                 </button>
               </div>
             );
-          })}
+          })()}
+
+          {/* 2. Бутерброд с ветчиной */}
+          {(() => {
+            const config = PROVISION_CONFIGS.sandwich;
+            const canAfford = sandwichPrice !== null && coins >= sandwichPrice;
+            const isDisabled = isFull || isSandwichLimit || !canAfford;
+
+            return (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '9px 12px',
+                  borderRadius: '16px',
+                  background: 'linear-gradient(180deg, #6c3b1b 0%, #512a12 50%, #3e1e0b 100%)',
+                  border: '1.5px solid #2f170a',
+                  boxShadow:
+                    'inset 0 1px 0 rgba(255, 235, 190, 0.22), inset 0 -2px 0 rgba(0, 0, 0, 0.55), 0 3px 8px rgba(0, 0, 0, 0.45)',
+                }}
+              >
+                <div
+                  style={{
+                    width: '46px',
+                    height: '46px',
+                    borderRadius: '13px',
+                    background: 'radial-gradient(circle at 50% 50%, #1c0e07 0%, #0d0603 100%)',
+                    border: '1.5px solid #3d2110',
+                    boxShadow: 'inset 0 3px 6px rgba(0, 0, 0, 0.8)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '24px',
+                    flexShrink: 0,
+                  }}
+                >
+                  {config.icon}
+                </div>
+
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 800, color: '#fef3c7' }}>
+                      {config.name}
+                    </span>
+                    <span
+                      style={{
+                        background: 'linear-gradient(135deg, #16a34a, #15803d)',
+                        color: '#fff',
+                        fontSize: '9px',
+                        fontWeight: 900,
+                        padding: '1px 5px',
+                        borderRadius: '6px',
+                      }}
+                    >
+                      +{config.energyBonus} ⚡
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '10.5px', color: '#d6c0a9', lineHeight: 1.2 }}>
+                    Сегодня: <strong style={{ color: sandwichCount >= MAX_DAILY_PROVISION_BUYS ? '#ef4444' : '#86efac' }}>{sandwichCount}/{MAX_DAILY_PROVISION_BUYS}</strong> • +10 забросов
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => onBuyProvision('sandwich')}
+                  disabled={isDisabled}
+                  style={{
+                    flexShrink: 0,
+                    background: isDisabled
+                      ? 'rgba(40, 24, 15, 0.8)'
+                      : 'linear-gradient(180deg, #f59e0b 0%, #d97706 50%, #b45309 100%)',
+                    border: isDisabled ? '1.5px solid #3d2110' : '1.5px solid #fde047',
+                    borderRadius: '12px',
+                    padding: '7px 8px',
+                    color: isDisabled ? '#78716c' : '#ffffff',
+                    cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '2px',
+                    boxShadow: isDisabled
+                      ? 'none'
+                      : '0 0 12px rgba(245, 158, 11, 0.4), 0 2px 6px rgba(0, 0, 0, 0.4)',
+                    minWidth: '76px',
+                  }}
+                >
+                  {isSandwichLimit ? (
+                    <span style={{ fontSize: '10px', fontWeight: 900, color: '#f87171' }}>Лимит (5/5)</span>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 900, fontSize: '12px' }}>
+                        <span>{sandwichPrice}</span>
+                        <CoinIcon size={12} />
+                      </div>
+                      <span style={{ fontSize: '9.5px', fontWeight: 800 }}>
+                        {isFull ? 'Сыт' : 'Съесть'}
+                      </span>
+                    </>
+                  )}
+                </button>
+              </div>
+            );
+          })()}
+
+          {/* 3. Особый энергетик за Алмазы (безлимитно!) */}
+          {onBuyEnergyWithGems && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '9px 12px',
+                borderRadius: '16px',
+                background: 'linear-gradient(180deg, #1e1b4b 0%, #1e1136 50%, #130a24 100%)',
+                border: '1.5px solid #6366f1',
+                boxShadow:
+                  '0 0 14px rgba(99, 102, 241, 0.25), inset 0 1px 0 rgba(199, 210, 254, 0.25), 0 3px 8px rgba(0, 0, 0, 0.45)',
+              }}
+            >
+              <div
+                style={{
+                  width: '46px',
+                  height: '46px',
+                  borderRadius: '13px',
+                  background: 'radial-gradient(circle at 50% 50%, #312e81 0%, #1e1b4b 100%)',
+                  border: '1.5px solid #818cf8',
+                  boxShadow: 'inset 0 2px 6px rgba(0, 0, 0, 0.8)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '24px',
+                  flexShrink: 0,
+                }}
+              >
+                ⚡
+              </div>
+
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: 800, color: '#e0e7ff' }}>
+                    Энергетик егеря
+                  </span>
+                  <span
+                    style={{
+                      background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                      color: '#fff',
+                      fontSize: '9px',
+                      fontWeight: 900,
+                      padding: '1px 5px',
+                      borderRadius: '6px',
+                    }}
+                  >
+                    +100 ⚡ (МАКС)
+                  </span>
+                </div>
+                <div style={{ fontSize: '10.5px', color: '#c7d2fe', lineHeight: 1.2 }}>
+                  Полный бак энергии • Без лимитов в день!
+                </div>
+              </div>
+
+              <button
+                onClick={() => onBuyEnergyWithGems()}
+                disabled={isFull || gems < GEMS_ENERGY_DRINK_COST}
+                style={{
+                  flexShrink: 0,
+                  background: isFull || gems < GEMS_ENERGY_DRINK_COST
+                    ? 'rgba(30, 27, 75, 0.8)'
+                    : 'linear-gradient(180deg, #6366f1 0%, #4f46e5 50%, #3730a3 100%)',
+                  border: isFull || gems < GEMS_ENERGY_DRINK_COST ? '1.5px solid #3730a3' : '1.5px solid #a5b4fc',
+                  borderRadius: '12px',
+                  padding: '7px 8px',
+                  color: isFull || gems < GEMS_ENERGY_DRINK_COST ? '#64748b' : '#ffffff',
+                  cursor: isFull || gems < GEMS_ENERGY_DRINK_COST ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '2px',
+                  boxShadow: isFull || gems < GEMS_ENERGY_DRINK_COST
+                    ? 'none'
+                    : '0 0 12px rgba(99, 102, 241, 0.4), 0 2px 6px rgba(0, 0, 0, 0.4)',
+                  minWidth: '76px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 900, fontSize: '12px' }}>
+                  <span>{GEMS_ENERGY_DRINK_COST}</span>
+                  <span>💎</span>
+                </div>
+                <span style={{ fontSize: '9.5px', fontWeight: 800 }}>
+                  {isFull ? 'Сыт' : 'Полный бак'}
+                </span>
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Нижняя строчка с балансом монет */}
+        {/* Нижняя строчка с балансом монет и алмазов */}
         <div
           style={{
             display: 'flex',
@@ -356,13 +564,18 @@ export const QuickEnergyModal: React.FC<QuickEnergyModalProps> = ({
             borderTop: '1px solid rgba(198, 146, 75, 0.25)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#fef3c7' }}>
-            <span>Ваш баланс:</span>
-            <span style={{ fontWeight: 800, color: '#fbbf24' }}>{coins}</span>
-            <CoinIcon size={14} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', color: '#fef3c7' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ fontWeight: 800, color: '#fbbf24' }}>{coins}</span>
+              <CoinIcon size={14} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ fontWeight: 800, color: '#a5b4fc' }}>{gems}</span>
+              <span style={{ fontSize: '12px' }}>💎</span>
+            </div>
           </div>
-          <span style={{ fontSize: '11px', color: '#a8a29e' }}>
-            Расход: 5 ⚡ на заброс
+          <span style={{ fontSize: '10.5px', color: '#a8a29e' }}>
+            Сброс цен: в 00:00
           </span>
         </div>
       </div>

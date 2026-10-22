@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { CaughtFishItem } from '../components/InventoryScreen';
-import { PROVISIONS } from '../data/provisionsData';
+import { getTodayDateString } from '../types/quests';
+import {
+  getProvisionPrice,
+  PROVISION_CONFIGS,
+  type DailyProvisionsState,
+  GEMS_ENERGY_DRINK_COST,
+} from '../data/provisionsData';
 
 export interface FishJournalEntry {
   fishId: string;
@@ -86,6 +92,44 @@ export function usePlayerState() {
     const parsed = Number(val);
     return !isNaN(parsed) && parsed >= 0 ? parsed : 120;
   });
+
+  // Суточный учёт покупок чая и бутербродов (максимум 5 в день со ступенчатой ценой)
+  const [dailyProvisions, setDailyProvisions] = useState<DailyProvisionsState>(() => {
+    const today = getTodayDateString();
+    try {
+      const saved = localStorage.getItem('fg_daily_provisions');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.date === today) {
+          return {
+            date: today,
+            teaBoughtCount: Number(parsed.teaBoughtCount) || 0,
+            sandwichBoughtCount: Number(parsed.sandwichBoughtCount) || 0,
+          };
+        }
+      }
+    } catch {
+      // fallback
+    }
+    return { date: today, teaBoughtCount: 0, sandwichBoughtCount: 0 };
+  });
+
+  // Автоматический сброс счётчиков покупок еды в полночь при смене даты
+  useEffect(() => {
+    const checkDay = () => {
+      const today = getTodayDateString();
+      setDailyProvisions((prev) => {
+        if (prev.date !== today) {
+          const fresh = { date: today, teaBoughtCount: 0, sandwichBoughtCount: 0 };
+          localStorage.setItem('fg_daily_provisions', JSON.stringify(fresh));
+          return fresh;
+        }
+        return prev;
+      });
+    };
+    const timer = setInterval(checkDay, 10000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Рыболовный журнал (Энциклопедия видов и трофеев)
   const [journal, setJournal] = useState<FishJournal>(() => {
@@ -312,18 +356,26 @@ export function usePlayerState() {
     });
   }, [expToNextLevel, maxEnergy]);
 
-  // Продажа одной рыбы
+  // Продажа одной рыбы (трофеи дают бонус в алмазах!)
   const sellFish = useCallback((uid: string, fallbackPrice?: number) => {
     const targetItem = inventory.find((item) => item.uid === uid);
     const amountToCredit = targetItem
       ? (Number(targetItem.price) || Number(fallbackPrice) || 1)
       : (Number(fallbackPrice) || 1);
 
+    if (targetItem?.sizeCategory === 'trophy') {
+      setGems((prev) => {
+        const next = prev + 5;
+        localStorage.setItem('fg_gems', next.toString());
+        return next;
+      });
+    }
+
     setCoins((prevCoins) => prevCoins + amountToCredit);
     setInventory((prevInv) => prevInv.filter((item) => item.uid !== uid));
   }, [inventory]);
 
-  // Продажа всего садка (прямой расчёт без сайд-эффектов в апдейтере)
+  // Продажа всего садка (трофеи приносят по +5 💎 за штуку!)
   const sellAllFish = useCallback((): number => {
     if (inventory.length === 0) return 0;
 
@@ -331,6 +383,15 @@ export function usePlayerState() {
       (sum, item) => sum + (Number(item.price) || 1),
       0
     );
+
+    const trophyCount = inventory.filter((item) => item.sizeCategory === 'trophy').length;
+    if (trophyCount > 0) {
+      setGems((prev) => {
+        const next = prev + trophyCount * 5;
+        localStorage.setItem('fg_gems', next.toString());
+        return next;
+      });
+    }
 
     setCoins((prevCoins) => prevCoins + totalEarned);
     setInventory([]);
@@ -412,17 +473,50 @@ export function usePlayerState() {
   }, [maxEnergy]);
 
   const buyProvision = useCallback((provisionId: 'tea' | 'sandwich'): boolean => {
-    const item = PROVISIONS.find((p) => p.id === provisionId);
-    if (!item) return false;
     if (energy >= maxEnergy) return false;
-    if (coins < item.price) return false;
 
-    if (spendCoins(item.price)) {
-      restoreEnergy(item.energyBonus);
+    const today = getTodayDateString();
+    let currentProvisions = dailyProvisions;
+    if (currentProvisions.date !== today) {
+      currentProvisions = { date: today, teaBoughtCount: 0, sandwichBoughtCount: 0 };
+    }
+
+    const boughtCount = provisionId === 'tea' ? currentProvisions.teaBoughtCount : currentProvisions.sandwichBoughtCount;
+    const price = getProvisionPrice(provisionId, boughtCount);
+    if (price === null) return false; // Лимит 5 покупок на сегодня исчерпан
+    if (coins < price) return false;
+
+    if (spendCoins(price)) {
+      const config = PROVISION_CONFIGS[provisionId];
+      restoreEnergy(config.energyBonus);
+
+      const nextProvisions = {
+        ...currentProvisions,
+        date: today,
+        teaBoughtCount: provisionId === 'tea' ? currentProvisions.teaBoughtCount + 1 : currentProvisions.teaBoughtCount,
+        sandwichBoughtCount: provisionId === 'sandwich' ? currentProvisions.sandwichBoughtCount + 1 : currentProvisions.sandwichBoughtCount,
+      };
+      setDailyProvisions(nextProvisions);
+      localStorage.setItem('fg_daily_provisions', JSON.stringify(nextProvisions));
       return true;
     }
     return false;
-  }, [coins, energy, maxEnergy, spendCoins, restoreEnergy]);
+  }, [coins, energy, maxEnergy, dailyProvisions, spendCoins, restoreEnergy]);
+
+  // Восстановление полного запаса энергии за кристаллы (20 💎)
+  const buyEnergyWithGems = useCallback((): boolean => {
+    if (energy >= maxEnergy) return false;
+    if (gems < GEMS_ENERGY_DRINK_COST) return false;
+
+    setGems((prev) => {
+      const nextGems = prev - GEMS_ENERGY_DRINK_COST;
+      localStorage.setItem('fg_gems', nextGems.toString());
+      return nextGems;
+    });
+
+    restoreEnergy(maxEnergy);
+    return true;
+  }, [gems, energy, maxEnergy, restoreEnergy]);
 
   const claimAllSpeciesReward = useCallback((): boolean => {
     if (hasClaimedAllSpeciesReward) return false;
@@ -445,11 +539,13 @@ export function usePlayerState() {
     energy,
     maxEnergy,
     secondsToNextEnergy,
+    dailyProvisions,
     maxKeepnetCapacity,
     isKeepnetFull: inventory.length >= maxKeepnetCapacity,
     spendEnergy,
     restoreEnergy,
     buyProvision,
+    buyEnergyWithGems,
     inventory,
     inventoryCount: inventory.length,
     journal,
