@@ -534,134 +534,125 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
         )}
 
         {gameState === 'reeling' && (
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              width: '100%',
-              height: '60px',
+          <button
+            onMouseDown={handlePullStart}
+            onMouseUp={handlePullEnd}
+            onTouchStart={handlePullStart}
+            onTouchEnd={handlePullEnd}
+            onMouseLeave={() => {
+              if (isPulling) handlePullEnd();
             }}
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: '52px',
+              background: isPulling
+                ? 'linear-gradient(180deg, #b91c1c 0%, #991b1b 50%, #7f1d1d 100%)'
+                : 'linear-gradient(180deg, #ef4444 0%, #dc2626 50%, #991b1b 100%)',
+              border: isPulling ? '2.5px solid #fbbf24' : '2px solid #fca5a5',
+              borderRadius: '24px',
+              color: '#ffffff',
+              fontSize: '17px',
+              fontWeight: 900,
+              cursor: 'pointer',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              WebkitTapHighlightColor: 'transparent',
+              outline: 'none',
+              boxShadow: isPulling
+                ? '0 0 26px rgba(245, 158, 11, 0.8), inset 0 2px 8px rgba(0, 0, 0, 0.6)'
+                : '0 0 24px rgba(239, 68, 68, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4)',
+              transform: isPulling ? 'scale(0.97) translateY(1px)' : 'scale(1)',
+              animation: isPulling ? 'pullButtonJitter 0.15s infinite linear' : 'none',
+              transition: isPulling ? 'none' : 'transform 0.1s ease, box-shadow 0.1s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0 16px',
+            }}
+            title="Зажмите и удерживайте, чтобы тянуть леску"
           >
-            <button
-              onMouseDown={handlePullStart}
-              onMouseUp={handlePullEnd}
-              onTouchStart={handlePullStart}
-              onTouchEnd={handlePullEnd}
-              onMouseLeave={() => {
-                if (isPulling) handlePullEnd();
-              }}
+            {/* 3D Катушка слева на кнопке */}
+            <div
               style={{
-                position: 'relative',
-                height: '60px',
-                width: 'auto',
-                aspectRatio: '1211 / 513',
-                maxWidth: '100%',
-                background: 'transparent',
-                border: 'none',
-                padding: 0,
-                margin: 0,
-                cursor: 'pointer',
-                userSelect: 'none',
-                WebkitUserSelect: 'none',
-                WebkitTapHighlightColor: 'transparent',
-                outline: 'none',
-                animation: isPulling ? 'pullButtonJitter 0.15s infinite linear' : 'none',
-                transform: isPulling ? 'scale(0.96) translateY(2px)' : 'scale(1)',
-                filter: isPulling
-                  ? 'drop-shadow(0 0 22px rgba(245, 158, 11, 0.9)) brightness(1.08)'
-                  : 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.55))',
-                transition: isPulling ? 'none' : 'transform 0.1s ease, filter 0.1s ease',
+                position: 'absolute',
+                left: '8px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                pointerEvents: 'none',
               }}
-              title="Зажмите и удерживайте, чтобы тянуть леску"
             >
               <img
-                src="/assets/ui/btn_pull_reel.png"
-                alt="ТЯНУТЬ!"
+                src="/assets/ui/reel_angle_side.png"
+                alt="Катушка"
                 draggable={false}
                 style={{
                   width: '100%',
                   height: '100%',
                   objectFit: 'contain',
-                  display: 'block',
-                  pointerEvents: 'none',
+                  filter: isPulling
+                    ? 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.9))'
+                    : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5))',
                 }}
               />
 
-              {/* Анимация крутящейся катушки при удержании */}
+              {/* Анимация вращения катушки при вываживании */}
               <div
                 style={{
                   position: 'absolute',
-                  left: '19.3%',
-                  top: '52.5%',
-                  width: '42px',
-                  height: '42px',
-                  transform: 'translate(-50%, -50%)',
+                  inset: '2px',
+                  borderRadius: '50%',
                   pointerEvents: 'none',
                   opacity: isPulling ? 1 : 0,
-                  transition: 'opacity 0.12s ease',
+                  transition: 'opacity 0.1s ease',
                   mixBlendMode: 'screen',
                 }}
               >
-                {/* Анизотропный вращающийся золотистый блик */}
+                {/* Анизотропный золотистый блик */}
                 <div
                   style={{
                     position: 'absolute',
-                    left: '50%',
-                    top: '50%',
-                    width: '34px',
-                    height: '34px',
+                    inset: 0,
                     borderRadius: '50%',
                     background:
-                      'conic-gradient(from 0deg, rgba(255, 235, 170, 0.85) 0deg, transparent 40deg, rgba(255, 215, 100, 0.95) 90deg, transparent 130deg, rgba(255, 235, 170, 0.85) 180deg, transparent 220deg, rgba(255, 215, 100, 0.95) 270deg, transparent 310deg, rgba(255, 235, 170, 0.85) 360deg)',
-                    animation: isPulling ? 'reelSpoolSpin 0.24s linear infinite' : 'none',
+                      'conic-gradient(from 0deg, rgba(255, 235, 170, 0.85) 0deg, transparent 45deg, rgba(255, 215, 100, 0.95) 90deg, transparent 135deg, rgba(255, 235, 170, 0.85) 180deg, transparent 225deg, rgba(255, 215, 100, 0.95) 270deg, transparent 315deg, rgba(255, 235, 170, 0.85) 360deg)',
+                    animation: isPulling ? 'reelSpoolSpin 0.22s linear infinite' : 'none',
                     filter: 'blur(1px)',
                   }}
                 />
-                {/* Внутренние кольца шпули с обратным вращением */}
+                {/* Шпуля */}
                 <div
                   style={{
                     position: 'absolute',
-                    left: '50%',
-                    top: '50%',
-                    width: '22px',
-                    height: '22px',
+                    inset: '6px',
                     borderRadius: '50%',
                     border: '1.5px dashed rgba(253, 224, 71, 0.75)',
                     boxShadow: 'inset 0 0 6px rgba(245, 158, 11, 0.6)',
-                    animation: isPulling ? 'reelSpoolSpin 0.18s linear infinite reverse' : 'none',
+                    animation: isPulling ? 'reelSpoolSpin 0.16s linear infinite reverse' : 'none',
                   }}
                 />
-                {/* Вращающаяся рукоять катушки */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: '50%',
-                    top: '50%',
-                    width: '32px',
-                    height: '32px',
-                    pointerEvents: 'none',
-                    animation: isPulling ? 'reelKnobSpin 0.24s linear infinite' : 'none',
-                  }}
-                >
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '2px',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: '6px',
-                      height: '6px',
-                      borderRadius: '50%',
-                      background:
-                        'radial-gradient(circle at 35% 35%, #ffffff 0%, #fbbf24 60%, #b45309 100%)',
-                      boxShadow: '0 0 4px rgba(251, 191, 36, 0.9)',
-                    }}
-                  />
-                </div>
               </div>
-            </button>
-          </div>
+            </div>
+
+            {/* Текст кнопки по центру */}
+            <span
+              style={{
+                fontSize: '17px',
+                fontWeight: 900,
+                letterSpacing: '1px',
+                textShadow: isPulling
+                  ? '0 2px 4px rgba(0,0,0,0.8), 0 0 12px rgba(251, 191, 36, 0.8)'
+                  : '0 2px 4px rgba(0,0,0,0.6)',
+              }}
+            >
+              ТЯНУТЬ! 🔄
+            </span>
+          </button>
         )}
       </div>
 

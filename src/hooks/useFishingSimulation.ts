@@ -330,8 +330,9 @@ export function useFishingSimulation({
       const outOfZoneDrain = isOverloaded ? -0.65 : -0.4;
 
       const inZone = tensionRef.current >= curStart && tensionRef.current <= curEnd;
+      // Комфортная скорость подмотки: 7-11 секунд активного вываживания
       progressRef.current += inZone
-        ? 1.0 * reelSpeedRef.current * sizeSpeedModifier * overloadProgressMod
+        ? 0.45 * reelSpeedRef.current * sizeSpeedModifier * overloadProgressMod
         : outOfZoneDrain;
 
       if (tensionRef.current >= 100 || tensionRef.current <= 0 || progressRef.current <= 0) {
