@@ -15,17 +15,17 @@ interface RangerQuestsModalProps {
 
 const QUEST_CONFIGS = [
   {
-    titleTop: '46.0%',
+    titleTop: '46.2%',
     progressTop: '50.6%',
     buttonTop: '50.6%',
   },
   {
-    titleTop: '60.1%',
+    titleTop: '60.3%',
     progressTop: '64.7%',
     buttonTop: '64.7%',
   },
   {
-    titleTop: '74.2%',
+    titleTop: '74.4%',
     progressTop: '78.8%',
     buttonTop: '78.8%',
   },
@@ -95,25 +95,23 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
           }}
         />
 
-        {/* Живые цифры обратного отсчета в пергаментном окне */}
+        {/* Живые цифры обратного отсчета справа от надписи «Новые заказы:» */}
         <div
           style={{
             position: 'absolute',
-            left: '56.5%',
+            left: '58.5%',
             top: '23.0%',
             width: '21.0%',
             height: '3.1%',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            background: '#ceae7e',
-            color: '#2b1204',
+            justifyContent: 'flex-start',
+            color: '#2a1103',
             fontWeight: 900,
-            fontSize: 'clamp(11px, 2.3vw, 15px)',
+            fontSize: 'clamp(11px, 2.2vw, 15px)',
             fontFamily: 'system-ui, -apple-system, sans-serif',
-            borderRadius: '6px',
             pointerEvents: 'none',
-            boxShadow: 'inset 0 1px 2px rgba(60, 30, 10, 0.25)',
+            letterSpacing: '0.4px',
           }}
         >
           {timeUntilMidnight}
@@ -215,19 +213,19 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
 
           return (
             <React.Fragment key={quest.id || idx}>
-              {/* Заголовок квеста */}
+              {/* Заголовок квеста с отступом справа от медальона */}
               <div
                 style={{
                   position: 'absolute',
-                  left: '40.0%',
+                  left: '43.0%',
                   top: config.titleTop,
-                  width: '39.0%',
+                  width: '47.0%',
                   height: '3.8%',
                   display: 'flex',
                   alignItems: 'center',
                   color: '#ffffff',
                   fontWeight: 900,
-                  fontSize: 'clamp(12px, 2.7vw, 16px)',
+                  fontSize: 'clamp(12px, 2.6vw, 16px)',
                   lineHeight: 1.15,
                   textShadow: '0 2px 4px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.7)',
                   whiteSpace: 'nowrap',
@@ -243,9 +241,9 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
               <div
                 style={{
                   position: 'absolute',
-                  left: '39.0%',
+                  left: '43.0%',
                   top: config.progressTop,
-                  width: '22.0%',
+                  width: '26.0%',
                   height: '3.85%',
                   background: '#2b1407',
                   borderRadius: '14px',
@@ -297,9 +295,9 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
               <div
                 style={{
                   position: 'absolute',
-                  left: '62.5%',
+                  left: '71.0%',
                   top: config.buttonTop,
-                  width: '18.5%',
+                  width: '20.0%',
                   height: '3.85%',
                   display: 'flex',
                   alignItems: 'center',
@@ -312,7 +310,7 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
                       width: '100%',
                       height: '100%',
                       borderRadius: '12px',
-                      background: 'rgba(20, 10, 5, 0.8)',
+                      background: 'rgba(20, 10, 5, 0.85)',
                       border: '1px solid rgba(74, 222, 128, 0.45)',
                       color: '#4ade80',
                       fontWeight: 900,
