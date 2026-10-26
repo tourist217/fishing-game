@@ -46,25 +46,27 @@ export interface UpgradesState {
   reelOilLevel: number;
 }
 
+// Интервал авто-восстановления червей: 1 червь каждые 2 минуты до лимита 3 шт.
+export const WORM_REGEN_INTERVAL_MS = 120000; // 2 минуты (120 000 мс)
+export const MAX_AUTO_REGEN_WORMS = 3;
+
 export function useBaitState(
   coins?: number,
   spendCoins?: (amount: number) => boolean,
   triggerHaptic?: (type: 'impact' | 'notification' | 'selection') => void
 ) {
-  // 1. Количество каждой наживки
+  // 1. Временная метка для регенерации червей
+  const [lastWormTimestamp, setLastWormTimestamp] = useState<number>(() => {
+    const val = localStorage.getItem('fg_worm_timestamp');
+    const parsed = Number(val);
+    return !isNaN(parsed) && parsed > 0 ? parsed : Date.now();
+  });
+
+  const [secondsToNextWorm, setSecondsToNextWorm] = useState<number>(0);
+
+  // 2. Количество каждой наживки (с офлайн-расчётом червей при загрузке)
   const [baits, setBaits] = useState<Record<string, number>>(() => {
-    try {
-      const saved = localStorage.getItem('fg_baits');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (typeof parsed === 'object' && parsed !== null) {
-          return parsed;
-        }
-      }
-    } catch {
-      // fallback
-    }
-    return {
+    let initialBaits: Record<string, number> = {
       worm: 10,
       bread: 5,
       dough: 5,
@@ -73,6 +75,44 @@ export function useBaitState(
       bloodworm: 0,
       livebait: 0,
     };
+
+    try {
+      const saved = localStorage.getItem('fg_baits');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed === 'object' && parsed !== null) {
+          initialBaits = { ...initialBaits, ...parsed };
+        }
+      }
+    } catch {
+      // fallback
+    }
+
+    // Офлайн-восстановление червей, если их меньше 3
+    const currentWorms = initialBaits.worm || 0;
+    if (currentWorms < MAX_AUTO_REGEN_WORMS) {
+      const tsVal = localStorage.getItem('fg_worm_timestamp');
+      const lastTs = Number(tsVal);
+      if (!isNaN(lastTs) && lastTs > 0) {
+        const now = Date.now();
+        const elapsed = Math.max(0, now - lastTs);
+        const wormsToAdd = Math.floor(elapsed / WORM_REGEN_INTERVAL_MS);
+        if (wormsToAdd > 0) {
+          const restored = Math.min(MAX_AUTO_REGEN_WORMS, currentWorms + wormsToAdd);
+          const remainder = elapsed % WORM_REGEN_INTERVAL_MS;
+          const newTs = now - remainder;
+          localStorage.setItem('fg_worm_timestamp', newTs.toString());
+          initialBaits.worm = restored;
+          localStorage.setItem('fg_baits', JSON.stringify(initialBaits));
+        }
+      } else {
+        localStorage.setItem('fg_worm_timestamp', Date.now().toString());
+      }
+    } else {
+      localStorage.setItem('fg_worm_timestamp', Date.now().toString());
+    }
+
+    return initialBaits;
   });
 
   // 2. Выбранная активная насадка
@@ -107,6 +147,53 @@ export function useBaitState(
   useEffect(() => {
     localStorage.setItem('fg_upgrades', JSON.stringify(upgrades));
   }, [upgrades]);
+
+  // Таймер регенерации червей в реальном времени (до 3 шт. каждые 2 минуты)
+  useEffect(() => {
+    const checkWormRegen = () => {
+      setBaits((prev) => {
+        const currentWorms = prev.worm || 0;
+        const now = Date.now();
+
+        if (currentWorms >= MAX_AUTO_REGEN_WORMS) {
+          setSecondsToNextWorm(0);
+          setLastWormTimestamp(now);
+          localStorage.setItem('fg_worm_timestamp', now.toString());
+          return prev;
+        }
+
+        const elapsed = Math.max(0, now - lastWormTimestamp);
+        const wormsToAdd = Math.floor(elapsed / WORM_REGEN_INTERVAL_MS);
+
+        if (wormsToAdd > 0) {
+          const nextWorms = Math.min(MAX_AUTO_REGEN_WORMS, currentWorms + wormsToAdd);
+          const remainder = elapsed % WORM_REGEN_INTERVAL_MS;
+          const nextTs = now - remainder;
+          setLastWormTimestamp(nextTs);
+          localStorage.setItem('fg_worm_timestamp', nextTs.toString());
+
+          const nextState = {
+            ...prev,
+            worm: nextWorms,
+          };
+          baitsRef.current = nextState;
+          localStorage.setItem('fg_baits', JSON.stringify(nextState));
+
+          const secs = nextWorms >= MAX_AUTO_REGEN_WORMS ? 0 : Math.ceil((WORM_REGEN_INTERVAL_MS - remainder) / 1000);
+          setSecondsToNextWorm(secs);
+          return nextState;
+        } else {
+          const secs = Math.ceil((WORM_REGEN_INTERVAL_MS - (elapsed % WORM_REGEN_INTERVAL_MS)) / 1000);
+          setSecondsToNextWorm(secs);
+          return prev;
+        }
+      });
+    };
+
+    checkWormRegen();
+    const timer = setInterval(checkWormRegen, 1000);
+    return () => clearInterval(timer);
+  }, [lastWormTimestamp]);
 
   // Вместимость одной банки (3 шт. на старте, до 15 шт. на макс. уровне)
   const currentBaitCapacity = getBaitCapacity(upgrades.baitCapacityLevel);
@@ -183,6 +270,17 @@ export function useBaitState(
       setBaits(nextBaits);
       localStorage.setItem('fg_baits', JSON.stringify(nextBaits));
 
+      if (baitId === 'worm' && nextBaits.worm < MAX_AUTO_REGEN_WORMS) {
+        const now = Date.now();
+        setLastWormTimestamp((prev) => {
+          if (currentCount >= MAX_AUTO_REGEN_WORMS) {
+            localStorage.setItem('fg_worm_timestamp', now.toString());
+            return now;
+          }
+          return prev;
+        });
+      }
+
       return true;
     },
     []
@@ -227,5 +325,6 @@ export function useBaitState(
     upgrades,
     currentBaitCapacity,
     buyUpgrade,
+    secondsToNextWorm,
   };
 }
