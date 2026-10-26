@@ -28,11 +28,26 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
   const getDifficultyBadge = (difficulty: DailyQuest['difficulty']) => {
     switch (difficulty) {
       case 'easy':
-        return { label: 'Обычный заказ', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.15)' };
+        return {
+          label: 'Обычный заказ',
+          color: '#ffffff',
+          bg: 'linear-gradient(90deg, #0284c7 0%, #0369a1 100%)',
+          border: '#38bdf8',
+        };
       case 'medium':
-        return { label: 'Опытный заказ', color: '#c084fc', bg: 'rgba(192, 132, 252, 0.15)' };
+        return {
+          label: 'Опытный заказ',
+          color: '#ffffff',
+          bg: 'linear-gradient(90deg, #9333ea 0%, #7e22ce 100%)',
+          border: '#c084fc',
+        };
       case 'hard':
-        return { label: 'Мастерский заказ', color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.15)' };
+        return {
+          label: 'Мастерский заказ',
+          color: '#1c1917',
+          bg: 'linear-gradient(90deg, #facc15 0%, #ca8a04 100%)',
+          border: '#fde047',
+        };
     }
   };
 
@@ -54,6 +69,7 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
         userSelect: 'none',
       }}
     >
+      {/* Главный стенд объявлений из тёмного морёного дуба с латунным кантом */}
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
@@ -61,45 +77,70 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
           maxWidth: '360px',
           height: '100%',
           maxHeight: '100%',
-          background: 'linear-gradient(180deg, #152232 0%, #0c1522 100%)',
+          background: 'linear-gradient(180deg, #2b1810 0%, #1c0f0a 60%, #120906 100%)',
           borderRadius: '26px',
-          border: '1.5px solid rgba(255, 255, 255, 0.14)',
-          boxShadow: '0 12px 36px rgba(0, 0, 0, 0.65)',
+          border: '2px solid #854d0e',
+          boxShadow: '0 16px 48px rgba(0, 0, 0, 0.85), inset 0 0 24px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(251, 191, 36, 0.25)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
           position: 'relative',
         }}
       >
-        {/* Шапка модала */}
+        {/* Угловые латунные заклёпки */}
+        <div style={{ position: 'absolute', top: '9px', left: '9px', width: '7px', height: '7px', borderRadius: '50%', background: 'radial-gradient(circle, #fde047 30%, #854d0e 100%)', boxShadow: '0 1px 3px rgba(0,0,0,0.9)', zIndex: 5, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: '9px', right: '9px', width: '7px', height: '7px', borderRadius: '50%', background: 'radial-gradient(circle, #fde047 30%, #854d0e 100%)', boxShadow: '0 1px 3px rgba(0,0,0,0.9)', zIndex: 5, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: '9px', left: '9px', width: '7px', height: '7px', borderRadius: '50%', background: 'radial-gradient(circle, #fde047 30%, #854d0e 100%)', boxShadow: '0 1px 3px rgba(0,0,0,0.9)', zIndex: 5, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: '9px', right: '9px', width: '7px', height: '7px', borderRadius: '50%', background: 'radial-gradient(circle, #fde047 30%, #854d0e 100%)', boxShadow: '0 1px 3px rgba(0,0,0,0.9)', zIndex: 5, pointerEvents: 'none' }} />
+
+        {/* Шапка доски объявлений */}
         <div
           style={{
             padding: '14px 16px 10px 16px',
-            background: 'rgba(30, 41, 59, 0.6)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            background: 'linear-gradient(180deg, rgba(61, 35, 20, 0.85) 0%, rgba(38, 20, 11, 0.85) 100%)',
+            borderBottom: '1px solid rgba(251, 191, 36, 0.2)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img
-              src="/assets/icons/ranger_quests.png"
-              alt="Егерь"
+            <div
               style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '10px',
-                objectFit: 'cover',
-                border: '1.5px solid rgba(251, 191, 36, 0.4)',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+                width: '42px',
+                height: '42px',
+                borderRadius: '12px',
+                padding: '2px',
+                background: 'linear-gradient(135deg, #fbbf24 0%, #78350f 100%)',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.6)',
               }}
-            />
+            >
+              <img
+                src="/assets/icons/ranger_quests.png"
+                alt="Егерь"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '10px',
+                  objectFit: 'cover',
+                  display: 'block',
+                }}
+              />
+            </div>
             <div>
-              <div style={{ fontSize: '15.5px', fontWeight: 900, color: '#ffffff', lineHeight: 1.1 }}>
+              <div
+                style={{
+                  fontSize: '16.5px',
+                  fontWeight: 900,
+                  color: '#fef3c7',
+                  lineHeight: 1.15,
+                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.9), 0 0 10px rgba(251, 191, 36, 0.35)',
+                  letterSpacing: '0.3px',
+                }}
+              >
                 Заказы Егеря
               </div>
-              <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+              <div style={{ fontSize: '11px', color: '#fed7aa', fontWeight: 600, marginTop: '2px' }}>
                 Ежедневные поручения лесничества
               </div>
             </div>
@@ -108,17 +149,19 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
           <button
             onClick={onClose}
             style={{
-              width: '28px',
-              height: '28px',
+              width: '30px',
+              height: '30px',
               borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: 'none',
-              color: '#cbd5e1',
+              background: 'radial-gradient(circle, #3d2314 0%, #1c0f0a 100%)',
+              border: '1.5px solid rgba(251, 191, 36, 0.4)',
+              color: '#fde68a',
               fontSize: '13px',
+              fontWeight: 900,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
             }}
           >
             ✕
@@ -133,23 +176,25 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
             padding: '12px 14px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '10px',
+            gap: '11px',
           }}
         >
-          {/* Реплика Егеря и Таймер обновления */}
+          {/* Реплика Егеря на состаренном пергаментном свитке */}
           <div
             style={{
-              background: 'rgba(15, 23, 42, 0.7)',
+              background: 'linear-gradient(180deg, #fef3c7 0%, #fde68a 65%, #fcd34d 100%)',
               borderRadius: '16px',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              padding: '10px 12px',
+              border: '1px solid #b45309',
+              padding: '11px 13px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '6px',
+              gap: '8px',
+              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.5), inset 0 0 14px rgba(180, 83, 9, 0.22)',
+              position: 'relative',
             }}
           >
-            <div style={{ fontSize: '11.5px', color: '#cbd5e1', lineHeight: 1.45 }}>
-              «Здорово, рыбак! Лес шумит, рыба гуляет. Выполни мои 3 поручения за день — и получишь
+            <div style={{ fontSize: '11.5px', color: '#451a03', fontWeight: 700, lineHeight: 1.45 }}>
+              «<strong style={{ color: '#270d01' }}>Здорово, рыбак!</strong> Лес шумит, рыба гуляет. Выполни мои 3 поручения за день — и получишь
               дополнительную премию от егерской службы!»
             </div>
             <div
@@ -157,20 +202,23 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                paddingTop: '4px',
-                borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                paddingTop: '6px',
+                borderTop: '1px solid rgba(180, 83, 9, 0.25)',
                 fontSize: '11px',
               }}
             >
-              <span style={{ color: '#94a3b8' }}>⏳ Новые заказы через:</span>
+              <span style={{ color: '#78350f', fontWeight: 800 }}>⏳ Новые заказы через:</span>
               <span
                 style={{
                   fontFamily: 'monospace',
                   fontWeight: 900,
-                  color: '#38bdf8',
-                  background: 'rgba(56, 189, 248, 0.12)',
-                  padding: '2px 6px',
+                  fontSize: '12px',
+                  color: '#fef08a',
+                  background: 'rgba(28, 16, 10, 0.88)',
+                  padding: '2px 8px',
                   borderRadius: '6px',
+                  border: '1px solid #78350f',
+                  boxShadow: '0 1px 4px rgba(0, 0, 0, 0.3)',
                 }}
               >
                 {timeUntilMidnight}
@@ -182,24 +230,33 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
           <div
             style={{
               background: canClaimBonus
-                ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.15) 100%)'
-                : 'rgba(20, 28, 42, 0.75)',
+                ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.35) 0%, rgba(180, 83, 9, 0.25) 100%)'
+                : 'linear-gradient(180deg, #381e10 0%, #231209 100%)',
               borderRadius: '18px',
               border: canClaimBonus
-                ? '1.5px solid #f59e0b'
-                : '1px solid rgba(255, 255, 255, 0.1)',
-              padding: '12px',
+                ? '1.5px solid #fbbf24'
+                : '1.5px solid #78350f',
+              padding: '12px 13px',
               display: 'flex',
               flexDirection: 'column',
               gap: '8px',
-              boxShadow: canClaimBonus ? '0 0 18px rgba(245, 158, 11, 0.3)' : 'none',
+              boxShadow: canClaimBonus
+                ? '0 0 20px rgba(245, 158, 11, 0.4), inset 0 0 12px rgba(245, 158, 11, 0.2)'
+                : '0 4px 12px rgba(0, 0, 0, 0.45)',
               transition: 'all 0.2s ease',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ fontSize: '18px' }}>🎖️</span>
-                <span style={{ fontSize: '12.5px', fontWeight: 900, color: '#ffffff' }}>
+                <span
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: 900,
+                    color: '#fef3c7',
+                    textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+                  }}
+                >
                   Премия Егеря за день
                 </span>
               </div>
@@ -207,15 +264,29 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
                 style={{
                   fontSize: '11px',
                   fontWeight: 900,
-                  color: completedCount === 3 ? '#4ade80' : '#f59e0b',
+                  color: completedCount === 3 ? '#4ade80' : '#fbbf24',
+                  background: 'rgba(0, 0, 0, 0.4)',
+                  padding: '2px 8px',
+                  borderRadius: '6px',
+                  border: '1px solid rgba(251, 191, 36, 0.25)',
                 }}
               >
                 {completedCount} / 3 выполнено
               </span>
             </div>
 
-            {/* Сегментированный прогресс-бар */}
-            <div style={{ display: 'flex', gap: '4px', height: '6px' }}>
+            {/* Трёхсегментный прогресс-бар */}
+            <div
+              style={{
+                display: 'flex',
+                gap: '5px',
+                height: '7px',
+                background: '#120906',
+                padding: '1px',
+                borderRadius: '5px',
+                border: '1px solid #451a03',
+              }}
+            >
               {[0, 1, 2].map((idx) => {
                 const isFilled = idx < completedCount;
                 return (
@@ -225,9 +296,9 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
                       flex: 1,
                       borderRadius: '3px',
                       background: isFilled
-                        ? 'linear-gradient(90deg, #4ade80, #22c55e)'
-                        : 'rgba(255, 255, 255, 0.1)',
-                      boxShadow: isFilled ? '0 0 6px rgba(74, 222, 128, 0.5)' : 'none',
+                        ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
+                        : 'rgba(255, 255, 255, 0.06)',
+                      boxShadow: isFilled ? '0 0 8px rgba(251, 191, 36, 0.65)' : 'none',
                     }}
                   />
                 );
@@ -235,11 +306,13 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
             </div>
 
             {/* Награды за премию */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', gap: '6px', fontSize: '11px', fontWeight: 800, alignItems: 'center' }}>
-                <span style={{ color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '3px' }}>+{DAILY_BONUS_REWARD.coins} <CoinIcon size={13} /></span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '2px' }}>
+              <div style={{ display: 'flex', gap: '8px', fontSize: '11.5px', fontWeight: 900, alignItems: 'center' }}>
+                <span style={{ color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                  +{DAILY_BONUS_REWARD.coins} <CoinIcon size={13} />
+                </span>
                 <span style={{ color: '#38bdf8' }}>+{DAILY_BONUS_REWARD.gems} 💎</span>
-                <span style={{ color: '#a78bfa' }}>+{DAILY_BONUS_REWARD.exp} XP</span>
+                <span style={{ color: '#c084fc' }}>+{DAILY_BONUS_REWARD.exp} XP</span>
               </div>
 
               {canClaimBonus && (
@@ -249,31 +322,31 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
                     triggerHaptic('notification');
                   }}
                   style={{
-                    padding: '6px 12px',
+                    padding: '6px 14px',
                     borderRadius: '10px',
-                    border: 'none',
+                    border: '1px solid #fde047',
                     background: 'linear-gradient(135deg, #f59e0b, #d97706)',
                     color: '#ffffff',
                     fontSize: '11px',
                     fontWeight: 900,
                     cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(245, 158, 11, 0.45)',
+                    boxShadow: '0 0 14px rgba(245, 158, 11, 0.6)',
                   }}
                 >
-                  Забрать премию!
+                  Забрать премию! 🎉
                 </button>
               )}
 
               {allCompletedBonusClaimed && (
-                <span style={{ fontSize: '11px', fontWeight: 800, color: '#4ade80' }}>
+                <span style={{ fontSize: '11px', fontWeight: 900, color: '#4ade80' }}>
                   ✓ Награда получена
                 </span>
               )}
             </div>
           </div>
 
-          {/* Список 3 заданий */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
+          {/* Список 3 поручений Егеря */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {quests.map((quest) => {
               const badge = getDifficultyBadge(quest.difficulty);
               const progressRatio = Math.min(1, quest.currentCount / quest.targetCount);
@@ -284,67 +357,92 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
                   key={quest.id}
                   style={{
                     background: quest.isCompleted && !quest.isClaimed
-                      ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(15, 23, 42, 0.85) 100%)'
-                      : 'rgba(20, 28, 42, 0.65)',
+                      ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.22) 0%, rgba(35, 18, 9, 0.95) 100%)'
+                      : 'linear-gradient(180deg, #351c10 0%, #201008 100%)',
                     borderRadius: '18px',
                     border: quest.isCompleted && !quest.isClaimed
                       ? '1.5px solid #22c55e'
-                      : '1px solid rgba(255, 255, 255, 0.09)',
-                    padding: '11px 12px',
+                      : '1.5px solid #6c3b1a',
+                    padding: '12px',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '7px',
+                    gap: '8px',
                     boxShadow: quest.isCompleted && !quest.isClaimed
-                      ? '0 0 14px rgba(34, 197, 94, 0.25)'
-                      : 'none',
+                      ? '0 0 16px rgba(34, 197, 94, 0.35)'
+                      : '0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.08)',
+                    position: 'relative',
                   }}
                 >
-                  {/* Верхняя строка карточки: бейдж сложности и иконка */}
+                  {/* Верхняя строка: Лента категории сложности и Награды */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '18px' }}>{quest.icon}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span
                         style={{
-                          fontSize: '9.5px',
-                          fontWeight: 800,
+                          fontSize: '10px',
+                          fontWeight: 900,
                           color: badge.color,
                           background: badge.bg,
-                          padding: '2px 6px',
+                          border: `1px solid ${badge.border}`,
+                          padding: '2px 8px',
                           borderRadius: '6px',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.4)',
+                          letterSpacing: '0.3px',
                         }}
                       >
                         {badge.label}
                       </span>
                     </div>
 
-                    {/* Награда */}
-                    <div style={{ display: 'flex', gap: '6px', fontSize: '11px', fontWeight: 800, alignItems: 'center' }}>
-                      <span style={{ color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '3px' }}>+{quest.rewardCoins} <CoinIcon size={13} /></span>
+                    {/* Награда за заказ */}
+                    <div style={{ display: 'flex', gap: '7px', fontSize: '11px', fontWeight: 900, alignItems: 'center' }}>
+                      <span style={{ color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        +{quest.rewardCoins} <CoinIcon size={13} />
+                      </span>
                       {quest.rewardGems && quest.rewardGems > 0 && (
                         <span style={{ color: '#38bdf8' }}>+{quest.rewardGems} 💎</span>
                       )}
-                      <span style={{ color: '#a78bfa' }}>+{quest.rewardExp} XP</span>
+                      <span style={{ color: '#c084fc' }}>+{quest.rewardExp} XP</span>
                     </div>
                   </div>
 
-                  {/* Название и описание */}
-                  <div>
-                    <div style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff' }}>
-                      {quest.title}
+                  {/* Тело карточки: Иконка в круглом колодце + Описание */}
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <div
+                      style={{
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '50%',
+                        background: 'radial-gradient(circle, #25130b 40%, #0d0603 100%)',
+                        border: '1.5px solid #854d0e',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '20px',
+                        flexShrink: 0,
+                        boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.5)',
+                      }}
+                    >
+                      {quest.icon}
                     </div>
-                    <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px', lineHeight: 1.35 }}>
-                      {quest.description}
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '13.5px', fontWeight: 900, color: '#ffffff', lineHeight: 1.2 }}>
+                        {quest.title}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#fed7aa', marginTop: '2px', lineHeight: 1.35, opacity: 0.9 }}>
+                        {quest.description}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Прогресс-бар */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                  {/* Прогресс-бар с заполнением */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', marginTop: '2px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10.5px' }}>
-                      <span style={{ color: '#64748b' }}>Прогресс</span>
+                      <span style={{ color: '#a8a29e', fontWeight: 700 }}>Прогресс</span>
                       <span
                         style={{
-                          fontWeight: 800,
-                          color: quest.isCompleted ? '#4ade80' : '#cbd5e1',
+                          fontWeight: 900,
+                          color: quest.isCompleted ? '#4ade80' : '#fde047',
                         }}
                       >
                         {quest.currentCount} / {quest.targetCount}
@@ -352,10 +450,11 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
                     </div>
                     <div
                       style={{
-                        height: '6px',
-                        background: 'rgba(255, 255, 255, 0.08)',
-                        borderRadius: '3px',
+                        height: '7px',
+                        background: '#120906',
+                        borderRadius: '4px',
                         overflow: 'hidden',
+                        border: '1px solid #451a03',
                       }}
                     >
                       <div
@@ -363,16 +462,19 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
                           height: '100%',
                           width: `${progressPercent}%`,
                           background: quest.isCompleted
-                            ? 'linear-gradient(90deg, #4ade80, #22c55e)'
-                            : 'linear-gradient(90deg, #38bdf8, #0284c7)',
-                          borderRadius: '3px',
+                            ? 'linear-gradient(90deg, #10b981, #34d399)'
+                            : 'linear-gradient(90deg, #0284c7, #38bdf8)',
+                          borderRadius: '4px',
+                          boxShadow: quest.isCompleted
+                            ? '0 0 8px rgba(52, 211, 153, 0.6)'
+                            : '0 0 8px rgba(56, 189, 248, 0.5)',
                           transition: 'width 0.3s ease',
                         }}
                       />
                     </div>
                   </div>
 
-                  {/* Кнопка действия */}
+                  {/* Кнопка состояния выполнения */}
                   <div style={{ marginTop: '2px' }}>
                     {quest.isClaimed ? (
                       <div
@@ -380,10 +482,11 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
                           textAlign: 'center',
                           padding: '6px',
                           borderRadius: '10px',
-                          background: 'rgba(255, 255, 255, 0.04)',
+                          background: 'rgba(0, 0, 0, 0.3)',
                           fontSize: '11px',
                           fontWeight: 800,
                           color: '#4ade80',
+                          border: '1px solid rgba(74, 222, 128, 0.25)',
                         }}
                       >
                         ✓ Награда получена
@@ -396,15 +499,15 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
                         }}
                         style={{
                           width: '100%',
-                          padding: '7px 12px',
+                          padding: '8px 12px',
                           borderRadius: '10px',
-                          border: 'none',
+                          border: '1px solid #6ee7b7',
                           background: 'linear-gradient(135deg, #10b981, #059669)',
                           color: '#ffffff',
-                          fontSize: '11.5px',
+                          fontSize: '12px',
                           fontWeight: 900,
                           cursor: 'pointer',
-                          boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)',
+                          boxShadow: '0 0 16px rgba(16, 185, 129, 0.55)',
                         }}
                       >
                         Забрать награду! 🎁
@@ -413,12 +516,13 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
                       <div
                         style={{
                           textAlign: 'center',
-                          padding: '5px',
+                          padding: '6px',
                           borderRadius: '10px',
-                          background: 'rgba(255, 255, 255, 0.03)',
+                          background: 'rgba(0, 0, 0, 0.3)',
+                          border: '1px solid rgba(255, 255, 255, 0.08)',
                           fontSize: '10.5px',
-                          fontWeight: 700,
-                          color: '#64748b',
+                          fontWeight: 800,
+                          color: '#d6d3d1',
                         }}
                       >
                         В процессе выполнения ({quest.currentCount}/{quest.targetCount})
@@ -431,12 +535,12 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
           </div>
         </div>
 
-        {/* Нижняя кнопка возврата на базу */}
+        {/* Нижняя кнопка возврата на базу в деревянном стиле */}
         <div
           style={{
-            padding: '8px 14px',
-            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-            background: 'rgba(15, 23, 42, 0.75)',
+            padding: '10px 16px',
+            borderTop: '1px solid rgba(251, 191, 36, 0.2)',
+            background: 'linear-gradient(180deg, rgba(38, 20, 11, 0.95) 0%, rgba(20, 10, 6, 0.95) 100%)',
             display: 'flex',
             justifyContent: 'center',
           }}
@@ -445,21 +549,23 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
             onClick={onClose}
             style={{
               width: '100%',
-              padding: '8px 14px',
-              borderRadius: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%)',
-              color: '#94a3b8',
-              fontSize: '11.5px',
-              fontWeight: 800,
+              padding: '10px 14px',
+              borderRadius: '14px',
+              border: '1.5px solid #b45309',
+              background: 'linear-gradient(180deg, #78350f 0%, #451a03 100%)',
+              color: '#fde68a',
+              fontSize: '13px',
+              fontWeight: 900,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '6px',
+              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.2)',
+              letterSpacing: '0.4px',
             }}
           >
-            <span>🏠</span>
+            <span>🏡</span>
             <span>Вернуться на базу</span>
           </button>
         </div>
