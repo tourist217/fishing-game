@@ -282,6 +282,7 @@ export default function App() {
       {!isMapOpen && activeTab === 'keepnet' && (
         <InventoryScreen
           inventory={player.inventory}
+          maxCapacity={player.maxKeepnetCapacity}
           getRarityLabel={getRarityLabel}
           onSellFish={(uid, price) => {
             player.sellFish(uid, price);
@@ -290,6 +291,10 @@ export default function App() {
           onSellAll={() => {
             player.sellAllFish();
             triggerHaptic('notification');
+          }}
+          onClose={() => {
+            setActiveTab('base');
+            triggerHaptic('selection');
           }}
         />
       )}
