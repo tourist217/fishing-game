@@ -14,9 +14,9 @@ interface RangerQuestsModalProps {
 }
 
 const QUEST_CONFIGS = [
-  { buttonTop: '51.7%' },
-  { buttonTop: '64.8%' },
-  { buttonTop: '77.9%' },
+  { buttonTop: '58.4%' },
+  { buttonTop: '69.6%' },
+  { buttonTop: '80.8%' },
 ];
 
 export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
@@ -47,7 +47,7 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
         overflow: 'hidden',
       }}
     >
-      {/* Главный стенд объявлений Егеря: точный Вариант В (Экспедиционный Стенд) */}
+      {/* Главный стенд объявлений Егеря: чистый студийный арт без артефактов и заплаток */}
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
@@ -71,10 +71,10 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
           aria-label="Закрыть"
           style={{
             position: 'absolute',
-            left: '82.5%',
-            top: '10.5%',
+            left: '85.0%',
+            top: '4.0%',
             width: '12.0%',
-            height: '7.0%',
+            height: '6.5%',
             borderRadius: '50%',
             background: 'transparent',
             border: 'none',
@@ -83,22 +83,22 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
           }}
         />
 
-        {/* Живой таймер справа от надписи «Новые заказы:» (без фона, с отступом от двоеточия, шрифтом Georgia) */}
+        {/* Живой таймер на свободном пергаменте справа от «Новые заказы:» */}
         <div
           style={{
             position: 'absolute',
-            left: '63.0%',
-            top: '26.8%',
-            width: '20.0%',
-            height: '2.8%',
+            left: '46.0%',
+            top: '28.8%',
+            width: '36.0%',
+            height: '3.6%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
             color: '#381604',
             fontWeight: 900,
-            fontSize: 'clamp(11px, 2.3vw, 15px)',
+            fontSize: 'clamp(13px, 2.8vw, 18px)',
             fontFamily: 'Georgia, serif',
-            letterSpacing: '0.6px',
+            letterSpacing: '1px',
             background: 'transparent',
             border: 'none',
             pointerEvents: 'none',
@@ -116,9 +116,9 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
             }}
             style={{
               position: 'absolute',
-              left: '26.0%',
-              top: '35.5%',
-              width: '48.0%',
+              left: '25.0%',
+              top: '49.0%',
+              width: '50.0%',
               height: '4.8%',
               borderRadius: '14px',
               border: '2px solid #86efac',
@@ -146,9 +146,9 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
           <div
             style={{
               position: 'absolute',
-              left: '28.0%',
-              top: '35.8%',
-              width: '44.0%',
+              left: '26.0%',
+              top: '49.2%',
+              width: '48.0%',
               height: '4.2%',
               borderRadius: '12px',
               background: 'rgba(20, 10, 5, 0.85)',
@@ -169,21 +169,20 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
           </div>
         )}
 
-        {/* 3 карточки заданий Егеря (кнопки сбора/статуса без лишних прогресс-баров) */}
+        {/* 3 карточки заданий Егеря (кнопки сбора/статуса) */}
         {quests.slice(0, 3).map((quest, idx) => {
           const config = QUEST_CONFIGS[idx];
 
           return (
             <React.Fragment key={quest.id || idx}>
-              {/* Кнопка действия (интерактивная при завершении или получении) */}
               {quest.isClaimed ? (
                 <div
                   style={{
                     position: 'absolute',
-                    left: '61.85%',
+                    left: '68.0%',
                     top: config.buttonTop,
-                    width: '21.22%',
-                    height: '3.34%',
+                    width: '16.7%',
+                    height: '3.1%',
                     borderRadius: '10px',
                     background: 'rgba(20, 10, 5, 0.85)',
                     border: '1px solid rgba(74, 222, 128, 0.45)',
@@ -207,10 +206,10 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
                   }}
                   style={{
                     position: 'absolute',
-                    left: '61.85%',
+                    left: '68.0%',
                     top: config.buttonTop,
-                    width: '21.22%',
-                    height: '3.34%',
+                    width: '16.7%',
+                    height: '3.1%',
                     borderRadius: '10px',
                     border: '1.5px solid #86efac',
                     background: 'linear-gradient(180deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
@@ -243,11 +242,11 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
           aria-label="Вернуться на базу"
           style={{
             position: 'absolute',
-            left: '21.8%',
-            top: '86.5%',
-            width: '56.4%',
-            height: '7.5%',
-            borderRadius: '20px',
+            left: '20.0%',
+            top: '90.5%',
+            width: '60.0%',
+            height: '4.8%',
+            borderRadius: '16px',
             background: 'transparent',
             border: 'none',
             cursor: 'pointer',
