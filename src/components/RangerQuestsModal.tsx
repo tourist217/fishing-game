@@ -14,25 +14,16 @@ interface RangerQuestsModalProps {
 }
 
 const QUEST_CONFIGS = [
-  {
-    progressTop: '52.0%',
-    buttonTop: '51.7%',
-  },
-  {
-    progressTop: '65.0%',
-    buttonTop: '64.8%',
-  },
-  {
-    progressTop: '78.1%',
-    buttonTop: '77.9%',
-  },
+  { buttonTop: '51.7%' },
+  { buttonTop: '64.8%' },
+  { buttonTop: '77.9%' },
 ];
 
 export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
   quests,
   allCompletedBonusClaimed,
   timeUntilMidnight,
-  completedCount,
+  completedCount: _completedCount,
   canClaimBonus,
   onClaimQuestReward,
   onClaimDailyBonus,
@@ -92,50 +83,31 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
           }}
         />
 
-        {/* Живой таймер справа от надписи «Новые заказы:» */}
+        {/* Живой таймер справа от надписи «Новые заказы:» (без фона, с отступом от двоеточия, шрифтом Georgia) */}
         <div
           style={{
             position: 'absolute',
-            left: '58.2%',
+            left: '63.0%',
             top: '26.8%',
-            width: '18.0%',
+            width: '20.0%',
             height: '2.8%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
-            color: '#3d1a03',
+            color: '#381604',
             fontWeight: 900,
             fontSize: 'clamp(11px, 2.3vw, 15px)',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            letterSpacing: '0.4px',
+            fontFamily: 'Georgia, serif',
+            letterSpacing: '0.6px',
+            background: 'transparent',
+            border: 'none',
             pointerEvents: 'none',
           }}
         >
           {timeUntilMidnight}
         </div>
 
-        {/* Живой прогресс суперприза */}
-        <div
-          style={{
-            position: 'absolute',
-            left: '36.0%',
-            top: '32.1%',
-            width: '28.0%',
-            height: '2.8%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fef3c7',
-            fontWeight: 900,
-            fontSize: 'clamp(11px, 2.3vw, 14px)',
-            textShadow: '0 1px 3px rgba(0, 0, 0, 0.95)',
-            pointerEvents: 'none',
-          }}
-        >
-          Суперприз ({completedCount}/3)
-        </div>
-
-        {/* Кнопка забрать суперприз дня, когда выполнены все 3 заказа */}
+        {/* Кнопка забрать финальную награду дня, когда выполнены все 3 заказа */}
         {canClaimBonus && (
           <button
             onClick={() => {
@@ -166,7 +138,7 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
             }}
           >
             <span>🎁</span>
-            <span>Забрать суперприз!</span>
+            <span>Забрать награду!</span>
           </button>
         )}
 
@@ -193,72 +165,16 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
             }}
           >
             <span>✓</span>
-            <span>Суперприз получен</span>
+            <span>Награда получена</span>
           </div>
         )}
 
-        {/* 3 карточки заданий Егеря */}
+        {/* 3 карточки заданий Егеря (кнопки сбора/статуса без лишних прогресс-баров) */}
         {quests.slice(0, 3).map((quest, idx) => {
           const config = QUEST_CONFIGS[idx];
-          const progressRatio = Math.min(1, quest.currentCount / quest.targetCount);
-          const progressPercent = Math.round(progressRatio * 100);
 
           return (
             <React.Fragment key={quest.id || idx}>
-              {/* Прогресс-бар поверх углубления в дереве */}
-              <div
-                style={{
-                  position: 'absolute',
-                  left: '34.5%',
-                  top: config.progressTop,
-                  width: '25.4%',
-                  height: '2.9%',
-                  background: '#1a0e06',
-                  borderRadius: '14px',
-                  border: '1px solid rgba(217, 119, 6, 0.6)',
-                  boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.9)',
-                  overflow: 'hidden',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
-                {/* Заполнение прогресс-бара */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    width: `${progressPercent}%`,
-                    background: quest.isCompleted
-                      ? 'linear-gradient(180deg, #4ade80 0%, #16a34a 60%, #15803d 100%)'
-                      : 'linear-gradient(180deg, #34d399 0%, #10b981 60%, #059669 100%)',
-                    borderRadius: '12px',
-                    boxShadow: quest.isCompleted
-                      ? '0 0 10px rgba(74, 222, 128, 0.85)'
-                      : '0 0 8px rgba(52, 211, 153, 0.8)',
-                    transition: 'width 0.3s ease',
-                  }}
-                />
-
-                {/* Числа прогресса (1/2) поверх заливки */}
-                <div
-                  style={{
-                    position: 'relative',
-                    width: '100%',
-                    textAlign: 'center',
-                    color: '#ffffff',
-                    fontWeight: 900,
-                    fontSize: 'clamp(9.5px, 2.1vw, 12.5px)',
-                    textShadow: '0 1px 3px rgba(0, 0, 0, 0.95)',
-                    letterSpacing: '0.4px',
-                    zIndex: 2,
-                  }}
-                >
-                  ({quest.currentCount}/{quest.targetCount})
-                </div>
-              </div>
-
               {/* Кнопка действия (интерактивная при завершении или получении) */}
               {quest.isClaimed ? (
                 <div
@@ -313,7 +229,7 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
                 >
                   Забрать! 🎁
                 </button>
-              ) : null /* В процессе уже нарисовано в самом арте Варианта В */}
+              ) : null}
             </React.Fragment>
           );
         })}
