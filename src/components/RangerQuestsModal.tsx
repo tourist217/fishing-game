@@ -15,19 +15,16 @@ interface RangerQuestsModalProps {
 
 const QUEST_CONFIGS = [
   {
-    titleTop: '46.2%',
-    progressTop: '50.6%',
-    buttonTop: '50.6%',
+    progressTop: '52.0%',
+    buttonTop: '51.7%',
   },
   {
-    titleTop: '60.3%',
-    progressTop: '64.7%',
-    buttonTop: '64.7%',
+    progressTop: '65.0%',
+    buttonTop: '64.8%',
   },
   {
-    titleTop: '74.4%',
-    progressTop: '78.8%',
-    buttonTop: '78.8%',
+    progressTop: '78.1%',
+    buttonTop: '77.9%',
   },
 ];
 
@@ -59,7 +56,7 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
         overflow: 'hidden',
       }}
     >
-      {/* Главный стенд объявлений Егеря: точный Вариант 1 (Каноничный Таёжный Кордон) */}
+      {/* Главный стенд объявлений Егеря: точный Вариант В (Экспедиционный Стенд) */}
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
@@ -67,7 +64,7 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
           width: 'min(94vh * 0.558, 100vw - 16px, 430px)',
           aspectRatio: '768 / 1376',
           maxHeight: '94vh',
-          backgroundImage: "url('/assets/ui/ranger_quests_variant1.jpg')",
+          backgroundImage: "url('/assets/ui/ranger_quests_variant_c.jpg')",
           backgroundSize: '100% 100%',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -83,10 +80,10 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
           aria-label="Закрыть"
           style={{
             position: 'absolute',
-            left: '82.0%',
-            top: '6.0%',
-            width: '11.5%',
-            height: '6.4%',
+            left: '82.5%',
+            top: '10.5%',
+            width: '12.0%',
+            height: '7.0%',
             borderRadius: '50%',
             background: 'transparent',
             border: 'none',
@@ -95,55 +92,50 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
           }}
         />
 
-        {/* Живые цифры обратного отсчета справа от надписи «Новые заказы:» */}
+        {/* Живой таймер справа от надписи «Новые заказы:» */}
         <div
           style={{
             position: 'absolute',
-            left: '58.5%',
-            top: '23.0%',
-            width: '21.0%',
-            height: '3.1%',
+            left: '58.2%',
+            top: '26.8%',
+            width: '18.0%',
+            height: '2.8%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
-            color: '#2a1103',
+            color: '#3d1a03',
             fontWeight: 900,
-            fontSize: 'clamp(11px, 2.2vw, 15px)',
+            fontSize: 'clamp(11px, 2.3vw, 15px)',
             fontFamily: 'system-ui, -apple-system, sans-serif',
-            pointerEvents: 'none',
             letterSpacing: '0.4px',
+            pointerEvents: 'none',
           }}
         >
           {timeUntilMidnight}
         </div>
 
-        {/* Премия дня: плашка счетчика выполнения */}
+        {/* Живой прогресс суперприза */}
         <div
           style={{
             position: 'absolute',
-            left: '32.0%',
-            top: '30.1%',
-            width: '36.0%',
-            height: '3.1%',
+            left: '36.0%',
+            top: '32.1%',
+            width: '28.0%',
+            height: '2.8%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(180deg, #78350f 0%, #451a03 100%)',
-            borderRadius: '12px',
-            border: '1px solid #d97706',
             color: '#fef3c7',
             fontWeight: 900,
-            fontSize: 'clamp(10px, 2.2vw, 13px)',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.6)',
-            textShadow: '0 1px 2px rgba(0,0,0,0.9)',
-            letterSpacing: '0.3px',
+            fontSize: 'clamp(11px, 2.3vw, 14px)',
+            textShadow: '0 1px 3px rgba(0, 0, 0, 0.95)',
             pointerEvents: 'none',
           }}
         >
-          Grand Prize ({completedCount}/3)
+          Суперприз ({completedCount}/3)
         </div>
 
-        {/* Кнопка забрать премию дня, когда выполнены все 3 заказа */}
+        {/* Кнопка забрать суперприз дня, когда выполнены все 3 заказа */}
         {canClaimBonus && (
           <button
             onClick={() => {
@@ -152,10 +144,10 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
             }}
             style={{
               position: 'absolute',
-              left: '25.0%',
-              top: '35.0%',
-              width: '50.0%',
-              height: '5.2%',
+              left: '26.0%',
+              top: '35.5%',
+              width: '48.0%',
+              height: '4.8%',
               borderRadius: '14px',
               border: '2px solid #86efac',
               background: 'linear-gradient(180deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
@@ -174,7 +166,7 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
             }}
           >
             <span>🎁</span>
-            <span>Забрать премию!</span>
+            <span>Забрать суперприз!</span>
           </button>
         )}
 
@@ -182,10 +174,10 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
           <div
             style={{
               position: 'absolute',
-              left: '27.0%',
-              top: '35.2%',
-              width: '46.0%',
-              height: '4.6%',
+              left: '28.0%',
+              top: '35.8%',
+              width: '44.0%',
+              height: '4.2%',
               borderRadius: '12px',
               background: 'rgba(20, 10, 5, 0.85)',
               border: '1.5px solid #22c55e',
@@ -201,7 +193,7 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
             }}
           >
             <span>✓</span>
-            <span>Премия получена</span>
+            <span>Суперприз получен</span>
           </div>
         )}
 
@@ -213,42 +205,18 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
 
           return (
             <React.Fragment key={quest.id || idx}>
-              {/* Заголовок квеста с отступом справа от медальона */}
+              {/* Прогресс-бар поверх углубления в дереве */}
               <div
                 style={{
                   position: 'absolute',
-                  left: '43.0%',
-                  top: config.titleTop,
-                  width: '47.0%',
-                  height: '3.8%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  color: '#ffffff',
-                  fontWeight: 900,
-                  fontSize: 'clamp(12px, 2.6vw, 16px)',
-                  lineHeight: 1.15,
-                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.7)',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  pointerEvents: 'none',
-                }}
-              >
-                {quest.title}
-              </div>
-
-              {/* Прогресс-бар в глубоком латунно-деревянном пазу */}
-              <div
-                style={{
-                  position: 'absolute',
-                  left: '43.0%',
+                  left: '34.5%',
                   top: config.progressTop,
-                  width: '26.0%',
-                  height: '3.85%',
-                  background: '#2b1407',
+                  width: '25.4%',
+                  height: '2.9%',
+                  background: '#1a0e06',
                   borderRadius: '14px',
-                  border: '1.5px solid #d97706',
-                  boxShadow: 'inset 0 2px 5px rgba(0, 0, 0, 0.85), 0 1px 2px rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(217, 119, 6, 0.6)',
+                  boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.9)',
                   overflow: 'hidden',
                   display: 'flex',
                   alignItems: 'center',
@@ -264,16 +232,16 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
                     width: `${progressPercent}%`,
                     background: quest.isCompleted
                       ? 'linear-gradient(180deg, #4ade80 0%, #16a34a 60%, #15803d 100%)'
-                      : 'linear-gradient(180deg, #38bdf8 0%, #0284c7 60%, #0369a1 100%)',
+                      : 'linear-gradient(180deg, #34d399 0%, #10b981 60%, #059669 100%)',
                     borderRadius: '12px',
                     boxShadow: quest.isCompleted
-                      ? '0 0 10px rgba(74, 222, 128, 0.8)'
-                      : '0 0 10px rgba(56, 189, 248, 0.8)',
+                      ? '0 0 10px rgba(74, 222, 128, 0.85)'
+                      : '0 0 8px rgba(52, 211, 153, 0.8)',
                     transition: 'width 0.3s ease',
                   }}
                 />
 
-                {/* Текст прогресса (1/2) поверх заливки */}
+                {/* Числа прогресса (1/2) поверх заливки */}
                 <div
                   style={{
                     position: 'relative',
@@ -281,7 +249,7 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
                     textAlign: 'center',
                     color: '#ffffff',
                     fontWeight: 900,
-                    fontSize: 'clamp(10px, 2.2vw, 13px)',
+                    fontSize: 'clamp(9.5px, 2.1vw, 12.5px)',
                     textShadow: '0 1px 3px rgba(0, 0, 0, 0.95)',
                     letterSpacing: '0.4px',
                     zIndex: 2,
@@ -291,87 +259,61 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
                 </div>
               </div>
 
-              {/* Кнопка состояния квеста */}
-              <div
-                style={{
-                  position: 'absolute',
-                  left: '71.0%',
-                  top: config.buttonTop,
-                  width: '20.0%',
-                  height: '3.85%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {quest.isClaimed ? (
-                  <div
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      borderRadius: '12px',
-                      background: 'rgba(20, 10, 5, 0.85)',
-                      border: '1px solid rgba(74, 222, 128, 0.45)',
-                      color: '#4ade80',
-                      fontWeight: 900,
-                      fontSize: 'clamp(9px, 2.0vw, 12px)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.5)',
-                      textShadow: '0 1px 2px rgba(0,0,0,0.9)',
-                    }}
-                  >
-                    ✓ Готово
-                  </div>
-                ) : quest.isCompleted ? (
-                  <button
-                    onClick={() => {
-                      onClaimQuestReward(quest.id);
-                      triggerHaptic('notification');
-                    }}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      borderRadius: '12px',
-                      border: '1.5px solid #86efac',
-                      background: 'linear-gradient(180deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
-                      color: '#ffffff',
-                      fontWeight: 900,
-                      fontSize: 'clamp(9.5px, 2.1vw, 12.5px)',
-                      cursor: 'pointer',
-                      boxShadow: '0 0 14px rgba(34, 197, 94, 0.9), inset 0 1px 2px rgba(255, 255, 255, 0.4)',
-                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.8)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
-                  >
-                    Забрать! 🎁
-                  </button>
-                ) : (
-                  <div
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      borderRadius: '12px',
-                      border: '1.5px solid #a3e635',
-                      background: 'linear-gradient(180deg, #65a30d 0%, #4d7c0f 50%, #3f6212 100%)',
-                      color: '#ffffff',
-                      fontWeight: 900,
-                      fontSize: 'clamp(9px, 2.0vw, 12px)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.35)',
-                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.9)',
-                    }}
-                  >
-                    В процессе
-                  </div>
-                )}
-              </div>
+              {/* Кнопка действия (интерактивная при завершении или получении) */}
+              {quest.isClaimed ? (
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: '61.85%',
+                    top: config.buttonTop,
+                    width: '21.22%',
+                    height: '3.34%',
+                    borderRadius: '10px',
+                    background: 'rgba(20, 10, 5, 0.85)',
+                    border: '1px solid rgba(74, 222, 128, 0.45)',
+                    color: '#4ade80',
+                    fontWeight: 900,
+                    fontSize: 'clamp(9px, 2.0vw, 12px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.5)',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.9)',
+                  }}
+                >
+                  ✓ Готово
+                </div>
+              ) : quest.isCompleted ? (
+                <button
+                  onClick={() => {
+                    onClaimQuestReward(quest.id);
+                    triggerHaptic('notification');
+                  }}
+                  style={{
+                    position: 'absolute',
+                    left: '61.85%',
+                    top: config.buttonTop,
+                    width: '21.22%',
+                    height: '3.34%',
+                    borderRadius: '10px',
+                    border: '1.5px solid #86efac',
+                    background: 'linear-gradient(180deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
+                    color: '#ffffff',
+                    fontWeight: 900,
+                    fontSize: 'clamp(9.5px, 2.1vw, 12.5px)',
+                    cursor: 'pointer',
+                    boxShadow: '0 0 14px rgba(34, 197, 94, 0.9), inset 0 1px 2px rgba(255, 255, 255, 0.4)',
+                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.8)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    WebkitTapHighlightColor: 'transparent',
+                    animation: 'pulse 1.5s infinite',
+                  }}
+                >
+                  Забрать! 🎁
+                </button>
+              ) : null /* В процессе уже нарисовано в самом арте Варианта В */}
             </React.Fragment>
           );
         })}
@@ -385,10 +327,10 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
           aria-label="Вернуться на базу"
           style={{
             position: 'absolute',
-            left: '23.8%',
-            top: '90.2%',
-            width: '52.4%',
-            height: '7.0%',
+            left: '21.8%',
+            top: '86.5%',
+            width: '56.4%',
+            height: '7.5%',
             borderRadius: '20px',
             background: 'transparent',
             border: 'none',
