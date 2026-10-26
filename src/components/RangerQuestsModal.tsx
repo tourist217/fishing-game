@@ -15,12 +15,12 @@ interface RangerQuestsModalProps {
 
 const QUEST_CONFIGS = [
   {
-    titleTop: '45.8%',
-    progressTop: '50.5%',
-    buttonTop: '50.5%',
+    titleTop: '46.0%',
+    progressTop: '50.6%',
+    buttonTop: '50.6%',
   },
   {
-    titleTop: '60.0%',
+    titleTop: '60.1%',
     progressTop: '64.7%',
     buttonTop: '64.7%',
   },
@@ -74,7 +74,7 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
           filter: 'drop-shadow(0 16px 40px rgba(0, 0, 0, 0.9))',
         }}
       >
-        {/* Кнопка закрытия (X) в правом верхнем углу резной дубовой шапки */}
+        {/* Кнопка закрытия (X) в правом верхнем углу */}
         <button
           onClick={() => {
             triggerHaptic('light');
@@ -95,36 +95,31 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
           }}
         />
 
-        {/* Живой динамический таймер на пергаментном свитке */}
+        {/* Живые цифры обратного отсчета в пергаментном окне */}
         <div
           style={{
             position: 'absolute',
-            left: '21.0%',
-            top: '22.8%',
-            width: '58.0%',
-            height: '3.8%',
+            left: '56.5%',
+            top: '23.0%',
+            width: '21.0%',
+            height: '3.1%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '6px',
-            background: 'linear-gradient(180deg, #c7a473 0%, #dbb988 100%)',
-            borderRadius: '20px',
-            boxShadow: 'inset 0 1px 3px rgba(60, 30, 10, 0.45)',
-            color: '#3b1d07',
+            background: '#ceae7e',
+            color: '#2b1204',
             fontWeight: 900,
-            fontSize: 'clamp(11px, 2.5vw, 15px)',
-            letterSpacing: '0.2px',
+            fontSize: 'clamp(11px, 2.3vw, 15px)',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            borderRadius: '6px',
             pointerEvents: 'none',
+            boxShadow: 'inset 0 1px 2px rgba(60, 30, 10, 0.25)',
           }}
         >
-          <span>⏳</span>
-          <span>Новые заказы:</span>
-          <span style={{ color: '#1a0902', fontWeight: 900, fontFamily: 'monospace' }}>
-            {timeUntilMidnight}
-          </span>
+          {timeUntilMidnight}
         </div>
 
-        {/* Карточка премии Grand Prize ({completedCount}/3) */}
+        {/* Премия дня: плашка счетчика выполнения */}
         <div
           style={{
             position: 'absolute',
@@ -224,15 +219,15 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
               <div
                 style={{
                   position: 'absolute',
-                  left: '38.5%',
+                  left: '40.0%',
                   top: config.titleTop,
-                  width: '43.0%',
+                  width: '39.0%',
                   height: '3.8%',
                   display: 'flex',
                   alignItems: 'center',
-                  color: '#fffef0',
+                  color: '#ffffff',
                   fontWeight: 900,
-                  fontSize: 'clamp(12px, 2.8vw, 17px)',
+                  fontSize: 'clamp(12px, 2.7vw, 16px)',
                   lineHeight: 1.15,
                   textShadow: '0 2px 4px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.7)',
                   whiteSpace: 'nowrap',
@@ -244,13 +239,13 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
                 {quest.title}
               </div>
 
-              {/* Прогресс-бар в глубоком латунно-деревянном пазу с ярким неоновым заполнением */}
+              {/* Прогресс-бар в глубоком латунно-деревянном пазу */}
               <div
                 style={{
                   position: 'absolute',
-                  left: '38.4%',
+                  left: '39.0%',
                   top: config.progressTop,
-                  width: '22.1%',
+                  width: '22.0%',
                   height: '3.85%',
                   background: '#2b1407',
                   borderRadius: '14px',
@@ -302,9 +297,9 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
               <div
                 style={{
                   position: 'absolute',
-                  left: '61.2%',
+                  left: '62.5%',
                   top: config.buttonTop,
-                  width: '19.8%',
+                  width: '18.5%',
                   height: '3.85%',
                   display: 'flex',
                   alignItems: 'center',
