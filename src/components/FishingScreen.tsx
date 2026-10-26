@@ -145,14 +145,6 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
       }}
     >
       <style>{`
-        @keyframes reelSpoolSpin {
-          0% { transform: translate(-50%, -50%) rotate(0deg); }
-          100% { transform: translate(-50%, -50%) rotate(-360deg); }
-        }
-        @keyframes reelKnobSpin {
-          0% { transform: translate(-50%, -50%) rotate(0deg); }
-          100% { transform: translate(-50%, -50%) rotate(-360deg); }
-        }
         @keyframes pullButtonJitter {
           0% { transform: scale(0.96) translate(0, 1px); }
           25% { transform: scale(0.96) translate(-0.4px, 1.4px); }
@@ -552,7 +544,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
               border: isPulling ? '2.5px solid #fbbf24' : '2px solid #fca5a5',
               borderRadius: '24px',
               color: '#ffffff',
-              fontSize: '17px',
+              fontSize: '18px',
               fontWeight: 900,
               cursor: 'pointer',
               userSelect: 'none',
@@ -572,81 +564,10 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
             }}
             title="Зажмите и удерживайте, чтобы тянуть леску"
           >
-            {/* 3D Катушка слева на кнопке (вид от первого лица / крепёж к камере-удочке) */}
-            <div
-              style={{
-                position: 'absolute',
-                left: '8px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: '42px',
-                height: '42px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                pointerEvents: 'none',
-              }}
-            >
-              <img
-                src="/assets/ui/reel_angle_rear_handle.png"
-                alt="Катушка"
-                draggable={false}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'contain',
-                  filter: isPulling
-                    ? 'drop-shadow(0 0 10px rgba(251, 191, 36, 0.95))'
-                    : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5))',
-                }}
-              />
-
-              {/* Анимация вращения катушки при вываживании */}
-              <div
-                style={{
-                  position: 'absolute',
-                  left: '58%',
-                  top: '48%',
-                  transform: 'translate(-50%, -50%)',
-                  width: '30px',
-                  height: '30px',
-                  borderRadius: '50%',
-                  pointerEvents: 'none',
-                  opacity: isPulling ? 1 : 0,
-                  transition: 'opacity 0.1s ease',
-                  mixBlendMode: 'screen',
-                }}
-              >
-                {/* Анизотропный золотистый блик (плавная визуальная скорость вращения катушки) */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    borderRadius: '50%',
-                    background:
-                      'conic-gradient(from 0deg, rgba(255, 235, 170, 0.85) 0deg, transparent 45deg, rgba(255, 215, 100, 0.95) 90deg, transparent 135deg, rgba(255, 235, 170, 0.85) 180deg, transparent 225deg, rgba(255, 215, 100, 0.95) 270deg, transparent 315deg, rgba(255, 235, 170, 0.85) 360deg)',
-                    animation: isPulling ? 'reelSpoolSpin 0.75s linear infinite' : 'none',
-                    filter: 'blur(1px)',
-                  }}
-                />
-                {/* Внутренние кольца */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    inset: '4px',
-                    borderRadius: '50%',
-                    border: '1.5px dashed rgba(253, 224, 71, 0.75)',
-                    boxShadow: 'inset 0 0 6px rgba(245, 158, 11, 0.6)',
-                    animation: isPulling ? 'reelSpoolSpin 0.6s linear infinite reverse' : 'none',
-                  }}
-                />
-              </div>
-            </div>
-
             {/* Текст кнопки по центру */}
             <span
               style={{
-                fontSize: '17px',
+                fontSize: '18px',
                 fontWeight: 900,
                 letterSpacing: '1px',
                 textShadow: isPulling
