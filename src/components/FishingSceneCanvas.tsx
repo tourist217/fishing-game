@@ -239,8 +239,8 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
         lineWaterX = baseX + lateralSway;
         lineWaterY = baseY + verticalSway;
 
-        // Отрисовка бурунов, брызг и подводного силуэта рыбы
-        drawReelingWaterEffects(ctx, lineWaterX, lineWaterY, time, curTension, p);
+        // Отрисовка бурунов и подводного анатомического силуэта рыбы
+        drawReelingWaterEffects(ctx, lineWaterX, lineWaterY, time, curTension, p, shoreX, shoreY);
       } else if (curGameState === 'hooked') {
         // === РЕАЛИСТИЧНАЯ ПОКЛЁВКА (ПРИТОПЫ, ВЫКЛАДЫВАНИЕ, УТОП С НАКЛОНОМ) ===
         const hookedAge = (Date.now() - hookedStartTimeRef.current) / 1000;
@@ -400,84 +400,24 @@ function drawWeatherEffects(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  weather: WeatherType,
-  time: number
+  _weather: WeatherType,
+  _time: number
 ) {
-  if (weather === 'rain') {
-    ctx.save();
-    // 1. Пасмурное дождевое затемнение атмосферы
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.22)';
-    ctx.fillRect(0, 0, width, height);
-
-    // 2. Анимированные падающие струи дождя
-    ctx.strokeStyle = 'rgba(215, 235, 255, 0.38)';
-    ctx.lineWidth = 1.3;
-    const dropCount = 85;
-    for (let i = 0; i < dropCount; i++) {
-      const seedX = (Math.sin(i * 197.3) * 0.5 + 0.5) * width;
-      const speed = 420 + (i % 6) * 45;
-      const dropY = ((i * 41 + time * speed) % (height + 60)) - 30;
-      const dropX = (seedX + (time * 50)) % width;
-      const len = 14 + (i % 5) * 4;
-      ctx.beginPath();
-      ctx.moveTo(dropX, dropY);
-      ctx.lineTo(dropX - 3.5, dropY + len);
-      ctx.stroke();
-    }
-
-    // 3. Круги / всплески капель на поверхности воды (нижняя половина экрана)
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-    ctx.lineWidth = 1;
-    for (let i = 0; i < 7; i++) {
-      const rx = ((i * 89 + Math.sin(time * 0.8 + i) * 35) % (width - 40)) + 20;
-      const ry = height * 0.52 + ((i * 59) % (height * 0.38));
-      const phase = ((time * 2.2 + i * 0.65) % 1);
-      const r = phase * 11;
-      ctx.beginPath();
-      ctx.ellipse(rx, ry, r, r * 0.35, 0, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    ctx.restore();
-  } else if (weather === 'fog') {
-    ctx.save();
-    // Плавные стелющиеся полосы тумана над гладью воды
-    for (let band = 0; band < 4; band++) {
-      const y = height * (0.44 + band * 0.11);
-      const drift = Math.sin(time * 0.2 + band) * 20;
-      const grad = ctx.createLinearGradient(0, y - 28, 0, y + 28);
-      grad.addColorStop(0, 'rgba(235, 245, 255, 0)');
-      grad.addColorStop(0.5, `rgba(225, 238, 250, ${0.22 - band * 0.025})`);
-      grad.addColorStop(1, 'rgba(235, 245, 255, 0)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, y - 28 + drift, width, 56);
-    }
-    // Легкая общая дымка
-    ctx.fillStyle = 'rgba(210, 225, 240, 0.14)';
-    ctx.fillRect(0, 0, width, height);
-    ctx.restore();
-  } else if (weather === 'overcast') {
-    ctx.save();
-    // Плотное серое пасмурное рассеяние
-    ctx.fillStyle = 'rgba(50, 65, 80, 0.20)';
-    ctx.fillRect(0, 0, width, height);
-    ctx.restore();
-  } else if (weather === 'clear') {
-    ctx.save();
-    // Солнечный мягкий блик в верхней части
-    const sunGlow = ctx.createRadialGradient(
-      width * 0.3,
-      height * 0.18,
-      10,
-      width * 0.3,
-      height * 0.18,
-      width * 0.65
-    );
-    sunGlow.addColorStop(0, 'rgba(255, 245, 210, 0.14)');
-    sunGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    ctx.fillStyle = sunGlow;
-    ctx.fillRect(0, 0, width, height);
-    ctx.restore();
-  }
+  // По запросу: туман и дождь полностью отключены, всегда ясная погода с мягким солнечным светом
+  ctx.save();
+  const sunGlow = ctx.createRadialGradient(
+    width * 0.3,
+    height * 0.18,
+    10,
+    width * 0.3,
+    height * 0.18,
+    width * 0.65
+  );
+  sunGlow.addColorStop(0, 'rgba(255, 245, 210, 0.14)');
+  sunGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  ctx.fillStyle = sunGlow;
+  ctx.fillRect(0, 0, width, height);
+  ctx.restore();
 }
 
 function drawSky(
@@ -772,23 +712,150 @@ function drawFloat(
   ctx.restore();
 }
 
+function drawFishShadow(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  angle: number,
+  length: number,
+  width: number,
+  time: number,
+  progress: number
+) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+
+  // Динамическое виляние хвоста рыбы (активное сопротивление вываживанию)
+  const wagPhase = time * 14;
+  const tailWag = Math.sin(wagPhase) * (width * 0.65);
+  const finFlutter = Math.sin(time * 11) * 2;
+  const alpha = Math.min(0.74, 0.45 + progress * 0.28);
+
+  // Мягкое подводное затемнение/глубина
+  ctx.shadowColor = 'rgba(5, 18, 30, 0.55)';
+  ctx.shadowBlur = 6;
+
+  // 1. Парные грудные плавники (выступают по бокам тела)
+  ctx.fillStyle = `rgba(10, 32, 48, ${alpha * 0.72})`;
+  // Левый грудной плавник
+  ctx.beginPath();
+  ctx.moveTo(length * 0.12, -width * 0.44);
+  ctx.quadraticCurveTo(length * 0.02, -width * 1.05 + finFlutter, -length * 0.06, -width * 0.42);
+  ctx.closePath();
+  ctx.fill();
+
+  // Правый грудной плавник
+  ctx.beginPath();
+  ctx.moveTo(length * 0.12, width * 0.44);
+  ctx.quadraticCurveTo(length * 0.02, width * 1.05 - finFlutter, -length * 0.06, width * 0.42);
+  ctx.closePath();
+  ctx.fill();
+
+  // 2. Брюшные плавники
+  ctx.beginPath();
+  ctx.moveTo(-length * 0.12, -width * 0.38);
+  ctx.quadraticCurveTo(-length * 0.18, -width * 0.72, -length * 0.24, -width * 0.34);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(-length * 0.12, width * 0.38);
+  ctx.quadraticCurveTo(-length * 0.18, width * 0.72, -length * 0.24, width * 0.34);
+  ctx.closePath();
+  ctx.fill();
+
+  // 3. Анатомическое веретенообразное тело рыбы с изгибом к хвосту
+  ctx.fillStyle = `rgba(8, 24, 38, ${alpha})`;
+  ctx.beginPath();
+  // Нос (пасть) рыбы
+  ctx.moveTo(length * 0.48, 0);
+
+  // Верхний контур (жабры -> спина -> хвостовой стебель)
+  ctx.bezierCurveTo(
+    length * 0.35, -width * 0.4,
+    length * 0.12, -width * 0.52,
+    -length * 0.05, -width * 0.48
+  );
+  ctx.bezierCurveTo(
+    -length * 0.22, -width * 0.38,
+    -length * 0.36, -width * 0.18 + tailWag * 0.4,
+    -length * 0.42, tailWag * 0.6
+  );
+
+  // Хвостовой плавник (настоящий раздвоенный хвост рыбы)
+  // Верхняя лопасть
+  ctx.lineTo(-length * 0.62, -width * 0.62 + tailWag);
+  // Выемка хвоста
+  ctx.quadraticCurveTo(-length * 0.53, tailWag * 0.8, -length * 0.62, width * 0.62 + tailWag);
+  // Нижняя лопасть
+  ctx.lineTo(-length * 0.42, tailWag * 0.6);
+
+  // Нижний контур (хвостовой стебель -> брюхо -> горло -> пасть)
+  ctx.bezierCurveTo(
+    -length * 0.36, width * 0.18 + tailWag * 0.4,
+    -length * 0.22, width * 0.38,
+    -length * 0.05, width * 0.48
+  );
+  ctx.bezierCurveTo(
+    length * 0.12, width * 0.52,
+    length * 0.35, width * 0.4,
+    length * 0.48, 0
+  );
+
+  ctx.closePath();
+  ctx.fill();
+
+  // 4. Тёмный хребет вдоль спины
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = `rgba(3, 12, 20, ${alpha * 0.85})`;
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(length * 0.38, 0);
+  ctx.quadraticCurveTo(0, tailWag * 0.25, -length * 0.38, tailWag * 0.6);
+  ctx.stroke();
+
+  // 5. Тонкий водный блик по спине рыбы
+  ctx.strokeStyle = `rgba(210, 235, 255, ${0.16 + progress * 0.12})`;
+  ctx.lineWidth = 1.0;
+  ctx.beginPath();
+  ctx.moveTo(length * 0.32, -width * 0.1);
+  ctx.quadraticCurveTo(length * 0.05, -width * 0.12, -length * 0.18, tailWag * 0.2 - width * 0.06);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
 function drawReelingWaterEffects(
   ctx: CanvasRenderingContext2D,
   wx: number,
   wy: number,
   time: number,
   _tension: number,
-  progress: number
+  progress: number,
+  shoreX: number,
+  shoreY: number
 ) {
   ctx.save();
 
-  // 1. Подводный силуэт рыбы под точкой входа лески
-  const fishSize = 13 + (1 - progress) * 8;
-  const fishSway = Math.sin(time * 6) * 4;
-  ctx.fillStyle = 'rgba(10, 25, 40, 0.45)';
-  ctx.beginPath();
-  ctx.ellipse(wx + fishSway, wy + 8, fishSize, 5, fishSway * 0.08, 0, Math.PI * 2);
-  ctx.fill();
+  // 1. Расчёт ориентации рыбы к берегу и бокового виляния при борьбе
+  const dx = shoreX - wx;
+  const dy = shoreY - wy;
+  const angleToShore = Math.atan2(dy, dx);
+  const swayAngle = Math.cos(time * 5.5) * 0.32;
+  const fishAngle = angleToShore + swayAngle;
+
+  // Размеры рыбы (плавно увеличиваются по мере приближения к берегу и поверхности)
+  const fishLength = 34 + progress * 14;
+  const fishWidth = 11 + progress * 5;
+
+  // Смещение центра рыбы так, чтобы пасть находилась точно у точки входа лески (wx, wy)
+  const headOffset = fishLength * 0.38;
+  const fishCenterX = wx - Math.cos(fishAngle) * headOffset;
+  const fishCenterY = wy - Math.sin(fishAngle) * headOffset;
+
+  // Отрисовка реалистичного силуэта рыбы
+  drawFishShadow(ctx, fishCenterX, fishCenterY, fishAngle, fishLength, fishWidth, time, progress);
 
   // 2. Кильватерный след (V-образная волна от подтягивания рыбы к берегу)
   const wakeCount = 3;

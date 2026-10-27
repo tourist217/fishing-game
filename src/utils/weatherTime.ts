@@ -94,25 +94,11 @@ function getSlotIndex(date: Date): number {
   return date.getHours() * 4 + Math.floor(date.getMinutes() / 15);
 }
 
-function pseudoRandom(seed: number): number {
-  const x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
-}
 
-export function getWeatherForSlot(slotIndex: number, dateStr: string): WeatherType {
-  let hash = 0;
-  for (let i = 0; i < dateStr.length; i++) {
-    hash = (hash << 5) - hash + dateStr.charCodeAt(i);
-    hash |= 0;
-  }
-  const seed = Math.abs(hash) + slotIndex * 137;
-  const rand = pseudoRandom(seed);
 
-  // Распределение погоды: 40% ясно, 25% пасмурно, 20% дождь, 15% туман
-  if (rand < 0.40) return 'clear';
-  if (rand < 0.65) return 'overcast';
-  if (rand < 0.85) return 'rain';
-  return 'fog';
+export function getWeatherForSlot(_slotIndex: number, _dateStr: string): WeatherType {
+  // По запросу: только ясная погода, без дождя и тумана
+  return 'clear';
 }
 
 export function getCurrentWeather(date: Date = new Date()): {
