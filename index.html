@@ -5,6 +5,18 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Рыбалка Онлайн</title>
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript">
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=113819533', 'ym');
+
+        ym(113819533, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <!-- /Yandex.Metrika counter -->
     <!-- Официальный скрипт Telegram Mini Apps -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Предзагрузка артов карты для мгновенного открытия без задержек -->
@@ -12,6 +24,7 @@
     <link rel="preload" as="image" href="/assets/locations/map_section_volga.jpg" />
   </head>
   <body style="margin: 0; padding: 0; overflow: hidden; user-select: none; background-color: #0b131e; -webkit-tap-highlight-color: transparent;">
+    <noscript><div><img src="https://mc.yandex.ru/watch/113819533" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
     <div id="root" style="width: 100vw; height: 100vh; overflow: hidden;"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

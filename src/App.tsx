@@ -17,10 +17,12 @@ import { useDailyQuests } from './hooks/useDailyQuests';
 import { triggerHaptic as triggerHapticUtil } from './utils/haptics';
 
 import { FISH_DATABASE } from './fishData';
+import { initUserAnalytics, trackGoal } from './utils/analytics';
 
 export default function App() {
-  // Предварительная загрузка всех картинок рыб в кэш браузера при старте
+  // Предварительная загрузка всех картинок рыб в кэш браузера при старте и инициализация аналитики
   useEffect(() => {
+    initUserAnalytics();
     FISH_DATABASE.forEach((fish) => {
       if (fish.image) {
         const img = new Image();
@@ -84,11 +86,20 @@ export default function App() {
     baits: baits.baits,
     currentLocation,
     consumeBait: baits.consumeBait,
-    onFishCaught: (fish, exp) => {
-      player.addCaughtFish(fish, exp);
-      dailyQuests.handleFishCaught(fish, baits.selectedBaitId);
+    onFishCaught: (caughtItem, exp) => {
+      player.addCaughtFish(caughtItem, exp);
+      dailyQuests.handleFishCaught(caughtItem, baits.selectedBaitId);
+      trackGoal('fish_caught', {
+        fish: caughtItem.fish.name,
+        weight: caughtItem.weight,
+        rarity: caughtItem.fish.rarity,
+        price: caughtItem.price,
+      });
     },
-    onLineBreak: gear.breakLine,
+    onLineBreak: () => {
+      gear.breakLine();
+      trackGoal('line_break');
+    },
     triggerHaptic,
     isKeepnetFull: player.isKeepnetFull,
     spendEnergy: player.spendEnergy,
@@ -209,7 +220,10 @@ export default function App() {
             }}
             onSelectBait={baits.selectBait}
             getRarityLabel={getRarityLabel}
-            onStartFishing={fishing.startFishing}
+            onStartFishing={() => {
+              fishing.startFishing();
+              trackGoal('cast_rod', { location: currentLocation.name });
+            }}
             onStartReeling={fishing.startReeling}
             onPullStart={fishing.handlePullStart}
             onPullEnd={fishing.handlePullEnd}
@@ -286,10 +300,12 @@ export default function App() {
           getRarityLabel={getRarityLabel}
           onSellFish={(uid, price) => {
             player.sellFish(uid, price);
+            trackGoal('sell_single_fish', { price });
             triggerHaptic('impact');
           }}
           onSellAll={() => {
             player.sellAllFish();
+            trackGoal('sell_all_fish');
             triggerHaptic('notification');
           }}
           onClose={() => {
