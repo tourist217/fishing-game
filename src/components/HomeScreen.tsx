@@ -211,6 +211,7 @@ interface HomeScreenProps {
   onClaimQuestReward?: (questId: string) => boolean;
   onClaimDailyBonus?: () => boolean;
   onAddTestGems?: (amount: number) => void;
+  onRestartTutorial?: () => void;
 }
 
 export const HomeScreen = ({
@@ -252,6 +253,7 @@ export const HomeScreen = ({
   canClaimBonus = false,
   onClaimQuestReward,
   onClaimDailyBonus,
+  onRestartTutorial,
 }: HomeScreenProps) => {
   const currentRod = ROD_TIERS.find((r) => r.id === gear.equippedRodId) || ROD_TIERS[0];
   const rodLevel = gear.rodLevels[gear.equippedRodId] || 1;
@@ -1675,6 +1677,29 @@ export const HomeScreen = ({
             <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '16px' }}>
               Версия: {APP_VERSION}
             </div>
+
+            {onRestartTutorial && (
+              <button
+                onClick={() => {
+                  onRestartTutorial();
+                  setActiveModal(null);
+                }}
+                style={{
+                  width: '100%',
+                  background: 'rgba(34, 197, 94, 0.2)',
+                  border: '1px solid rgba(34, 197, 94, 0.5)',
+                  color: '#4ade80',
+                  borderRadius: '12px',
+                  padding: '10px',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  marginBottom: '10px',
+                }}
+              >
+                Пройти обучение заново 🎓
+              </button>
+            )}
 
             <button
               onClick={onResetProgress || handleReset}

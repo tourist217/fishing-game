@@ -18,6 +18,8 @@ import { triggerHaptic as triggerHapticUtil } from './utils/haptics';
 
 import { FISH_DATABASE } from './fishData';
 import { initUserAnalytics, trackGoal } from './utils/analytics';
+import { useTutorial } from './hooks/useTutorial';
+import { TutorialGuide } from './components/TutorialGuide';
 
 export default function App() {
   // Предварительная загрузка всех картинок рыб в кэш браузера при старте и инициализация аналитики
@@ -37,6 +39,7 @@ export default function App() {
 
   // 1. Состояние игрока и экономики
   const player = usePlayerState();
+  const tutorial = useTutorial(player.level, player.exp);
 
   // 2. Снаряжение (удочки, катушки, лески)
   const gear = useGearState(
@@ -95,6 +98,9 @@ export default function App() {
         rarity: caughtItem.fish.rarity,
         price: caughtItem.price,
       });
+      if (tutorial.step === 'reeling_guide' || tutorial.step === 'cast_rod') {
+        tutorial.nextStep(undefined, 'open_keepnet');
+      }
     },
     onLineBreak: () => {
       gear.breakLine();
@@ -104,6 +110,24 @@ export default function App() {
     isKeepnetFull: player.isKeepnetFull,
     spendEnergy: player.spendEnergy,
   });
+
+  const isTutorialVisible = () => {
+    if (tutorial.isCompleted) return false;
+    switch (tutorial.step) {
+      case 'welcome_cast':
+        return !isAtPond && activeTab === 'base' && !isMapOpen;
+      case 'cast_rod':
+        return isAtPond && fishing.gameState === 'idle';
+      case 'reeling_guide':
+        return isAtPond && (fishing.gameState === 'hooked' || fishing.gameState === 'reeling');
+      case 'open_keepnet':
+        return activeTab !== 'keepnet';
+      case 'sell_fish':
+        return activeTab === 'keepnet';
+      default:
+        return false;
+    }
+  };
 
   const getRarityLabel = (rarity: string) => {
     switch (rarity) {
@@ -223,6 +247,9 @@ export default function App() {
             onStartFishing={() => {
               fishing.startFishing();
               trackGoal('cast_rod', { location: currentLocation.name });
+              if (tutorial.step === 'cast_rod') {
+                tutorial.nextStep('cast_rod', 'reeling_guide');
+              }
             }}
             onStartReeling={fishing.startReeling}
             onPullStart={fishing.handlePullStart}
@@ -272,7 +299,11 @@ export default function App() {
               }
               setIsAtPond(true);
               triggerHaptic('notification');
+              if (tutorial.step === 'welcome_cast') {
+                tutorial.nextStep('welcome_cast', 'cast_rod');
+              }
             }}
+            onRestartTutorial={tutorial.resetTutorial}
             onOpenKeepnet={() => {
               setActiveTab('keepnet');
               triggerHaptic('selection');
@@ -302,11 +333,17 @@ export default function App() {
             player.sellFish(uid, price);
             trackGoal('sell_single_fish', { price });
             triggerHaptic('impact');
+            if (tutorial.step === 'sell_fish') {
+              tutorial.completeTutorial();
+            }
           }}
           onSellAll={() => {
             player.sellAllFish();
             trackGoal('sell_all_fish');
             triggerHaptic('notification');
+            if (tutorial.step === 'sell_fish') {
+              tutorial.completeTutorial();
+            }
           }}
           onClose={() => {
             setActiveTab('base');
@@ -362,6 +399,9 @@ export default function App() {
         activeTab={activeTab}
         onTabChange={(tab) => {
           setBaseClickNonce((prev) => prev + 1);
+          if (tab === 'keepnet' && tutorial.step === 'open_keepnet') {
+            tutorial.nextStep('open_keepnet', 'sell_fish');
+          }
           if (tab === 'base') {
             if (isAtPond) {
               fishing.resetToIdle();
@@ -381,6 +421,25 @@ export default function App() {
         }}
         inventoryCount={player.inventoryCount}
       />
+
+      {isTutorialVisible() && (
+        <TutorialGuide
+          step={tutorial.step}
+          onNext={() => {
+            if (tutorial.step === 'open_keepnet') {
+              fishing.resetToIdle();
+              setIsAtPond(false);
+              setActiveTab('keepnet');
+              tutorial.nextStep('open_keepnet', 'sell_fish');
+            } else if (tutorial.step === 'sell_fish') {
+              tutorial.completeTutorial();
+            } else {
+              tutorial.nextStep();
+            }
+          }}
+          onSkip={tutorial.skipTutorial}
+        />
+      )}
     </div>
   );
 }
