@@ -46,6 +46,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#06b6d4',
     waterType: 'still',
     weightModifier: 1.5,
+    image: '/assets/locations/loc_forest_lake.jpg',
   },
   {
     id: 'loc_quiet_river',
