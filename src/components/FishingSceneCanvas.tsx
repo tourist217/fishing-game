@@ -781,7 +781,7 @@ function drawReelingWaterEffects(
   wx: number,
   wy: number,
   time: number,
-  tension: number,
+  _tension: number,
   progress: number
 ) {
   ctx.save();
@@ -816,29 +816,6 @@ function drawReelingWaterEffects(
     ctx.beginPath();
     ctx.ellipse(wx, wy, spread * 0.8, spread * 0.35, 0, 0, Math.PI * 2);
     ctx.stroke();
-  }
-
-  // 3. Брызги и белая пена в месте разрезания воды леской
-  const foamIntensity = Math.min(1, 0.4 + tension / 100);
-  ctx.fillStyle = `rgba(255, 255, 255, ${0.75 * foamIntensity})`;
-  ctx.beginPath();
-  ctx.arc(wx, wy, 3.5, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 4. Мелкие летящие капли брызг при среднем и сильном натяжении
-  if (tension > 35) {
-    for (let i = 0; i < 4; i++) {
-      const dropAngle = (time * 12 + i * 1.5) % Math.PI;
-      const dropDist = 6 + Math.sin(time * 15 + i) * 6;
-      const dx = wx + Math.cos(dropAngle) * dropDist;
-      const dy = wy - Math.sin(dropAngle) * (dropDist * 0.7);
-      const dropAlpha = Math.max(0, 0.8 - dropDist / 14);
-
-      ctx.fillStyle = `rgba(255, 255, 255, ${dropAlpha})`;
-      ctx.beginPath();
-      ctx.arc(dx, dy, 1.2, 0, Math.PI * 2);
-      ctx.fill();
-    }
   }
 
   ctx.restore();
