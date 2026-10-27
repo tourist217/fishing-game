@@ -255,9 +255,12 @@ export default function App() {
             onPullStart={fishing.handlePullStart}
             onPullEnd={fishing.handlePullEnd}
             onDismissModal={fishing.dismissModal}
+            isTutorialCast={tutorial.step === 'cast_rod'}
+            isTutorialReel={tutorial.step === 'reeling_guide'}
           />
         ) : (
           <HomeScreen
+            isTutorialWelcome={tutorial.step === 'welcome_cast'}
             currentLocation={currentLocation}
             gear={gear.gear}
             userName={player.userName}

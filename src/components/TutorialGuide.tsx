@@ -20,7 +20,7 @@ export const TutorialGuide: React.FC<TutorialGuideProps> = ({ step, onNext, onSk
           arrowPos: 'bottom' as const,
           actionLabel: undefined,
           boxStyle: {
-            bottom: '120px',
+            bottom: 'calc(168px + env(safe-area-inset-bottom, 0px))',
             left: '12px',
             right: '12px',
           },
@@ -32,7 +32,7 @@ export const TutorialGuide: React.FC<TutorialGuideProps> = ({ step, onNext, onSk
           arrowPos: 'bottom' as const,
           actionLabel: undefined,
           boxStyle: {
-            bottom: '110px',
+            bottom: 'calc(175px + env(safe-area-inset-bottom, 0px))',
             left: '12px',
             right: '12px',
           },
@@ -44,7 +44,7 @@ export const TutorialGuide: React.FC<TutorialGuideProps> = ({ step, onNext, onSk
           arrowPos: 'bottom' as const,
           actionLabel: undefined,
           boxStyle: {
-            bottom: '110px',
+            bottom: 'calc(175px + env(safe-area-inset-bottom, 0px))',
             left: '12px',
             right: '12px',
           },
@@ -56,7 +56,7 @@ export const TutorialGuide: React.FC<TutorialGuideProps> = ({ step, onNext, onSk
           arrowPos: 'bottom' as const,
           actionLabel: 'Открыть садок 🧺',
           boxStyle: {
-            bottom: '75px',
+            bottom: 'calc(75px + env(safe-area-inset-bottom, 0px))',
             left: '12px',
             right: '12px',
           },
@@ -64,11 +64,11 @@ export const TutorialGuide: React.FC<TutorialGuideProps> = ({ step, onNext, onSk
       case 'sell_fish':
         return {
           title: 'Старый Егерь',
-          text: 'Здесь твой улов. Продай рыбу за монеты — на них в Магазине покупай новые удочки и лески!',
-          arrowPos: 'bottom' as const,
+          text: 'Здесь твой улов. Нажми «Продать всё» наверху, чтобы получить монеты на новые снасти!',
+          arrowPos: 'top' as const,
           actionLabel: 'Понятно, на рыбалку! 🎣',
           boxStyle: {
-            bottom: '95px',
+            bottom: 'calc(75px + env(safe-area-inset-bottom, 0px))',
             left: '12px',
             right: '12px',
           },
@@ -87,6 +87,10 @@ export const TutorialGuide: React.FC<TutorialGuideProps> = ({ step, onNext, onSk
         @keyframes tutorialBounce {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(6px); }
+        }
+        @keyframes tutorialBounceUp {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
         }
         @keyframes tutorialGlowPulse {
           0%, 100% { box-shadow: 0 0 16px rgba(74, 222, 128, 0.4), 0 8px 32px rgba(0,0,0,0.6); }
@@ -191,7 +195,7 @@ export const TutorialGuide: React.FC<TutorialGuideProps> = ({ step, onNext, onSk
           <div
             style={{
               position: 'absolute',
-              bottom: '-22px',
+              bottom: '-24px',
               left: '50%',
               marginLeft: '-14px',
               fontSize: '24px',
@@ -202,6 +206,25 @@ export const TutorialGuide: React.FC<TutorialGuideProps> = ({ step, onNext, onSk
             }}
           >
             👇
+          </div>
+        )}
+
+        {/* Анимированная стрелка-указатель вверх */}
+        {config.arrowPos === 'top' && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '-24px',
+              left: '50%',
+              marginLeft: '-14px',
+              fontSize: '24px',
+              animation: 'tutorialBounceUp 0.9s infinite ease-in-out',
+              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.8))',
+              pointerEvents: 'none',
+              userSelect: 'none',
+            }}
+          >
+            👆
           </div>
         )}
       </div>

@@ -46,6 +46,8 @@ interface FishingScreenProps {
   onBuyProvision?: (id: 'tea' | 'sandwich') => boolean;
   onBuyEnergyWithGems?: () => boolean;
   getRarityLabel: (rarity: string) => { text: string; color: string };
+  isTutorialCast?: boolean;
+  isTutorialReel?: boolean;
 }
 
 export const FishingScreen: React.FC<FishingScreenProps> = ({
@@ -83,6 +85,8 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
   inventoryCount = 0,
   maxKeepnetCapacity = 15,
   getRarityLabel: _getRarityLabel,
+  isTutorialCast = false,
+  isTutorialReel = false,
 }: FishingScreenProps) => {
   const [isEnergyModalOpen, setIsEnergyModalOpen] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
@@ -458,13 +462,18 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                 ? '2px solid #fde047'
                 : !hasLineOnRod
                 ? '2px solid #fca5a5'
+                : isTutorialCast
+                ? '3px solid #fde047'
                 : '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '24px',
               color: canCast || !hasEnoughEnergy || isKeepnetFull || !hasLineOnRod ? '#ffffff' : '#64748b',
               fontSize: '15px',
               fontWeight: 900,
               cursor: canCast || !hasEnoughEnergy || isKeepnetFull || !hasLineOnRod ? 'pointer' : 'not-allowed',
-              boxShadow: canCast
+              transform: isTutorialCast ? 'scale(1.02)' : 'none',
+              boxShadow: isTutorialCast
+                ? '0 0 32px rgba(74, 222, 128, 0.9), 0 0 16px rgba(253, 224, 71, 0.8), 0 4px 12px rgba(0, 0, 0, 0.4)'
+                : canCast
                 ? '0 0 24px rgba(132, 204, 22, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4)'
                 : !hasEnoughEnergy
                 ? '0 0 24px rgba(251, 191, 36, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4)'
@@ -541,7 +550,11 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
               background: isPulling
                 ? 'linear-gradient(180deg, #b91c1c 0%, #991b1b 50%, #7f1d1d 100%)'
                 : 'linear-gradient(180deg, #ef4444 0%, #dc2626 50%, #991b1b 100%)',
-              border: isPulling ? '2.5px solid #fbbf24' : '2px solid #fca5a5',
+              border: isTutorialReel
+                ? '3px solid #fde047'
+                : isPulling
+                ? '2.5px solid #fbbf24'
+                : '2px solid #fca5a5',
               borderRadius: '24px',
               color: '#ffffff',
               fontSize: '18px',
@@ -553,6 +566,8 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
               outline: 'none',
               boxShadow: isPulling
                 ? '0 0 26px rgba(245, 158, 11, 0.8), inset 0 2px 8px rgba(0, 0, 0, 0.6)'
+                : isTutorialReel
+                ? '0 0 35px rgba(251, 191, 36, 0.95), 0 0 15px rgba(239, 68, 68, 0.8)'
                 : '0 0 24px rgba(239, 68, 68, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4)',
               transform: isPulling ? 'scale(0.97) translateY(1px)' : 'scale(1)',
               animation: isPulling ? 'pullButtonJitter 0.15s infinite linear' : 'none',

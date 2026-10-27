@@ -212,6 +212,7 @@ interface HomeScreenProps {
   onClaimDailyBonus?: () => boolean;
   onAddTestGems?: (amount: number) => void;
   onRestartTutorial?: () => void;
+  isTutorialWelcome?: boolean;
 }
 
 export const HomeScreen = ({
@@ -254,6 +255,7 @@ export const HomeScreen = ({
   onClaimQuestReward,
   onClaimDailyBonus,
   onRestartTutorial,
+  isTutorialWelcome = false,
 }: HomeScreenProps) => {
   const currentRod = ROD_TIERS.find((r) => r.id === gear.equippedRodId) || ROD_TIERS[0];
   const rodLevel = gear.rodLevels[gear.equippedRodId] || 1;
@@ -930,7 +932,9 @@ export const HomeScreen = ({
                   : !hasEnoughEnergy
                   ? 'linear-gradient(180deg, #d97706 0%, #b45309 50%, #78350f 100%)'
                   : 'linear-gradient(180deg, #84cc16 0%, #65a30d 50%, #4d7c0f 100%)',
-                border: isKeepnetFull
+                border: isTutorialWelcome
+                  ? '3px solid #fde047'
+                  : isKeepnetFull
                   ? '2.5px solid #fde047'
                   : !hasEnoughEnergy
                   ? '2.5px solid #fbbf24'
@@ -945,13 +949,16 @@ export const HomeScreen = ({
                 fontWeight: 900,
                 letterSpacing: '0.8px',
                 textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
-                boxShadow: isKeepnetFull
+                boxShadow: isTutorialWelcome
+                  ? '0 0 35px rgba(74, 222, 128, 0.9), 0 0 15px rgba(253, 224, 71, 0.8), 0 8px 24px rgba(0, 0, 0, 0.6)'
+                  : isKeepnetFull
                   ? '0 0 28px rgba(245, 158, 11, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 8px 24px rgba(0, 0, 0, 0.45)'
                   : !hasEnoughEnergy
                   ? '0 0 28px rgba(251, 191, 36, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 8px 24px rgba(0, 0, 0, 0.45)'
                   : '0 0 28px rgba(132, 204, 22, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 8px 24px rgba(0, 0, 0, 0.45)',
                 cursor: 'pointer',
-                transition: 'transform 0.1s ease',
+                transform: isTutorialWelcome ? 'scale(1.02)' : 'none',
+                transition: 'transform 0.15s ease, box-shadow 0.3s ease',
               }}
             >
               {isKeepnetFull ? (
