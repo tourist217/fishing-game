@@ -140,19 +140,19 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
       const curWeather = effectiveWeatherRef.current;
       const curRodMaterial = rodMaterialRef.current;
 
-      const isVillagePond = curLocation.id === 'loc_village_pond';
+      const LOCATION_BG_MAP: Record<string, string> = {
+        loc_village_pond: '/assets/locations/loc_village_pond_base.jpg',
+        loc_old_oxbow: '/assets/locations/loc_old_oxbow.jpg',
+      };
 
-      if (isVillagePond) {
-        // Единое базовое изображение фонового водоема
-        const bgSrc = '/assets/locations/loc_village_pond_base.jpg';
-        let photoImg = getPreloadedImage(bgSrc);
-        if (!photoImg) {
-          photoImg = getPreloadedImage('/assets/locations/loc_village_pond_dawn.jpg');
-        }
+      const bgSrc = curLocation.image || LOCATION_BG_MAP[curLocation.id];
+      const photoImg = bgSrc
+        ? getPreloadedImage(bgSrc) || (curLocation.id === 'loc_village_pond' ? getPreloadedImage('/assets/locations/loc_village_pond_dawn.jpg') : null)
+        : null;
 
-        if (photoImg) {
-          // Отрисовка без искажения пропорций (object-fit: cover)
-          drawImageCover(ctx, photoImg, width, height);
+      if (photoImg) {
+        // Отрисовка без искажения пропорций (object-fit: cover)
+        drawImageCover(ctx, photoImg, width, height);
 
           // Динамическое наложение освещения по времени суток на единое фоновое изображение
           if (curTime === 'morning') {
@@ -191,10 +191,6 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
           drawBackgroundScenery(ctx, width, height, curTime, curLocation);
           drawWaterSurface(ctx, width, height, height * 0.48, curTime, curLocation, time);
         }
-      } else {
-        drawSky(ctx, width, height, curTime, curLocation);
-        drawWaterSurface(ctx, width, height, height * 0.48, curTime, curLocation, time);
-      }
 
       // 3.5. Отрисовка погодных эффектов на холсте (дождь с каплями и кругами, туман, пасмурно, солнце)
       drawWeatherEffects(ctx, width, height, curWeather, time);

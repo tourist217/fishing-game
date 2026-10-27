@@ -8,6 +8,7 @@ export interface FishingLocation {
   accentColor: string;
   waterType: 'still' | 'slow_current' | 'fast_current' | 'deep_water';
   weightModifier: number; // Множитель среднего веса рыбы
+  image?: string;
 }
 
 export const LOCATIONS: FishingLocation[] = [
@@ -21,6 +22,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#10b981',
     waterType: 'still',
     weightModifier: 1.0,
+    image: '/assets/locations/loc_village_pond_base.jpg',
   },
   {
     id: 'loc_old_oxbow',
@@ -32,6 +34,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#34d399',
     waterType: 'still',
     weightModifier: 1.25,
+    image: '/assets/locations/loc_old_oxbow.jpg',
   },
   {
     id: 'loc_forest_lake',
