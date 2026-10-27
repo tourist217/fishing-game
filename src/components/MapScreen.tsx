@@ -490,7 +490,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({
           <button
             onClick={() => scrollToLocation(currentLocationId)}
             style={{
-              position: 'fixed',
+              position: 'absolute',
               bottom: showPreviewModal ? '240px' : '75px',
               right: '16px',
               zIndex: 35,

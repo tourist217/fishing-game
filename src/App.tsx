@@ -148,11 +148,14 @@ export default function App() {
 
   return (
     <div
+      className="app-mobile-container"
       style={{
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
         width: '100%',
+        position: 'relative',
+        overflow: 'hidden',
         boxSizing: 'border-box',
         padding: !isAtPond && activeTab === 'base'
           ? '0 0 calc(6px + env(safe-area-inset-bottom, 0px)) 0'

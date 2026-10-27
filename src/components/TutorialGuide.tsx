@@ -149,7 +149,7 @@ export const TutorialGuide: React.FC<TutorialGuideProps> = ({ step, onNext, onSk
       {/* Панель подсказки Егеря */}
       <div
         style={{
-          position: 'fixed',
+          position: 'absolute',
           ...config.boxStyle,
           zIndex: 9999,
           pointerEvents: 'auto',
