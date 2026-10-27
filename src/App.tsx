@@ -124,6 +124,14 @@ export default function App() {
         return activeTab !== 'keepnet';
       case 'sell_fish':
         return activeTab === 'keepnet';
+      case 'go_to_shop':
+        return true;
+      case 'buy_bait':
+        return activeTab === 'shop';
+      case 'energy_info':
+        return true;
+      case 'map_info':
+        return true;
       default:
         return false;
     }
@@ -337,7 +345,8 @@ export default function App() {
             trackGoal('sell_single_fish', { price });
             triggerHaptic('impact');
             if (tutorial.step === 'sell_fish') {
-              tutorial.completeTutorial();
+              player.addCoins(10);
+              tutorial.nextStep('sell_fish', 'go_to_shop');
             }
           }}
           onSellAll={() => {
@@ -345,7 +354,8 @@ export default function App() {
             trackGoal('sell_all_fish');
             triggerHaptic('notification');
             if (tutorial.step === 'sell_fish') {
-              tutorial.completeTutorial();
+              player.addCoins(10);
+              tutorial.nextStep('sell_fish', 'go_to_shop');
             }
           }}
           onClose={() => {
@@ -363,6 +373,7 @@ export default function App() {
           baits={baits.baits}
           baitCapacity={baits.currentBaitCapacity}
           upgrades={baits.upgrades}
+          initialTab={tutorial.step === 'buy_bait' ? 'baits' : tutorial.step === 'energy_info' ? 'provisions' : undefined}
           onBuyRod={gear.buyRod}
           onUpgradeRod={gear.upgradeRod}
           onEquipRod={gear.equipRod}
@@ -371,7 +382,13 @@ export default function App() {
           onEquipReel={gear.equipReel}
           onBuyLine={gear.buyLine}
           onEquipLine={gear.equipLine}
-          onBuyBait={baits.buyBait}
+          onBuyBait={(baitId, count, price) => {
+            const res = baits.buyBait(baitId, count, price);
+            if (res && tutorial.step === 'buy_bait') {
+              tutorial.nextStep('buy_bait', 'energy_info');
+            }
+            return res;
+          }}
           onBuyUpgrade={baits.buyUpgrade}
           energy={player.energy}
           maxEnergy={player.maxEnergy}
@@ -405,6 +422,12 @@ export default function App() {
           if (tab === 'keepnet' && tutorial.step === 'open_keepnet') {
             tutorial.nextStep('open_keepnet', 'sell_fish');
           }
+          if (tab === 'shop' && tutorial.step === 'go_to_shop') {
+            tutorial.nextStep('go_to_shop', 'buy_bait');
+          }
+          if (tab === 'map' && tutorial.step === 'map_info') {
+            tutorial.completeTutorial();
+          }
           if (tab === 'base') {
             if (isAtPond) {
               fishing.resetToIdle();
@@ -435,6 +458,28 @@ export default function App() {
               setActiveTab('keepnet');
               tutorial.nextStep('open_keepnet', 'sell_fish');
             } else if (tutorial.step === 'sell_fish') {
+              player.sellAllFish();
+              player.addCoins(10);
+              tutorial.nextStep('sell_fish', 'go_to_shop');
+            } else if (tutorial.step === 'go_to_shop') {
+              if (isAtPond) {
+                fishing.resetToIdle();
+                setIsAtPond(false);
+              }
+              setActiveTab('shop');
+              setIsMapOpen(false);
+              tutorial.nextStep('go_to_shop', 'buy_bait');
+            } else if (tutorial.step === 'buy_bait') {
+              tutorial.nextStep('buy_bait', 'energy_info');
+            } else if (tutorial.step === 'energy_info') {
+              tutorial.nextStep('energy_info', 'map_info');
+            } else if (tutorial.step === 'map_info') {
+              if (isAtPond) {
+                fishing.resetToIdle();
+                setIsAtPond(false);
+              }
+              setActiveTab('map');
+              setIsMapOpen(true);
               tutorial.completeTutorial();
             } else {
               tutorial.nextStep();

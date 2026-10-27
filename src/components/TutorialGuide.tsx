@@ -64,9 +64,57 @@ export const TutorialGuide: React.FC<TutorialGuideProps> = ({ step, onNext, onSk
       case 'sell_fish':
         return {
           title: 'Старый Егерь',
-          text: 'Здесь твой улов. Нажми «Продать всё» наверху, чтобы получить монеты на новые снасти!',
+          text: 'Здесь твой улов. Нажми «Продать всё» наверху, чтобы получить монеты на первые снасти!',
           arrowPos: 'top' as const,
-          actionLabel: 'Понятно, на рыбалку! 🎣',
+          actionLabel: undefined,
+          boxStyle: {
+            bottom: 'calc(75px + env(safe-area-inset-bottom, 0px))',
+            left: '12px',
+            right: '12px',
+          },
+        };
+      case 'go_to_shop':
+        return {
+          title: 'Старый Егерь',
+          text: 'Отличная сделка! Держи ещё +10 монет 🪙 от меня в подарок. Теперь заглянем в Магазин за наживками!',
+          arrowPos: 'bottom' as const,
+          actionLabel: 'В магазин 🛒',
+          boxStyle: {
+            bottom: 'calc(75px + env(safe-area-inset-bottom, 0px))',
+            left: '12px',
+            right: '12px',
+          },
+        };
+      case 'buy_bait':
+        return {
+          title: 'Старый Егерь',
+          text: 'Здесь продаются черви 🪱 и другие наживки. Всегда держи запас, чтобы не остаться без клёва!',
+          arrowPos: 'top' as const,
+          actionLabel: 'Понятно, дальше! 👍',
+          boxStyle: {
+            bottom: 'calc(75px + env(safe-area-inset-bottom, 0px))',
+            left: '12px',
+            right: '12px',
+          },
+        };
+      case 'energy_info':
+        return {
+          title: 'Старый Егерь',
+          text: 'Обрати внимание на молнию ⚡: на каждую рыбалку тратится энергия. Она восстанавливается со временем, а ещё можно выпить чай ☕ у костра!',
+          arrowPos: 'top' as const,
+          actionLabel: 'Понятно, дальше! 👍',
+          boxStyle: {
+            bottom: 'calc(75px + env(safe-area-inset-bottom, 0px))',
+            left: '12px',
+            right: '12px',
+          },
+        };
+      case 'map_info':
+        return {
+          title: 'Старый Егерь',
+          text: 'И главное — Карта 🗺️! Здесь открываются новые реки и озёра по мере роста твоего уровня: от лесных озёр до великой Волги!',
+          arrowPos: 'bottom' as const,
+          actionLabel: 'Завершить обучение 🎣',
           boxStyle: {
             bottom: 'calc(75px + env(safe-area-inset-bottom, 0px))',
             left: '12px',

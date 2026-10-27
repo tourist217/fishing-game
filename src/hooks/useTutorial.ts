@@ -2,12 +2,16 @@ import { useState, useCallback } from 'react';
 import { trackGoal } from '../utils/analytics';
 
 export type TutorialStep =
-  | 'welcome_cast'   // Шаг 1: На главном экране -> Нажми «На рыбалку»
-  | 'cast_rod'       // Шаг 2: На водоёме -> Забрось удочку
-  | 'reeling_guide'  // Шаг 3: При вываживании -> Удерживай «Тянуть»
-  | 'open_keepnet'   // Шаг 4: Рыба поймана -> Загляни в Садок
-  | 'sell_fish'      // Шаг 5: В садке -> Продай рыбу за монеты
-  | 'completed';     // Обучение пройдено
+  | 'welcome_cast'   // Шаг 1: Главный экран -> Нажми «На рыбалку»
+  | 'cast_rod'       // Шаг 2: Водоём -> Забрось удочку
+  | 'reeling_guide'  // Шаг 3: Вываживание -> Удерживай «Тянуть»
+  | 'open_keepnet'   // Шаг 4: Поймал рыбу -> Открой Садок
+  | 'sell_fish'      // Шаг 5: Садок -> Продай рыбу (+10 монет бонус!)
+  | 'go_to_shop'     // Шаг 6: Навигация -> В Магазин
+  | 'buy_bait'       // Шаг 7: Магазин -> Покупка наживки (червей)
+  | 'energy_info'    // Шаг 8: Энергия -> Расход и восстановление
+  | 'map_info'       // Шаг 9: Карта -> Водоёмы и уровни
+  | 'completed';     // Обучение завершено
 
 const STORAGE_KEY = 'fg_tutorial_v1_status';
 
@@ -64,7 +68,11 @@ export function useTutorial(playerLevel: number, playerExp: number) {
           case 'cast_rod': next = 'reeling_guide'; break;
           case 'reeling_guide': next = 'open_keepnet'; break;
           case 'open_keepnet': next = 'sell_fish'; break;
-          case 'sell_fish': next = 'completed'; break;
+          case 'sell_fish': next = 'go_to_shop'; break;
+          case 'go_to_shop': next = 'buy_bait'; break;
+          case 'buy_bait': next = 'energy_info'; break;
+          case 'energy_info': next = 'map_info'; break;
+          case 'map_info': next = 'completed'; break;
           default: next = 'completed';
         }
       }

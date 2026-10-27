@@ -58,6 +58,7 @@ export interface ShopScreenProps {
   dailyProvisions?: DailyProvisionsState;
   onBuyProvision?: (id: 'tea' | 'sandwich') => boolean | void;
   onBuyEnergyWithGems?: () => boolean | void;
+  initialTab?: ShopTab;
 }
 
 type ShopTab = 'rods' | 'reels' | 'lines' | 'baits' | 'upgrades' | 'provisions';
@@ -84,9 +85,16 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
     dailyProvisions = { date: '', teaBoughtCount: 0, sandwichBoughtCount: 0 },
     onBuyProvision,
     onBuyEnergyWithGems,
+    initialTab,
   } = props;
 
-  const [shopTab, setShopTab] = useState<ShopTab>('rods');
+  const [shopTab, setShopTab] = useState<ShopTab>(initialTab || 'rods');
+
+  React.useEffect(() => {
+    if (initialTab) {
+      setShopTab(initialTab);
+    }
+  }, [initialTab]);
 
   // Берём списки снастей из gearData напрямую
   const rods: RodTier[] = GearData.ROD_TIERS || [];
