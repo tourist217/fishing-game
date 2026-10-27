@@ -176,6 +176,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
           location={currentLocation}
           gameState={gameState}
           tension={tension}
+          catchProgress={catchProgress}
           rodMaterial={rodMaterial}
         />
 

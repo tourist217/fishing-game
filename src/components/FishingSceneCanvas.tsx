@@ -14,6 +14,7 @@ interface FishingSceneCanvasProps {
   location: FishingLocation;
   gameState: GameState;
   tension: number; // 0..100
+  catchProgress?: number; // 0..100
   rodMaterial?: string;
   onCastComplete?: () => void;
   timeOfDay?: TimeOfDay;
@@ -54,6 +55,7 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
   location,
   gameState,
   tension,
+  catchProgress = 0,
   rodMaterial = 'reed',
   timeOfDay: propTimeOfDay,
   weather: propWeather,
@@ -72,6 +74,12 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
 
   const tensionRef = useRef(tension);
   useEffect(() => { tensionRef.current = tension; }, [tension]);
+
+  const catchProgressRef = useRef(catchProgress);
+  useEffect(() => { catchProgressRef.current = catchProgress; }, [catchProgress]);
+
+  const lerpedCatchProgressRef = useRef(0);
+  const hookedStartTimeRef = useRef<number>(Date.now());
 
   const rodMaterialRef = useRef(rodMaterial);
   useEffect(() => { rodMaterialRef.current = rodMaterial; }, [rodMaterial]);
@@ -94,8 +102,12 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
       const ry = 0.58 + Math.random() * 0.14;
       castTargetRef.current = { x: rx, y: ry };
       castProgressRef.current = 0; // Стартуем анимацию полета
+      lerpedCatchProgressRef.current = 0;
+    } else if (gameState === 'hooked') {
+      hookedStartTimeRef.current = Date.now();
     } else if (gameState === 'idle') {
       castProgressRef.current = 1;
+      lerpedCatchProgressRef.current = 0;
     }
   }, [gameState]);
 
@@ -187,35 +199,110 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
       // 3.5. Отрисовка погодных эффектов на холсте (дождь с каплями и кругами, туман, пасмурно, солнце)
       drawWeatherEffects(ctx, width, height, curWeather, time);
 
-      // 4. Позиция поплавка на экране
+      // 4. Позиция поплавка и точки входа лески на экране
       const targetX = width * curCastTarget.x;
       const targetY = height * curCastTarget.y;
 
       let floatX = targetX;
       let floatY = targetY;
+      let floatTilt = 0;
+      let waterLineOffset = 0;
+      let isBobberVisible = true;
+      let lineWaterX = targetX;
+      let lineWaterY = targetY;
 
       if (curCastProgress < 1) {
-        // Полет поплавка по дуге (заброс)
+        // Полет поплавка по дуге при забросе
         const startX = width * 0.85;
         const startY = height * 0.8;
         const arcY = Math.sin(curCastProgress * Math.PI) * 120;
         floatX = startX + (targetX - startX) * curCastProgress;
         floatY = startY + (targetY - startY) * curCastProgress - arcY;
-      } else {
-        // Покачивание на волнах в покое или рывки при поклевке/вываживании
-        const waveBob = Math.sin(time * 2.5) * 3;
-        let biteShake = 0;
-        if (curGameState === 'hooked') {
-          biteShake = (Math.random() - 0.5) * 8 + Math.sin(time * 15) * 6; // Быстрая поклёвка
-        } else if (curGameState === 'reeling') {
-          biteShake = Math.sin(time * 8) * (curTension * 0.08); // Рывки при тяге
-        }
-        floatY += waveBob + biteShake;
-      }
+        lineWaterX = floatX;
+        lineWaterY = floatY;
+      } else if (curGameState === 'reeling') {
+        // === ВЫВАЖИВАНИЕ: ПОПЛАВОК ПОД ВОДОЙ, ЛЕСКА ТЯНЕТСЯ К БЕРЕГУ ===
+        isBobberVisible = false;
 
-      // 5. Отрисовка Рипплов (Кругов на воде)
-      if (curCastProgress >= 1 && curGameState !== 'idle') {
-        drawWaterRipples(ctx, floatX, floatY + 6, time, curGameState);
+        const targetProgress = catchProgressRef.current;
+        lerpedCatchProgressRef.current += (targetProgress - lerpedCatchProgressRef.current) * 0.08;
+        const p = Math.max(0, Math.min(1, lerpedCatchProgressRef.current / 100));
+
+        // Точка у мостков/берега (внизу экрана)
+        const shoreX = width * 0.52;
+        const shoreY = height * 0.92;
+
+        const baseX = targetX + (shoreX - targetX) * p;
+        const baseY = targetY + (shoreY - targetY) * p;
+
+        // Сопротивление рыбы: виляние из стороны в сторону (уменьшается у самого берега)
+        const fightAmplitude = (1 - p * 0.65) * 26;
+        const lateralSway = Math.sin(time * 5.5) * fightAmplitude;
+        const verticalSway = Math.cos(time * 7.0) * 3;
+
+        lineWaterX = baseX + lateralSway;
+        lineWaterY = baseY + verticalSway;
+
+        // Отрисовка бурунов, брызг и подводного силуэта рыбы
+        drawReelingWaterEffects(ctx, lineWaterX, lineWaterY, time, curTension, p);
+      } else if (curGameState === 'hooked') {
+        // === РЕАЛИСТИЧНАЯ ПОКЛЁВКА (ПРИТОПЫ, ВЫКЛАДЫВАНИЕ, УТОП С НАКЛОНОМ) ===
+        const hookedAge = (Date.now() - hookedStartTimeRef.current) / 1000;
+        const cycle = hookedAge % 2.2;
+        let biteDip = 0;
+        let biteTilt = 0;
+        let rippleIntensity = 1;
+
+        if (cycle < 0.45) {
+          // 1. Первый осторожный притоп
+          const p = Math.sin((cycle / 0.45) * Math.PI);
+          biteDip = p * 6;
+          biteTilt = p * 0.12;
+          rippleIntensity = 1.3;
+        } else if (cycle < 0.75) {
+          // 2. Пауза
+          biteDip = 0;
+          biteTilt = 0;
+        } else if (cycle < 1.25) {
+          // 3. Второй уверенный притоп
+          const p = Math.sin(((cycle - 0.75) / 0.5) * Math.PI);
+          biteDip = p * 10;
+          biteTilt = -p * 0.18;
+          rippleIntensity = 1.7;
+        } else if (cycle < 1.5) {
+          // 4. Выкладывание (подъём)
+          const p = Math.sin(((cycle - 1.25) / 0.25) * Math.PI);
+          biteDip = -p * 3;
+          biteTilt = p * 0.08;
+        } else {
+          // 5. Решительный утоп
+          const p = (cycle - 1.5) / 0.7;
+          const easeP = Math.sin(p * Math.PI * 0.5);
+          biteDip = 12 + easeP * 8;
+          biteTilt = 0.35 + Math.sin(time * 8) * 0.08;
+          rippleIntensity = 2.4;
+        }
+
+        floatX = targetX + Math.sin(time * 3) * 2;
+        floatY = targetY + Math.sin(time * 2.5) * 2;
+        waterLineOffset = biteDip;
+        floatTilt = biteTilt;
+        lineWaterX = floatX;
+        lineWaterY = floatY + biteDip;
+
+        drawWaterRipples(ctx, targetX, targetY + 6, time, 'hooked', rippleIntensity);
+      } else {
+        // === ПОКОЙ (ОЖИДАНИЕ / WAITING): МЯГКОЕ ПОКАЧИВАНИЕ НА ВОЛНАХ ===
+        const waveBob = Math.sin(time * 2.5) * 2.5;
+        floatX = targetX + Math.sin(time * 1.5) * 1.5;
+        floatY = targetY + waveBob;
+        floatTilt = Math.sin(time * 1.8) * 0.05;
+        lineWaterX = floatX;
+        lineWaterY = floatY;
+
+        if (curCastProgress >= 1 && curGameState !== 'idle') {
+          drawWaterRipples(ctx, targetX, targetY + 6, time, 'waiting', 1);
+        }
       }
 
       // 6. Вычисление Изгиба Удочки (Bending Rod)
@@ -233,12 +320,12 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
 
       // 7. Отрисовка Лески (Line)
       if (curGameState !== 'idle') {
-        drawFishingLine(ctx, rodTipX, rodTipY, floatX, floatY, bendFactor, curGameState);
+        drawFishingLine(ctx, rodTipX, rodTipY, lineWaterX, lineWaterY, bendFactor, curGameState, curTension, time);
       }
 
       // 8. Отрисовка Поплавка
-      if (curGameState !== 'idle') {
-        drawFloat(ctx, floatX, floatY, curTime, curGameState);
+      if (curGameState !== 'idle' && isBobberVisible) {
+        drawFloat(ctx, floatX, floatY, curTime, floatTilt, waterLineOffset);
       }
 
       // 9. Отрисовка Удилища (Rod)
@@ -597,19 +684,20 @@ function drawWaterRipples(
   cx: number,
   cy: number,
   time: number,
-  gameState: GameState
+  gameState: GameState,
+  intensity: number = 1
 ) {
-  const expandSpeed = gameState === 'hooked' ? 4 : 2;
+  const expandSpeed = gameState === 'hooked' ? 3.5 * Math.min(1.8, intensity) : 2;
   const numRipples = gameState === 'hooked' ? 3 : 2;
 
   for (let i = 0; i < numRipples; i++) {
     const phase = (time * expandSpeed + i * 0.8) % 2.5;
-    const radiusX = phase * 18 + 4;
+    const radiusX = (phase * 16 + 4) * Math.min(1.8, intensity);
     const radiusY = radiusX * 0.4;
     const alpha = Math.max(0, 1 - phase / 2.5) * (gameState === 'hooked' ? 0.7 : 0.35);
 
     ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.4;
     ctx.beginPath();
     ctx.ellipse(cx, cy, radiusX, radiusY, 0, 0, Math.PI * 2);
     ctx.stroke();
@@ -621,54 +709,58 @@ function drawFloat(
   fx: number,
   fy: number,
   timeOfDay: TimeOfDay,
-  gameState: GameState
+  tiltAngle: number = 0,
+  waterLineOffset: number = 0
 ) {
-  const isDipped = gameState === 'hooked';
-  const drawY = isDipped ? fy + 8 : fy;
+  ctx.save();
+  ctx.translate(fx, fy + waterLineOffset);
+  if (tiltAngle !== 0) {
+    ctx.rotate(tiltAngle);
+  }
 
   // 1. Подводная тень поплавка
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
   ctx.beginPath();
-  ctx.ellipse(fx, drawY + 10, 7, 3, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 10, 7, 3, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // 2. Киль поплавка (градиентный темно-серый под водой)
+  // 2. Киль поплавка (под водой)
   ctx.fillStyle = '#1e293b';
   ctx.beginPath();
-  ctx.rect(fx - 1.5, drawY, 3, 14);
+  ctx.rect(-1.5, 0, 3, 14);
   ctx.fill();
 
   // 3. Реалистичное тело бальзового поплавка (каплевидная форма с бликом)
-  const bodyGrad = ctx.createLinearGradient(fx - 6, drawY, fx + 6, drawY);
+  const bodyGrad = ctx.createLinearGradient(-6, 0, 6, 0);
   bodyGrad.addColorStop(0, '#e2e8f0');
   bodyGrad.addColorStop(0.5, '#ffffff');
   bodyGrad.addColorStop(1, '#94a3b8');
 
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
-  ctx.ellipse(fx, drawY - 4, 6, 10, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, -4, 6, 10, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Красный воротничок тела
   ctx.fillStyle = '#dc2626';
   ctx.beginPath();
-  ctx.rect(fx - 5.5, drawY - 9, 11, 5);
+  ctx.rect(-5.5, -9, 11, 5);
   ctx.fill();
 
   // 4. Реалистичная антенна поплавка (полосатая высокой видимости)
   ctx.fillStyle = '#facc15'; // жёлтая полоса
   ctx.beginPath();
-  ctx.rect(fx - 1.5, drawY - 20, 3, 11);
+  ctx.rect(-1.5, -20, 3, 11);
   ctx.fill();
 
   ctx.fillStyle = '#ef4444'; // красная верхушка
   ctx.beginPath();
-  ctx.rect(fx - 1.5, drawY - 20, 3, 5);
+  ctx.rect(-1.5, -20, 3, 5);
   ctx.fill();
 
   // Черные разделительные кольца на антенне
   ctx.fillStyle = '#0f172a';
-  ctx.fillRect(fx - 1.5, drawY - 15, 3, 1.5);
+  ctx.fillRect(-1.5, -15, 3, 1.5);
 
   // В ночное время: неоновый святящийся химический светлячок!
   if (timeOfDay === 'night') {
@@ -676,10 +768,80 @@ function drawFloat(
     ctx.shadowColor = '#22c55e';
     ctx.shadowBlur = 14;
     ctx.beginPath();
-    ctx.arc(fx, drawY - 20, 4, 0, Math.PI * 2);
+    ctx.arc(0, -20, 4, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
   }
+
+  ctx.restore();
+}
+
+function drawReelingWaterEffects(
+  ctx: CanvasRenderingContext2D,
+  wx: number,
+  wy: number,
+  time: number,
+  tension: number,
+  progress: number
+) {
+  ctx.save();
+
+  // 1. Подводный силуэт рыбы под точкой входа лески
+  const fishSize = 13 + (1 - progress) * 8;
+  const fishSway = Math.sin(time * 6) * 4;
+  ctx.fillStyle = 'rgba(10, 25, 40, 0.45)';
+  ctx.beginPath();
+  ctx.ellipse(wx + fishSway, wy + 8, fishSize, 5, fishSway * 0.08, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 2. Кильватерный след (V-образная волна от подтягивания рыбы к берегу)
+  const wakeCount = 3;
+  for (let i = 0; i < wakeCount; i++) {
+    const phase = (time * 3.2 + i * 0.7) % 2.0;
+    const spread = phase * 16 + 4;
+    const alpha = Math.max(0, 1 - phase / 2.0) * 0.65;
+
+    ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+    ctx.lineWidth = 1.3;
+
+    // Левый и правый усик V-волны
+    ctx.beginPath();
+    ctx.moveTo(wx, wy);
+    ctx.lineTo(wx - spread * 1.3, wy - spread * 0.6);
+    ctx.moveTo(wx, wy);
+    ctx.lineTo(wx + spread * 1.3, wy - spread * 0.6);
+    ctx.stroke();
+
+    // Овальный бурунчик
+    ctx.beginPath();
+    ctx.ellipse(wx, wy, spread * 0.8, spread * 0.35, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // 3. Брызги и белая пена в месте разрезания воды леской
+  const foamIntensity = Math.min(1, 0.4 + tension / 100);
+  ctx.fillStyle = `rgba(255, 255, 255, ${0.75 * foamIntensity})`;
+  ctx.beginPath();
+  ctx.arc(wx, wy, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 4. Мелкие летящие капли брызг при среднем и сильном натяжении
+  if (tension > 35) {
+    for (let i = 0; i < 4; i++) {
+      const dropAngle = (time * 12 + i * 1.5) % Math.PI;
+      const dropDist = 6 + Math.sin(time * 15 + i) * 6;
+      const dx = wx + Math.cos(dropAngle) * dropDist;
+      const dy = wy - Math.sin(dropAngle) * (dropDist * 0.7);
+      const dropAlpha = Math.max(0, 0.8 - dropDist / 14);
+
+      ctx.fillStyle = `rgba(255, 255, 255, ${dropAlpha})`;
+      ctx.beginPath();
+      ctx.arc(dx, dy, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
 }
 
 function drawFishingLine(
@@ -689,19 +851,43 @@ function drawFishingLine(
   fx: number,
   fy: number,
   bendFactor: number,
-  gameState: GameState
+  gameState: GameState,
+  tension: number = 0,
+  time: number = 0
 ) {
-  ctx.strokeStyle = gameState === 'reeling' ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.45)';
-  ctx.lineWidth = 1;
+  if (gameState === 'reeling') {
+    // Натянутая как струна леска с микро-вибрацией от натяжения
+    const vibe = tension > 25 ? Math.sin(time * 70) * (tension / 100) * 1.5 : 0;
+    const midX = (tx + fx) / 2 + vibe;
+    const midY = (ty + fy) / 2;
 
-  // Прогиб лески под собственным весом или натяжением
-  const midX = (tx + fx) / 2;
-  const midY = (ty + fy) / 2 + (1 - bendFactor) * 22;
+    ctx.save();
+    ctx.strokeStyle = tension > 80 ? 'rgba(254, 202, 202, 0.95)' : 'rgba(255, 255, 255, 0.9)';
+    ctx.lineWidth = tension > 70 ? 1.4 : 1.0;
+    if (tension > 75) {
+      ctx.shadowColor = 'rgba(239, 68, 68, 0.6)';
+      ctx.shadowBlur = 6;
+    }
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(midX, midY);
+    ctx.lineTo(fx, fy);
+    ctx.stroke();
+    ctx.restore();
+  } else {
+    // Спокойная леска с естественным провисанием
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.lineWidth = 1;
+    const midX = (tx + fx) / 2;
+    const midY = (ty + fy) / 2 + (1 - bendFactor) * 22;
 
-  ctx.beginPath();
-  ctx.moveTo(tx, ty);
-  ctx.quadraticCurveTo(midX, midY, fx, fy);
-  ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.quadraticCurveTo(midX, midY, fx, fy);
+    ctx.stroke();
+    ctx.restore();
+  }
 }
 
 function drawRod(
