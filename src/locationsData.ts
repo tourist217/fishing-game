@@ -58,6 +58,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#38bdf8',
     waterType: 'slow_current',
     weightModifier: 1.8,
+    image: '/assets/locations/loc_quiet_river.jpg',
   },
   {
     id: 'loc_beaver_backwater',
