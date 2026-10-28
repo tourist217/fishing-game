@@ -82,6 +82,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#60a5fa',
     waterType: 'slow_current',
     weightModifier: 2.7,
+    image: '/assets/locations/loc_wide_reach.jpg',
   },
   {
     id: 'loc_reservoir',

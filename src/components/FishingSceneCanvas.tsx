@@ -146,6 +146,7 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
         loc_forest_lake: '/assets/locations/loc_forest_lake.jpg',
         loc_quiet_river: '/assets/locations/loc_quiet_river.jpg',
         loc_beaver_backwater: '/assets/locations/loc_beaver_backwater.jpg',
+        loc_wide_reach: '/assets/locations/loc_wide_reach.jpg',
       };
 
       const bgSrc = curLocation.image || LOCATION_BG_MAP[curLocation.id];
