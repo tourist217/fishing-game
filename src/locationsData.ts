@@ -76,7 +76,7 @@ export const LOCATIONS: FishingLocation[] = [
     id: 'loc_wide_reach',
     name: 'Широкий плёс',
     levelReq: 15,
-    description: 'Открытая речная гладь с выраженными свалами и бровками. Нужен точный дальний заброс.',
+    description: 'Широкий речной простор с открытой водой и далёкими песчаными косами. Нужен точный дальний заброс.',
     icon: '🌊',
     gradient: 'linear-gradient(180deg, #122b49 0%, #1d436e 55%, #0a1b30 100%)',
     accentColor: '#60a5fa',
