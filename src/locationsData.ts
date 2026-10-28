@@ -94,6 +94,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#818cf8',
     waterType: 'deep_water',
     weightModifier: 3.3,
+    image: '/assets/locations/loc_reservoir.jpg',
   },
   {
     id: 'loc_oka_river',
