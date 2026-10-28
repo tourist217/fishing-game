@@ -70,6 +70,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#eab308',
     waterType: 'slow_current',
     weightModifier: 2.2,
+    image: '/assets/locations/loc_beaver_backwater.jpg',
   },
   {
     id: 'loc_wide_reach',
