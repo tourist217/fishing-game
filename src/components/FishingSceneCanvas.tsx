@@ -311,29 +311,66 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
         }
       }
 
-      // 6. Вычисление положения Удочки (First-Person Rod & Tip Coordinates)
-      const rodH = Math.min(height * 0.85, Math.max(height * 0.74, width * 1.35));
-      const rodScale = rodH / 1791;
-      const rodW = 841 * rodScale;
-
-      const buttTargetX = width * 0.94;
-      const buttTargetY = height * 1.02;
-
-      const rodDrawX = buttTargetX - 750 * rodScale;
-      const rodDrawY = buttTargetY - 1695 * rodScale;
-
-      // Экранные координаты вершинки (тюльпана) для привязки лески
-      const rodTipX = rodDrawX + 78 * rodScale;
-      const rodTipY = rodDrawY + 81 * rodScale;
-
-      const rodBaseX = buttTargetX;
-      const rodBaseY = buttTargetY;
-      const bendFactor = 0;
-
-      // Анимация вращения катушки при подмотке лески
-      if (curGameState === 'reeling') {
-        crankAngleRef.current += 0.28 + (curTension / 100) * 0.22;
+      // 6. Вычисление Нагрузки и Изгиба Удочки Дугой (Progressive Arc Bending)
+      let bendFactor = 0;
+      if (curGameState === 'hooked') {
+        // При поклевке вершинка пружинит и кивает в такт поплавку
+        bendFactor = 0.12 + Math.max(0, Math.sin(time * 14)) * 0.18;
+      } else if (curGameState === 'reeling') {
+        // При вываживании - изгиб дугой зависит от натяжения + рывки рыбы
+        const fishPulse = Math.sin(time * 4) * 0.10 + Math.sin(time * 9.5) * 0.05;
+        bendFactor = Math.min(1.0, Math.max(0.12, (curTension / 100) * 0.85 + fishPulse));
+        // Вращение ручки катушки при подмотке
+        crankAngleRef.current += 0.24 + (curTension / 100) * 0.22;
+      } else if (curGameState === 'caught') {
+        bendFactor = 0.20;
       }
+
+      // Геометрия Удочки: привязка комля в правом нижнем углу
+      const buttX = width * 0.94;
+      const buttY = height * 1.02;
+      const targetTipX = width * 0.28;
+      const targetTipY = height * 0.35;
+
+      const dx = targetTipX - buttX;
+      const dy = targetTipY - buttY;
+      const totalLen = Math.hypot(dx, dy);
+      const ux = dx / totalLen;
+      const uy = dy / totalLen;
+      const nx = -uy;
+      const ny = ux;
+
+      const handleLen = totalLen * 0.26;
+      const blankLen = totalLen * 0.74;
+      const rodScale = handleLen / 195.0;
+
+      // Точка выхода бланка из рукоятки
+      const p0 = {
+        x: buttX + ux * handleLen,
+        y: buttY + uy * handleLen
+      };
+
+      const b = Math.min(1.0, Math.max(0, bendFactor));
+
+      // Контрольные точки кубической кривой Безье (Параболический изгиб дугой)
+      const c1 = {
+        x: p0.x + ux * blankLen * (0.34 - 0.04 * b) + nx * (36 * b * rodScale),
+        y: p0.y + uy * blankLen * (0.34 - 0.04 * b) + ny * (36 * b * rodScale)
+      };
+
+      const c2 = {
+        x: p0.x + ux * blankLen * (0.68 - 0.16 * b) + nx * (175 * b * rodScale),
+        y: p0.y + uy * blankLen * (0.68 - 0.16 * b) + ny * (175 * b * rodScale)
+      };
+
+      const p3 = {
+        x: p0.x + ux * blankLen * (1.0 - 0.38 * b) + nx * (235 * b * rodScale),
+        y: p0.y + uy * blankLen * (1.0 - 0.38 * b) + ny * (235 * b * rodScale)
+      };
+
+      // Экранные координаты тюльпана (вершинки) для привязки лески
+      const rodTipX = p3.x;
+      const rodTipY = p3.y;
 
       // 7. Отрисовка Лески (Line)
       if (curGameState !== 'idle') {
@@ -345,8 +382,8 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
         drawFloat(ctx, floatX, floatY, curTime, floatTilt, waterLineOffset);
       }
 
-      // 9. Отрисовка Удилища (Rod)
-      drawRod(ctx, rodDrawX, rodDrawY, rodW, rodH, rodBaseX, rodBaseY, rodTipX, rodTipY, bendFactor, curRodMaterial);
+      // 9. Отрисовка Векторного Удилища (Classic Vector Rod with Arc Bending)
+      drawVectorRod(ctx, buttX, buttY, p0, c1, c2, p3, rodScale, crankAngleRef.current, curRodMaterial);
 
       animationFrameId = requestAnimationFrame(render);
     };
@@ -951,99 +988,357 @@ function drawFishingLine(
   }
 }
 
-function drawRod(
+function drawVectorRod(
   ctx: CanvasRenderingContext2D,
-  drawX: number,
-  drawY: number,
-  rodW: number,
-  rodH: number,
-  bx: number,
-  by: number,
-  tx: number,
-  ty: number,
-  bendFactor: number,
-  rodMaterial: string
+  buttX: number,
+  buttY: number,
+  p0: { x: number; y: number },
+  c1: { x: number; y: number },
+  c2: { x: number; y: number },
+  p3: { x: number; y: number },
+  scale: number,
+  crankAngle: number,
+  _rodMaterial: string
 ) {
-  const rodImg = getPreloadedImage('/assets/ui/rod_fps.png');
+  ctx.save();
 
-  if (rodImg) {
-    // Отрисовка цельного оригинального арта удилища из 4.png 1:1 без срезов и искажений
-    ctx.drawImage(rodImg, drawX, drawY, rodW, rodH);
-    return;
-  }
+  // 1. Отрисовка Рукояти и Катушки в локальных координатах комля
+  const handleAngle = Math.atan2(p0.y - buttY, p0.x - buttX);
+  const handleLen = Math.hypot(p0.x - buttX, p0.y - buttY);
 
-  // Fallback: процедурная отрисовка удилища, если изображение еще загружается
-  const ctrlX = bx - 60 - bendFactor * 55;
-  const ctrlY = by - (by - ty) * 0.55;
+  ctx.save();
+  ctx.translate(buttX, buttY);
+  ctx.rotate(handleAngle);
 
-  let mainColor = '#d4a373'; // reed / бамбук
-  let nodeColor = '#78350f'; // узлы бамбука
+  // Тень под рукоятью и катушкой
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+  ctx.shadowBlur = 8 * scale;
+  ctx.shadowOffsetY = 4 * scale;
 
-  if (rodMaterial === 'bamboo') {
-    mainColor = '#e9c46a';
-    nodeColor = '#92400e';
-  } else if (rodMaterial === 'plastic') {
-    mainColor = '#0284c7';
-    nodeColor = '#0369a1';
-  } else if (rodMaterial === 'fiberglass') {
-    mainColor = '#10b981';
-    nodeColor = '#047857';
-  } else if (rodMaterial === 'composite') {
-    mainColor = '#ef4444';
-    nodeColor = '#991b1b';
-  } else if (rodMaterial === 'carbon') {
-    mainColor = '#334155';
-    nodeColor = '#0f172a';
-  } else if (rodMaterial === 'gold') {
-    mainColor = '#fbbf24';
-    nodeColor = '#b45309';
-  }
-
-  // 1. Отрисовка бланка удочки (сужающаяся линия от комеля к верхушке)
-  ctx.strokeStyle = mainColor;
-  ctx.lineWidth = 6;
-  ctx.lineCap = 'round';
+  // 1.1 Затыльник рукояти (Butt Cap)
+  ctx.fillStyle = '#0f172a';
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(bx, by);
-  ctx.quadraticCurveTo(ctrlX, ctrlY, tx, ty);
+  ctx.roundRect(-8 * scale, -10 * scale, 12 * scale, 20 * scale, 4 * scale);
+  ctx.fill();
   ctx.stroke();
 
-  // 2. Прорисовка узлов/сочленений колен бамбука/удочки (Nodes/Rings)
-  ctx.strokeStyle = nodeColor;
-  ctx.lineWidth = 3;
-  for (let t = 0.2; t <= 0.8; t += 0.2) {
-    const nx = Math.pow(1 - t, 2) * bx + 2 * (1 - t) * t * ctrlX + t * t * tx;
-    const ny = Math.pow(1 - t, 2) * by + 2 * (1 - t) * t * ctrlY + t * t * ty;
+  // 1.2 Задняя пробковая часть (Rear Grip)
+  const corkGrad = ctx.createLinearGradient(0, -11 * scale, 0, 11 * scale);
+  corkGrad.addColorStop(0, '#dfb173');
+  corkGrad.addColorStop(0.35, '#f5d7a8');
+  corkGrad.addColorStop(0.7, '#c89658');
+  corkGrad.addColorStop(1, '#935f28');
+
+  ctx.fillStyle = corkGrad;
+  ctx.strokeStyle = '#78350f';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.roundRect(4 * scale, -9 * scale, handleLen * 0.45, 18 * scale, 2 * scale);
+  ctx.fill();
+  ctx.stroke();
+
+  // Металлическое соединительное кольцо
+  const titaniumGrad = ctx.createLinearGradient(0, -12 * scale, 0, 12 * scale);
+  titaniumGrad.addColorStop(0, '#64748b');
+  titaniumGrad.addColorStop(0.35, '#cbd5e1');
+  titaniumGrad.addColorStop(0.7, '#475569');
+  titaniumGrad.addColorStop(1, '#1e293b');
+
+  const reelSeatStart = handleLen * 0.46;
+  ctx.fillStyle = titaniumGrad;
+  ctx.fillRect(reelSeatStart, -9.5 * scale, 4 * scale, 19 * scale);
+
+  // 1.3 Катушкодержатель (Reel Seat)
+  const reelSeatLen = handleLen * 0.32;
+  ctx.fillStyle = '#1e293b';
+  ctx.strokeStyle = '#0f172a';
+  ctx.lineWidth = 1;
+  ctx.fillRect(reelSeatStart + 4 * scale, -8.5 * scale, reelSeatLen, 17 * scale);
+
+  // Резьбовые кольца прижима
+  ctx.strokeStyle = '#64748b';
+  ctx.lineWidth = 1.2;
+  for (let i = 1; i <= 3; i++) {
+    const tx = reelSeatStart + 4 * scale + i * 5 * scale;
     ctx.beginPath();
-    ctx.arc(nx, ny, 4, 0, Math.PI * 2);
+    ctx.moveTo(tx, -8.5 * scale);
+    ctx.lineTo(tx, 8.5 * scale);
     ctx.stroke();
   }
 
-  // 3. Пропускные кольца (Line Guides) вдоль бланка
-  for (let t = 0.3; t <= 0.9; t += 0.3) {
-    const gx = Math.pow(1 - t, 2) * bx + 2 * (1 - t) * t * ctrlX + t * t * tx;
-    const gy = Math.pow(1 - t, 2) * by + 2 * (1 - t) * t * ctrlY + t * t * ty;
-    ctx.fillStyle = '#94a3b8';
-    ctx.beginPath();
-    ctx.arc(gx - 2, gy - 2, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // 4. Тюльпан (вершинное кольцо удочки)
-  ctx.fillStyle = '#f8fafc';
-  ctx.strokeStyle = '#64748b';
-  ctx.lineWidth = 1.5;
+  // 1.4 Передняя рукоять (Foregrip - пробка с конусом)
+  const foregripStart = reelSeatStart + 4 * scale + reelSeatLen;
+  const foregripLen = handleLen - foregripStart;
+  ctx.fillStyle = corkGrad;
+  ctx.strokeStyle = '#78350f';
+  ctx.lineWidth = 0.8;
   ctx.beginPath();
-  ctx.arc(tx, ty, 3.5, 0, Math.PI * 2);
+  ctx.moveTo(foregripStart, -8.5 * scale);
+  ctx.lineTo(foregripStart + foregripLen - 4 * scale, -6 * scale);
+  ctx.lineTo(foregripStart + foregripLen - 4 * scale, 6 * scale);
+  ctx.lineTo(foregripStart, 8.5 * scale);
+  ctx.closePath();
   ctx.fill();
   ctx.stroke();
 
-  // 5. Пробковая рукоять (Cork Handle) у комеля внизу справа
-  ctx.fillStyle = '#d4a373';
-  ctx.strokeStyle = '#a16207';
+  // Передняя металлическая оправа
+  ctx.fillStyle = titaniumGrad;
+  ctx.fillRect(foregripStart + foregripLen - 4 * scale, -6.5 * scale, 4 * scale, 13 * scale);
+
+  // 1.5 Монолитная Безынерционная Катушка (Spinning Reel)
+  const rx = reelSeatStart + reelSeatLen * 0.52;
+  ctx.save();
+  ctx.translate(rx, 0);
+
+  // Лапка катушки, плотно сидящая в катушкодержателе
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(-12 * scale, 8 * scale, 24 * scale, 4.5 * scale);
+
+  // Цельнолитая ножка и корпус редуктора (Solid Casting Body)
+  ctx.fillStyle = titaniumGrad;
+  ctx.strokeStyle = '#0f172a';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.roundRect(bx - 12, by - 40, 24, 50, 6);
+  ctx.moveTo(-4 * scale, 12 * scale);
+  ctx.bezierCurveTo(-15 * scale, 20 * scale, -24 * scale, 32 * scale, -18 * scale, 44 * scale);
+  ctx.bezierCurveTo(-14 * scale, 52 * scale, -2 * scale, 54 * scale, 6 * scale, 48 * scale);
+  ctx.bezierCurveTo(14 * scale, 42 * scale, 12 * scale, 30 * scale, 4 * scale, 24 * scale);
+  ctx.bezierCurveTo(2 * scale, 18 * scale, 2 * scale, 14 * scale, 4 * scale, 12 * scale);
+  ctx.closePath();
   ctx.fill();
   ctx.stroke();
+
+  // Золотистый бортик / подшипниковый узел
+  const goldGrad = ctx.createLinearGradient(-10 * scale, 0, 10 * scale, 0);
+  goldGrad.addColorStop(0, '#b45309');
+  goldGrad.addColorStop(0.4, '#fde047');
+  goldGrad.addColorStop(0.7, '#d97706');
+  goldGrad.addColorStop(1, '#78350f');
+
+  ctx.fillStyle = '#1e293b';
+  ctx.strokeStyle = goldGrad;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(-8 * scale, 42 * scale, 6.5 * scale, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Ротор катушки
+  ctx.fillStyle = '#1e293b';
+  ctx.strokeStyle = '#0f172a';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(6 * scale, 32 * scale);
+  ctx.lineTo(16 * scale, 26 * scale);
+  ctx.lineTo(22 * scale, 38 * scale);
+  ctx.lineTo(12 * scale, 44 * scale);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Шпуля с золотым бортиком
+  ctx.fillStyle = goldGrad;
+  ctx.beginPath();
+  ctx.moveTo(16 * scale, 26 * scale);
+  ctx.lineTo(26 * scale, 20 * scale);
+  ctx.lineTo(30 * scale, 28 * scale);
+  ctx.lineTo(20 * scale, 34 * scale);
+  ctx.closePath();
+  ctx.fill();
+
+  // Бирюзовая намотка плетенки на шпуле
+  ctx.fillStyle = '#06b6d4';
+  ctx.beginPath();
+  ctx.moveTo(18 * scale, 25 * scale);
+  ctx.lineTo(24 * scale, 21.5 * scale);
+  ctx.lineTo(27 * scale, 27 * scale);
+  ctx.lineTo(21 * scale, 30.5 * scale);
+  ctx.closePath();
+  ctx.fill();
+
+  // Передняя гайка фрикциона
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.moveTo(26 * scale, 20 * scale);
+  ctx.lineTo(31 * scale, 17 * scale);
+  ctx.lineTo(33 * scale, 21 * scale);
+  ctx.lineTo(28 * scale, 24 * scale);
+  ctx.closePath();
+  ctx.fill();
+
+  // Дужка лесоукладывателя
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(12 * scale, 44 * scale);
+  ctx.quadraticCurveTo(24 * scale, 52 * scale, 28 * scale, 24 * scale);
+  ctx.stroke();
+
+  // Ролик лесоукладывателя
+  ctx.fillStyle = goldGrad;
+  ctx.beginPath();
+  ctx.arc(28 * scale, 24 * scale, 2.5 * scale, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Анимированная ручка катушки с кнобом
+  const axleX = -8 * scale;
+  const axleY = 42 * scale;
+  const crankRadius = 18 * scale;
+  const knobX = axleX + Math.cos(crankAngle) * crankRadius;
+  const knobY = axleY + Math.sin(crankAngle) * crankRadius * 0.65;
+
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.lineWidth = 3.2 * scale;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(axleX, axleY);
+  ctx.lineTo(knobX, knobY);
+  ctx.stroke();
+
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.arc(axleX, axleY, 2.8 * scale, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Кноб (деревянная/пробковая рукоятка ручки)
+  ctx.fillStyle = '#d97706';
+  ctx.strokeStyle = '#78350f';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.ellipse(knobX, knobY, 5.5 * scale, 3.8 * scale, crankAngle, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.restore(); // Закрываем катушку
+  ctx.restore(); // Закрываем локальную систему рукояти
+
+  // 2. Отрисовка БЛАНКА (Кубическая кривая Безье)
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+  ctx.shadowBlur = 6;
+  ctx.shadowOffsetY = 3;
+
+  // Базовый темный графитовый стержень
+  ctx.strokeStyle = '#0f172a';
+  ctx.lineWidth = 6.5 * scale;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(p0.x, p0.y);
+  ctx.bezierCurveTo(c1.x, c1.y, c2.x, c2.y, p3.x, p3.y);
+  ctx.stroke();
+
+  // Металлический отблеск / цилиндрический сердечник бланка
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 4.0 * scale;
+  ctx.beginPath();
+  ctx.moveTo(p0.x, p0.y);
+  ctx.bezierCurveTo(c1.x, c1.y, c2.x, c2.y, p3.x, p3.y);
+  ctx.stroke();
+
+  // Тонкий светлый верхний блик
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 1.2 * scale;
+  ctx.beginPath();
+  ctx.moveTo(p0.x, p0.y);
+  ctx.bezierCurveTo(c1.x, c1.y, c2.x, c2.y, p3.x, p3.y);
+  ctx.stroke();
+
+  ctx.shadowColor = 'transparent';
+
+  // 3. Расчет и Отрисовка Колец (5 колец SIC) вдоль кубической кривой
+  const guideT = [0.15, 0.33, 0.53, 0.76, 1.0];
+  const guideSizes = [11.5, 9.0, 7.2, 5.5, 3.8].map(s => s * scale);
+  const linePoints: { x: number; y: number }[] = [];
+
+  guideT.forEach((t, i) => {
+    const it = 1 - t;
+    // Координаты на кривой
+    const gx = it*it*it * p0.x + 3*it*it*t * c1.x + 3*it*t*t * c2.x + t*t*t * p3.x;
+    const gy = it*it*it * p0.y + 3*it*it*t * c1.y + 3*it*t*t * c2.y + t*t*t * p3.y;
+
+    // Касательный вектор (производная)
+    const dx = 3*it*it * (c1.x - p0.x) + 6*it*t * (c2.x - c1.x) + 3*t*t * (p3.x - c2.x);
+    const dy = 3*it*it * (c1.y - p0.y) + 6*it*t * (c2.y - c1.y) + 3*t*t * (p3.y - c2.y);
+    const len = Math.hypot(dx, dy);
+
+    // Нормаль в сторону прогиба к воде (наружу дуги)
+    const gnx = -dy / len;
+    const gny = dx / len;
+
+    const gSize = guideSizes[i];
+    const legLen = gSize * 0.85;
+
+    // Центр глазка кольца
+    const cx = gx + gnx * (legLen + gSize * 0.5);
+    const cy = gy + gny * (legLen + gSize * 0.5);
+
+    linePoints.push({ x: cx, y: cy });
+
+    if (i < 4) {
+      // Бандажная обмотка на бланке
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 6 * scale;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(gx - (dx / len) * 3 * scale, gy - (dy / len) * 3 * scale);
+      ctx.lineTo(gx + (dx / len) * 3 * scale, gy + (dy / len) * 3 * scale);
+      ctx.stroke();
+
+      // Стальная лапка кольца
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1.6 * scale;
+      ctx.beginPath();
+      ctx.moveTo(gx, gy);
+      ctx.lineTo(cx, cy);
+      ctx.stroke();
+
+      // Оправа кольца
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1.8 * scale;
+      ctx.beginPath();
+      ctx.arc(cx, cy, gSize, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Вставка SIC (темный карбид кремния)
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2.0 * scale;
+      ctx.beginPath();
+      ctx.arc(cx, cy, gSize * 0.68, 0, Math.PI * 2);
+      ctx.stroke();
+    } else {
+      // Тюльпан на вершинке (Tip-top guide)
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 1.6 * scale;
+      ctx.beginPath();
+      ctx.arc(cx, cy, gSize, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 1.8 * scale;
+      ctx.beginPath();
+      ctx.arc(cx, cy, gSize * 0.6, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 2.0 * scale;
+      ctx.beginPath();
+      ctx.moveTo(gx, gy);
+      ctx.lineTo(cx, cy);
+      ctx.stroke();
+    }
+  });
+
+  // 4. Леска, натянутая сквозь кольца
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+  ctx.lineWidth = 1.1 * scale;
+  ctx.beginPath();
+  linePoints.forEach((pt, idx) => {
+    if (idx === 0) ctx.moveTo(pt.x, pt.y);
+    else ctx.lineTo(pt.x, pt.y);
+  });
+  ctx.stroke();
+
+  ctx.restore();
 }
