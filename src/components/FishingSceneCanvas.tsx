@@ -959,15 +959,15 @@ function drawRod(
 
   if (rodImg) {
     // Координаты комля (хвата) и тюльпана (вершинки) в оригинале rod_fps.png
-    const handleImgX = 754;
+    const handleImgX = 737;
     const handleImgY = 1695;
-    const tipImgX = 79;
+    const tipImgX = 72;
     const tipImgY = 81;
 
-    const dImgX = tipImgX - handleImgX; // -675
+    const dImgX = tipImgX - handleImgX; // -665
     const dImgY = tipImgY - handleImgY; // -1614
-    const imgLen = Math.hypot(dImgX, dImgY); // ~1749
-    const imgAngle = Math.atan2(dImgY, dImgX); // ~ -1.966 rad
+    const imgLen = Math.hypot(dImgX, dImgY); // ~1745
+    const imgAngle = Math.atan2(dImgY, dImgX); // ~ -1.96 rad
 
     // Вектор на экране от точки комля (bx, by) к вершинке (tx, ty)
     const dScreenX = tx - bx;
@@ -988,8 +988,8 @@ function drawRod(
     ctx.drawImage(rodImg, -handleImgX, -handleImgY);
 
     // 2. Анимация катушки (вращение рукояти при подмотке лески)
-    // В координатах rod_fps.png ось катушки расположена в точке (x: 295, y: 1265)
-    const axleX = 295 - handleImgX;
+    // В координатах rod_fps.png ось катушки расположена в точке (x: 546, y: 1265)
+    const axleX = 546 - handleImgX;
     const axleY = 1265 - handleImgY;
 
     ctx.save();
