@@ -958,78 +958,72 @@ function drawRod(
   const ctrlY = by - (by - ty) * 0.55;
 
   if (rodImg) {
-    // Сегментная прорисовка изогнутого бланка из оригинального спрайта
-    const segCount = 28;
+    // Координаты комля (хвата) и тюльпана (вершинки) в оригинале rod_fps.png
+    const handleImgX = 754;
+    const handleImgY = 1695;
+    const tipImgX = 79;
+    const tipImgY = 81;
 
-    for (let i = 0; i < segCount; i++) {
-      const t0 = i / segCount;
-      const t1 = (i + 1) / segCount;
-      const tMid = (t0 + t1) * 0.5;
+    const dImgX = tipImgX - handleImgX; // -675
+    const dImgY = tipImgY - handleImgY; // -1614
+    const imgLen = Math.hypot(dImgX, dImgY); // ~1749
+    const imgAngle = Math.atan2(dImgY, dImgX); // ~ -1.966 rad
 
-      const p0X = Math.pow(1 - t0, 2) * bx + 2 * (1 - t0) * t0 * ctrlX + t0 * t0 * tx;
-      const p0Y = Math.pow(1 - t0, 2) * by + 2 * (1 - t0) * t0 * ctrlY + t0 * t0 * ty;
+    // Вектор на экране от точки комля (bx, by) к вершинке (tx, ty)
+    const dScreenX = tx - bx;
+    const dScreenY = ty - by;
+    const screenLen = Math.hypot(dScreenX, dScreenY);
+    const screenAngle = Math.atan2(dScreenY, dScreenX);
 
-      const p1X = Math.pow(1 - t1, 2) * bx + 2 * (1 - t1) * t1 * ctrlX + t1 * t1 * tx;
-      const p1Y = Math.pow(1 - t1, 2) * by + 2 * (1 - t1) * t1 * ctrlY + t1 * t1 * ty;
+    const scale = screenLen / imgLen;
+    const rot = screenAngle - imgAngle;
 
-      const segAngle = Math.atan2(p1Y - p0Y, p1X - p0X);
-      const segDist = Math.hypot(p1X - p0X, p1Y - p0Y);
+    // 1. Отрисовка ЦЕЛЬНОГО монолитного удилища без разбиения на сегменты
+    ctx.save();
+    ctx.translate(bx, by);
+    ctx.rotate(rot);
+    ctx.scale(scale, scale);
 
-      // Срез вертикального спрайта (комель снизу, вершинка сверху)
-      const srcY = rodImg.naturalHeight * (1 - t1);
-      const srcH = rodImg.naturalHeight / segCount;
+    // Рисуем цельный арт удочки, сопоставив комель с точкой хвата (0, 0)
+    ctx.drawImage(rodImg, -handleImgX, -handleImgY);
 
-      ctx.save();
-      ctx.translate(p0X, p0Y);
-      ctx.rotate(segAngle - Math.PI / 2);
-
-      // Коническое сужение бланка от комля к вершинке
-      const scaleW = 0.22 * (1 - tMid * 0.45);
-      const drawW = rodImg.naturalWidth * scaleW;
-
-      ctx.drawImage(
-        rodImg,
-        0, srcY, rodImg.naturalWidth, srcH,
-        -drawW * 0.5, 0, drawW, segDist + 1
-      );
-      ctx.restore();
-    }
-
-    // Анимированная ручка катушки (вращение при подмотке)
-    const reelT = 0.12; // Позиция катушки у основания бланка
-    const reelX = Math.pow(1 - reelT, 2) * bx + 2 * (1 - reelT) * reelT * ctrlX + reelT * reelT * tx;
-    const reelY = Math.pow(1 - reelT, 2) * by + 2 * (1 - reelT) * reelT * ctrlY + reelT * reelT * ty;
+    // 2. Анимация катушки (вращение рукояти при подмотке лески)
+    // В координатах rod_fps.png ось катушки расположена в точке (x: 295, y: 1265)
+    const axleX = 295 - handleImgX;
+    const axleY = 1265 - handleImgY;
 
     ctx.save();
-    ctx.translate(reelX - 8, reelY - 4);
+    ctx.translate(axleX, axleY);
 
-    const crankRadius = 14;
+    const crankRadius = 38; // в масштабе оригинального изображения
     const knobX = Math.cos(crankAngle) * crankRadius;
     const knobY = Math.sin(crankAngle) * crankRadius * 0.65; // Эллиптическая 3D перспектива вращения
 
-    // Рычаг катушки
-    ctx.strokeStyle = '#94a3b8';
-    ctx.lineWidth = 3.5;
+    // Рычаг катушки (металлический стержень)
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 9;
     ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(knobX, knobY);
     ctx.stroke();
 
-    // Ось вращения
+    // Ось вращения катушки
     ctx.fillStyle = '#0f172a';
     ctx.beginPath();
-    ctx.arc(0, 0, 4, 0, Math.PI * 2);
+    ctx.arc(0, 0, 11, 0, Math.PI * 2);
     ctx.fill();
 
-    // Кноб (рукоять катушки)
+    // Кноб (деревянная/пробковая ручка)
     ctx.fillStyle = '#d97706';
     ctx.beginPath();
-    ctx.ellipse(knobX, knobY, 4.5, 3, crankAngle, 0, Math.PI * 2);
+    ctx.ellipse(knobX, knobY, 12, 8, crankAngle, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = '#78350f';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2.5;
     ctx.stroke();
+
+    ctx.restore();
 
     ctx.restore();
     return;
