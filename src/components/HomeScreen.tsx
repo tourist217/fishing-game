@@ -921,88 +921,83 @@ export const HomeScreen = ({
             }
           };
 
+          if (isKeepnetFull || !hasEnoughEnergy) {
+            return (
+              <button
+                onClick={handleBridgeAction}
+                style={{
+                  flex: 1,
+                  height: '62px',
+                  background: isKeepnetFull
+                    ? 'linear-gradient(180deg, #f59e0b 0%, #d97706 50%, #b45309 100%)'
+                    : 'linear-gradient(180deg, #d97706 0%, #b45309 50%, #78350f 100%)',
+                  border: isKeepnetFull
+                    ? '2.5px solid #fde047'
+                    : '2.5px solid #fbbf24',
+                  borderRadius: '31px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  color: '#ffffff',
+                  fontSize: '14px',
+                  fontWeight: 900,
+                  letterSpacing: '0.8px',
+                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+                  boxShadow: isKeepnetFull
+                    ? '0 0 28px rgba(245, 158, 11, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 8px 24px rgba(0, 0, 0, 0.45)'
+                    : '0 0 28px rgba(251, 191, 36, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 8px 24px rgba(0, 0, 0, 0.45)',
+                  cursor: 'pointer',
+                  transition: 'transform 0.15s ease, box-shadow 0.3s ease',
+                }}
+              >
+                {isKeepnetFull ? (
+                  <>
+                    <span style={{ fontSize: '24px' }}>🧺</span>
+                    <span>САДОК ПОЛОН ({inventoryCount}/{maxKeepnetCapacity})</span>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ fontSize: '22px' }}>⚡</span>
+                    <span>МАЛО ЭНЕРГИИ (НУЖНО 5)</span>
+                  </>
+                )}
+              </button>
+            );
+          }
+
           return (
             <button
               onClick={handleBridgeAction}
+              className="btn-cast-graphic"
+              aria-label="Забросить"
               style={{
                 flex: 1,
                 height: '62px',
-                background: isKeepnetFull
-                  ? 'linear-gradient(180deg, #f59e0b 0%, #d97706 50%, #b45309 100%)'
-                  : !hasEnoughEnergy
-                  ? 'linear-gradient(180deg, #d97706 0%, #b45309 50%, #78350f 100%)'
-                  : 'linear-gradient(180deg, #84cc16 0%, #65a30d 50%, #4d7c0f 100%)',
-                border: isTutorialWelcome
-                  ? '3px solid #fde047'
-                  : isKeepnetFull
-                  ? '2.5px solid #fde047'
-                  : !hasEnoughEnergy
-                  ? '2.5px solid #fbbf24'
-                  : '2.5px solid #bef264',
-                borderRadius: '31px',
+                background: 'transparent',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '8px',
-                color: '#ffffff',
-                fontSize: isKeepnetFull || !hasEnoughEnergy ? '14px' : '18px',
-                fontWeight: 900,
-                letterSpacing: '0.8px',
-                textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
-                boxShadow: isTutorialWelcome
-                  ? '0 0 35px rgba(74, 222, 128, 0.9), 0 0 15px rgba(253, 224, 71, 0.8), 0 8px 24px rgba(0, 0, 0, 0.6)'
-                  : isKeepnetFull
-                  ? '0 0 28px rgba(245, 158, 11, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 8px 24px rgba(0, 0, 0, 0.45)'
-                  : !hasEnoughEnergy
-                  ? '0 0 28px rgba(251, 191, 36, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 8px 24px rgba(0, 0, 0, 0.45)'
-                  : '0 0 28px rgba(132, 204, 22, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 8px 24px rgba(0, 0, 0, 0.45)',
-                cursor: 'pointer',
-                transform: isTutorialWelcome ? 'scale(1.02)' : 'none',
-                transition: 'transform 0.15s ease, box-shadow 0.3s ease',
+                filter: isTutorialWelcome
+                  ? 'drop-shadow(0 0 24px rgba(74, 222, 128, 0.95)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5))'
+                  : 'drop-shadow(0 0 16px rgba(132, 204, 22, 0.55)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45))',
+                transform: isTutorialWelcome ? 'scale(1.03)' : 'none',
               }}
             >
-              {isKeepnetFull ? (
-                <>
-                  <span style={{ fontSize: '24px' }}>🧺</span>
-                  <span>САДОК ПОЛОН ({inventoryCount}/{maxKeepnetCapacity})</span>
-                </>
-              ) : !hasEnoughEnergy ? (
-                <>
-                  <span style={{ fontSize: '22px' }}>⚡</span>
-                  <span>МАЛО ЭНЕРГИИ (НУЖНО 5)</span>
-                </>
-              ) : (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
-                    <span
-                      style={{
-                        position: 'absolute',
-                        left: '-8px',
-                        fontSize: '14px',
-                        color: 'rgba(255, 255, 255, 0.75)',
-                        fontWeight: 900,
-                        lineHeight: 1,
-                      }}
-                    >
-                      ((
-                    </span>
-                    <BobberIcon size={34} />
-                    <span
-                      style={{
-                        position: 'absolute',
-                        right: '-8px',
-                        fontSize: '14px',
-                        color: 'rgba(255, 255, 255, 0.75)',
-                        fontWeight: 900,
-                        lineHeight: 1,
-                      }}
-                    >
-                      ))
-                    </span>
-                  </div>
-                  <span>ЗАБРОСИТЬ</span>
-                </>
-              )}
+              <img
+                src="/assets/ui/btn_cast.png"
+                alt="Забросить"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  pointerEvents: 'none',
+                  userSelect: 'none',
+                }}
+              />
             </button>
           );
         })()}
