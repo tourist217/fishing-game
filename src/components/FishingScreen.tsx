@@ -438,8 +438,8 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
               className="btn-cast-graphic"
               aria-label="Забросить удочку"
               style={{
-                width: 'min(100%, 280px)',
-                height: '66px',
+                width: 'min(100%, 310px)',
+                height: '76px',
                 alignSelf: 'center',
                 background: 'transparent',
                 border: 'none',
@@ -450,8 +450,8 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                 justifyContent: 'center',
                 filter: isTutorialCast
                   ? 'drop-shadow(0 0 24px rgba(74, 222, 128, 0.95)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5))'
-                  : 'drop-shadow(0 0 16px rgba(132, 204, 22, 0.55)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45))',
-                transform: isTutorialCast ? 'scale(1.03)' : 'none',
+                  : 'drop-shadow(0 0 18px rgba(132, 204, 22, 0.6)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45))',
+                transform: isTutorialCast ? 'scale(1.05)' : 'none',
               }}
             >
               <img

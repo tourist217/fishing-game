@@ -973,7 +973,7 @@ export const HomeScreen = ({
               aria-label="Забросить"
               style={{
                 flex: 1,
-                height: '62px',
+                height: '76px',
                 background: 'transparent',
                 border: 'none',
                 padding: 0,
@@ -983,8 +983,8 @@ export const HomeScreen = ({
                 justifyContent: 'center',
                 filter: isTutorialWelcome
                   ? 'drop-shadow(0 0 24px rgba(74, 222, 128, 0.95)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5))'
-                  : 'drop-shadow(0 0 16px rgba(132, 204, 22, 0.55)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45))',
-                transform: isTutorialWelcome ? 'scale(1.03)' : 'none',
+                  : 'drop-shadow(0 0 18px rgba(132, 204, 22, 0.6)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45))',
+                transform: isTutorialWelcome ? 'scale(1.05)' : 'scale(1.02)',
               }}
             >
               <img
