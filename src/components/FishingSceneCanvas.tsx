@@ -16,6 +16,7 @@ interface FishingSceneCanvasProps {
   tension: number; // 0..100
   catchProgress?: number; // 0..100
   rodMaterial?: string;
+  isPulling?: boolean;
   onCastComplete?: () => void;
   timeOfDay?: TimeOfDay;
   weather?: WeatherType;
@@ -61,6 +62,7 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
   tension,
   catchProgress = 0,
   rodMaterial = 'reed',
+  isPulling = false,
   timeOfDay: propTimeOfDay,
   weather: propWeather,
 }) => {
@@ -78,6 +80,9 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
 
   const tensionRef = useRef(tension);
   useEffect(() => { tensionRef.current = tension; }, [tension]);
+
+  const isPullingRef = useRef(isPulling);
+  useEffect(() => { isPullingRef.current = isPulling; }, [isPulling]);
 
   const catchProgressRef = useRef(catchProgress);
   useEffect(() => { catchProgressRef.current = catchProgress; }, [catchProgress]);
@@ -320,8 +325,10 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
         // При вываживании - изгиб дугой зависит от натяжения + рывки рыбы
         const fishPulse = Math.sin(time * 4) * 0.10 + Math.sin(time * 9.5) * 0.05;
         bendFactor = Math.min(1.0, Math.max(0.12, (curTension / 100) * 0.85 + fishPulse));
-        // Вращение ручки катушки при подмотке
-        crankAngleRef.current += 0.24 + (curTension / 100) * 0.22;
+        // Вращение ручки катушки ТОЛЬКО при нажатии на кнопку "ТЯНУТЬ"!
+        if (isPullingRef.current) {
+          crankAngleRef.current += 0.28 + (curTension / 100) * 0.22;
+        }
       } else if (curGameState === 'caught') {
         bendFactor = 0.20;
       }
@@ -337,8 +344,9 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
       const totalLen = Math.hypot(dx, dy);
       const ux = dx / totalLen;
       const uy = dy / totalLen;
-      const nx = -uy;
-      const ny = ux;
+      // Нормаль строго в сторону воды и рыбы (влево и вниз)
+      const nx = uy;
+      const ny = -ux;
 
       const handleLen = totalLen * 0.26;
       const blankLen = totalLen * 0.74;
@@ -1009,6 +1017,7 @@ function drawVectorRod(
   ctx.save();
   ctx.translate(buttX, buttY);
   ctx.rotate(handleAngle);
+  ctx.scale(1, -1); // Катушка и нижний хват ориентированы в сторону воды
 
   // Тень под рукоятью и катушкой
   ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
@@ -1263,9 +1272,9 @@ function drawVectorRod(
     const dy = 3*it*it * (c1.y - p0.y) + 6*it*t * (c2.y - c1.y) + 3*t*t * (p3.y - c2.y);
     const len = Math.hypot(dx, dy);
 
-    // Нормаль в сторону прогиба к воде (наружу дуги)
-    const gnx = -dy / len;
-    const gny = dx / len;
+    // Нормаль строго в сторону воды и рыбы (вниз и влево)
+    const gnx = dy / len;
+    const gny = -dx / len;
 
     const gSize = guideSizes[i];
     const legLen = gSize * 0.85;

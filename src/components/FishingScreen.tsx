@@ -178,6 +178,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
           tension={tension}
           catchProgress={catchProgress}
           rodMaterial={rodMaterial}
+          isPulling={isPulling}
         />
 
         {/* Компактный индикатор энергии на водоеме */}
