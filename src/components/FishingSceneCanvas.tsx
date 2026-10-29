@@ -161,6 +161,7 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
         loc_reservoir: '/assets/locations/loc_reservoir.jpg',
         loc_oka_river: '/assets/locations/loc_oka_river.jpg',
         loc_ladoga_lake: '/assets/locations/loc_ladoga_lake.jpg',
+        loc_akhtuba_pits: '/assets/locations/loc_akhtuba_pits.jpg',
       };
 
       const bgSrc = curLocation.image || LOCATION_BG_MAP[curLocation.id];

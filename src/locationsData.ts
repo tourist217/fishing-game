@@ -141,6 +141,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#c084fc',
     waterType: 'deep_water',
     weightModifier: 7.8,
+    image: '/assets/locations/loc_akhtuba_pits.jpg',
   },
   {
     id: 'loc_caspian_delta',
