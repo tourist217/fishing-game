@@ -93,6 +93,7 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
   // Позиция заброса и прогресс полета поплавка (в рефах, не вызывает лишних ре-рендеров)
   const castTargetRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.65 });
   const castProgressRef = useRef<number>(1);
+  const crankAngleRef = useRef<number>(0);
 
   // Генерируем новую случайную точку при переходе в заброс (waiting/hooked)
   useEffect(() => {
@@ -319,6 +320,11 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
       const rodTipX = rodTipTargetX - bendFactor * 70;
       const rodTipY = rodTipTargetY + bendFactor * 110;
 
+      // Анимация вращения катушки при подмотке лески
+      if (curGameState === 'reeling') {
+        crankAngleRef.current += 0.28 + (curTension / 100) * 0.22;
+      }
+
       // 7. Отрисовка Лески (Line)
       if (curGameState !== 'idle') {
         drawFishingLine(ctx, rodTipX, rodTipY, lineWaterX, lineWaterY, bendFactor, curGameState, curTension, time);
@@ -330,7 +336,7 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
       }
 
       // 9. Отрисовка Удилища (Rod)
-      drawRod(ctx, rodBaseX, rodBaseY, rodTipX, rodTipY, bendFactor, curRodMaterial);
+      drawRod(ctx, rodBaseX, rodBaseY, rodTipX, rodTipY, bendFactor, curRodMaterial, crankAngleRef.current);
 
       animationFrameId = requestAnimationFrame(render);
     };
@@ -942,8 +948,93 @@ function drawRod(
   tx: number,
   ty: number,
   bendFactor: number,
-  rodMaterial: string
+  rodMaterial: string,
+  crankAngle: number = 0
 ) {
+  const rodImg = getPreloadedImage('/assets/ui/rod_fps.png');
+
+  // Контрольная точка кривой изгиба удилища (Bending Rod Bezier)
+  const ctrlX = bx - 60 - bendFactor * 55;
+  const ctrlY = by - (by - ty) * 0.55;
+
+  if (rodImg) {
+    // Сегментная прорисовка изогнутого бланка из оригинального спрайта
+    const segCount = 28;
+
+    for (let i = 0; i < segCount; i++) {
+      const t0 = i / segCount;
+      const t1 = (i + 1) / segCount;
+      const tMid = (t0 + t1) * 0.5;
+
+      const p0X = Math.pow(1 - t0, 2) * bx + 2 * (1 - t0) * t0 * ctrlX + t0 * t0 * tx;
+      const p0Y = Math.pow(1 - t0, 2) * by + 2 * (1 - t0) * t0 * ctrlY + t0 * t0 * ty;
+
+      const p1X = Math.pow(1 - t1, 2) * bx + 2 * (1 - t1) * t1 * ctrlX + t1 * t1 * tx;
+      const p1Y = Math.pow(1 - t1, 2) * by + 2 * (1 - t1) * t1 * ctrlY + t1 * t1 * ty;
+
+      const segAngle = Math.atan2(p1Y - p0Y, p1X - p0X);
+      const segDist = Math.hypot(p1X - p0X, p1Y - p0Y);
+
+      // Срез вертикального спрайта (комель снизу, вершинка сверху)
+      const srcY = rodImg.naturalHeight * (1 - t1);
+      const srcH = rodImg.naturalHeight / segCount;
+
+      ctx.save();
+      ctx.translate(p0X, p0Y);
+      ctx.rotate(segAngle - Math.PI / 2);
+
+      // Коническое сужение бланка от комля к вершинке
+      const scaleW = 0.22 * (1 - tMid * 0.45);
+      const drawW = rodImg.naturalWidth * scaleW;
+
+      ctx.drawImage(
+        rodImg,
+        0, srcY, rodImg.naturalWidth, srcH,
+        -drawW * 0.5, 0, drawW, segDist + 1
+      );
+      ctx.restore();
+    }
+
+    // Анимированная ручка катушки (вращение при подмотке)
+    const reelT = 0.12; // Позиция катушки у основания бланка
+    const reelX = Math.pow(1 - reelT, 2) * bx + 2 * (1 - reelT) * reelT * ctrlX + reelT * reelT * tx;
+    const reelY = Math.pow(1 - reelT, 2) * by + 2 * (1 - reelT) * reelT * ctrlY + reelT * reelT * ty;
+
+    ctx.save();
+    ctx.translate(reelX - 8, reelY - 4);
+
+    const crankRadius = 14;
+    const knobX = Math.cos(crankAngle) * crankRadius;
+    const knobY = Math.sin(crankAngle) * crankRadius * 0.65; // Эллиптическая 3D перспектива вращения
+
+    // Рычаг катушки
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 3.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(knobX, knobY);
+    ctx.stroke();
+
+    // Ось вращения
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.arc(0, 0, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Кноб (рукоять катушки)
+    ctx.fillStyle = '#d97706';
+    ctx.beginPath();
+    ctx.ellipse(knobX, knobY, 4.5, 3, crankAngle, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#78350f';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.restore();
+    return;
+  }
+
   let mainColor = '#d4a373'; // reed / бамбук
   let nodeColor = '#78350f'; // узлы бамбука
 
@@ -966,10 +1057,6 @@ function drawRod(
     mainColor = '#fbbf24';
     nodeColor = '#b45309';
   }
-
-  // Контрольная точка кривой изгиба удилища (Bending Rod Bezier)
-  const ctrlX = bx - 60 - bendFactor * 40;
-  const ctrlY = by - (by - ty) * 0.5;
 
   // 1. Отрисовка бланка удочки (сужающаяся линия от комеля к верхушке)
   ctx.strokeStyle = mainColor;
