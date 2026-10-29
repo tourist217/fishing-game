@@ -432,69 +432,90 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
 
         {/* Главная кнопка действия (всегда занимает одинаковую нижнюю позицию) */}
         {gameState === 'idle' && (
-          <button
-            onClick={
-              canCast
-                ? onStartFishing
-                : !hasEnoughEnergy
-                ? () => setIsEnergyModalOpen(true)
+          canCast ? (
+            <button
+              onClick={onStartFishing}
+              className="btn-cast-graphic"
+              aria-label="Забросить удочку"
+              style={{
+                width: 'min(100%, 280px)',
+                height: '66px',
+                alignSelf: 'center',
+                background: 'transparent',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                filter: isTutorialCast
+                  ? 'drop-shadow(0 0 24px rgba(74, 222, 128, 0.95)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5))'
+                  : 'drop-shadow(0 0 16px rgba(132, 204, 22, 0.55)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45))',
+                transform: isTutorialCast ? 'scale(1.03)' : 'none',
+              }}
+            >
+              <img
+                src="/assets/ui/btn_cast.png"
+                alt="Забросить"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  pointerEvents: 'none',
+                  userSelect: 'none',
+                }}
+              />
+            </button>
+          ) : (
+            <button
+              onClick={
+                !hasEnoughEnergy
+                  ? () => setIsEnergyModalOpen(true)
+                  : isKeepnetFull
+                  ? onOpenKeepnet
+                  : !hasLineOnRod
+                  ? onOpenShop
+                  : undefined
+              }
+              disabled={hasLineOnRod && !isKeepnetFull && hasEnoughEnergy}
+              style={{
+                height: '52px',
+                background: !hasEnoughEnergy
+                  ? 'linear-gradient(180deg, #d97706 0%, #b45309 50%, #78350f 100%)'
+                  : isKeepnetFull
+                  ? 'linear-gradient(180deg, #f59e0b 0%, #d97706 50%, #b45309 100%)'
+                  : !hasLineOnRod
+                  ? 'linear-gradient(180deg, #ef4444 0%, #dc2626 50%, #991b1b 100%)'
+                  : 'rgba(255, 255, 255, 0.08)',
+                border: !hasEnoughEnergy
+                  ? '2px solid #fbbf24'
+                  : isKeepnetFull
+                  ? '2px solid #fde047'
+                  : !hasLineOnRod
+                  ? '2px solid #fca5a5'
+                  : '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '24px',
+                color: !hasEnoughEnergy || isKeepnetFull || !hasLineOnRod ? '#ffffff' : '#64748b',
+                fontSize: '15px',
+                fontWeight: 900,
+                cursor: !hasEnoughEnergy || isKeepnetFull || !hasLineOnRod ? 'pointer' : 'not-allowed',
+                boxShadow: !hasEnoughEnergy
+                  ? '0 0 24px rgba(251, 191, 36, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4)'
+                  : isKeepnetFull
+                  ? '0 0 24px rgba(245, 158, 11, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4)'
+                  : 'none',
+                letterSpacing: '0.5px',
+              }}
+            >
+              {!hasEnoughEnergy
+                ? '⚡ МАЛО ЭНЕРГИИ (ПОДКРЕПИТЬСЯ ☕)'
                 : isKeepnetFull
-                ? onOpenKeepnet
+                ? 'САДОК ПОЛОН (ПРОДАТЬ В САДКЕ 🧺)'
                 : !hasLineOnRod
-                ? onOpenShop
-                : undefined
-            }
-            disabled={!canCast && hasLineOnRod && !isKeepnetFull && hasEnoughEnergy}
-            style={{
-              height: '52px',
-              background: canCast
-                ? 'linear-gradient(180deg, #84cc16 0%, #65a30d 50%, #4d7c0f 100%)'
-                : !hasEnoughEnergy
-                ? 'linear-gradient(180deg, #d97706 0%, #b45309 50%, #78350f 100%)'
-                : isKeepnetFull
-                ? 'linear-gradient(180deg, #f59e0b 0%, #d97706 50%, #b45309 100%)'
-                : !hasLineOnRod
-                ? 'linear-gradient(180deg, #ef4444 0%, #dc2626 50%, #991b1b 100%)'
-                : 'rgba(255, 255, 255, 0.08)',
-              border: canCast
-                ? '2px solid #bef264'
-                : !hasEnoughEnergy
-                ? '2px solid #fbbf24'
-                : isKeepnetFull
-                ? '2px solid #fde047'
-                : !hasLineOnRod
-                ? '2px solid #fca5a5'
-                : isTutorialCast
-                ? '3px solid #fde047'
-                : '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '24px',
-              color: canCast || !hasEnoughEnergy || isKeepnetFull || !hasLineOnRod ? '#ffffff' : '#64748b',
-              fontSize: '15px',
-              fontWeight: 900,
-              cursor: canCast || !hasEnoughEnergy || isKeepnetFull || !hasLineOnRod ? 'pointer' : 'not-allowed',
-              transform: isTutorialCast ? 'scale(1.02)' : 'none',
-              boxShadow: isTutorialCast
-                ? '0 0 32px rgba(74, 222, 128, 0.9), 0 0 16px rgba(253, 224, 71, 0.8), 0 4px 12px rgba(0, 0, 0, 0.4)'
-                : canCast
-                ? '0 0 24px rgba(132, 204, 22, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4)'
-                : !hasEnoughEnergy
-                ? '0 0 24px rgba(251, 191, 36, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4)'
-                : isKeepnetFull
-                ? '0 0 24px rgba(245, 158, 11, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4)'
-                : 'none',
-              letterSpacing: '0.5px',
-            }}
-          >
-            {canCast
-              ? 'ЗАБРОСИТЬ УДОЧКУ 🎣'
-              : !hasEnoughEnergy
-              ? '⚡ МАЛО ЭНЕРГИИ (ПОДКРЕПИТЬСЯ ☕)'
-              : isKeepnetFull
-              ? 'САДОК ПОЛОН (ПРОДАТЬ В САДКЕ 🧺)'
-              : !hasLineOnRod
-              ? 'НЕТ ЛЕСКИ (В МАГАЗИН) 🛒'
-              : 'НЕТ НАЖИВКИ 🚫'}
-          </button>
+                ? 'НЕТ ЛЕСКИ (В МАГАЗИН) 🛒'
+                : 'НЕТ НАЖИВКИ 🚫'}
+            </button>
+          )
         )}
 
         {gameState === 'waiting' && (
