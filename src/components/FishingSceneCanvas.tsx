@@ -32,6 +32,10 @@ function getPreloadedImage(src: string): HTMLImageElement | null {
   return bgImages[src].complete && bgImages[src].naturalWidth > 0 ? bgImages[src] : null;
 }
 
+if (typeof window !== 'undefined') {
+  getPreloadedImage('/assets/ui/rod_fps.png');
+}
+
 function drawImageCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, width: number, height: number) {
   const imgRatio = img.width / img.height;
   const canvasRatio = width / height;
@@ -307,18 +311,24 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
         }
       }
 
-      // 6. Вычисление Изгиба Удочки (Bending Rod)
-      const rodBaseX = width * 0.92;
-      const rodBaseY = height + 10;
+      // 6. Вычисление положения Удочки (First-Person Rod & Tip Coordinates)
+      const rodH = Math.min(height * 0.85, Math.max(height * 0.74, width * 1.35));
+      const rodScale = rodH / 1791;
+      const rodW = 841 * rodScale;
 
-      // Спокойное положение вершинки
-      let rodTipTargetX = width * 0.72;
-      let rodTipTargetY = height * 0.45;
+      const buttTargetX = width * 0.94;
+      const buttTargetY = height * 1.02;
 
-      // Изгиб от натяжения лески в процессе вываживания
-      const bendFactor = curGameState === 'reeling' ? Math.max(0, curTension / 100) : 0;
-      const rodTipX = rodTipTargetX - bendFactor * 70;
-      const rodTipY = rodTipTargetY + bendFactor * 110;
+      const rodDrawX = buttTargetX - 750 * rodScale;
+      const rodDrawY = buttTargetY - 1695 * rodScale;
+
+      // Экранные координаты вершинки (тюльпана) для привязки лески
+      const rodTipX = rodDrawX + 78 * rodScale;
+      const rodTipY = rodDrawY + 81 * rodScale;
+
+      const rodBaseX = buttTargetX;
+      const rodBaseY = buttTargetY;
+      const bendFactor = 0;
 
       // Анимация вращения катушки при подмотке лески
       if (curGameState === 'reeling') {
@@ -336,7 +346,7 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
       }
 
       // 9. Отрисовка Удилища (Rod)
-      drawRod(ctx, rodBaseX, rodBaseY, rodTipX, rodTipY, bendFactor, curRodMaterial, crankAngleRef.current);
+      drawRod(ctx, rodDrawX, rodDrawY, rodW, rodH, rodBaseX, rodBaseY, rodTipX, rodTipY, bendFactor, curRodMaterial);
 
       animationFrameId = requestAnimationFrame(render);
     };
@@ -943,91 +953,28 @@ function drawFishingLine(
 
 function drawRod(
   ctx: CanvasRenderingContext2D,
+  drawX: number,
+  drawY: number,
+  rodW: number,
+  rodH: number,
   bx: number,
   by: number,
   tx: number,
   ty: number,
   bendFactor: number,
-  rodMaterial: string,
-  crankAngle: number = 0
+  rodMaterial: string
 ) {
   const rodImg = getPreloadedImage('/assets/ui/rod_fps.png');
 
-  // Контрольная точка кривой изгиба удилища (Bending Rod Bezier)
-  const ctrlX = bx - 60 - bendFactor * 55;
-  const ctrlY = by - (by - ty) * 0.55;
-
   if (rodImg) {
-    // Координаты комля (хвата) и тюльпана (вершинки) в оригинале rod_fps.png
-    const handleImgX = 737;
-    const handleImgY = 1695;
-    const tipImgX = 72;
-    const tipImgY = 81;
-
-    const dImgX = tipImgX - handleImgX; // -665
-    const dImgY = tipImgY - handleImgY; // -1614
-    const imgLen = Math.hypot(dImgX, dImgY); // ~1745
-    const imgAngle = Math.atan2(dImgY, dImgX); // ~ -1.96 rad
-
-    // Вектор на экране от точки комля (bx, by) к вершинке (tx, ty)
-    const dScreenX = tx - bx;
-    const dScreenY = ty - by;
-    const screenLen = Math.hypot(dScreenX, dScreenY);
-    const screenAngle = Math.atan2(dScreenY, dScreenX);
-
-    const scale = screenLen / imgLen;
-    const rot = screenAngle - imgAngle;
-
-    // 1. Отрисовка ЦЕЛЬНОГО монолитного удилища без разбиения на сегменты
-    ctx.save();
-    ctx.translate(bx, by);
-    ctx.rotate(rot);
-    ctx.scale(scale, scale);
-
-    // Рисуем цельный арт удочки, сопоставив комель с точкой хвата (0, 0)
-    ctx.drawImage(rodImg, -handleImgX, -handleImgY);
-
-    // 2. Анимация катушки (вращение рукояти при подмотке лески)
-    // В координатах rod_fps.png ось катушки расположена в точке (x: 546, y: 1265)
-    const axleX = 546 - handleImgX;
-    const axleY = 1265 - handleImgY;
-
-    ctx.save();
-    ctx.translate(axleX, axleY);
-
-    const crankRadius = 38; // в масштабе оригинального изображения
-    const knobX = Math.cos(crankAngle) * crankRadius;
-    const knobY = Math.sin(crankAngle) * crankRadius * 0.65; // Эллиптическая 3D перспектива вращения
-
-    // Рычаг катушки (металлический стержень)
-    ctx.strokeStyle = '#cbd5e1';
-    ctx.lineWidth = 9;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(knobX, knobY);
-    ctx.stroke();
-
-    // Ось вращения катушки
-    ctx.fillStyle = '#0f172a';
-    ctx.beginPath();
-    ctx.arc(0, 0, 11, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Кноб (деревянная/пробковая ручка)
-    ctx.fillStyle = '#d97706';
-    ctx.beginPath();
-    ctx.ellipse(knobX, knobY, 12, 8, crankAngle, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#78350f';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-
-    ctx.restore();
-
-    ctx.restore();
+    // Отрисовка цельного оригинального арта удилища из 4.png 1:1 без срезов и искажений
+    ctx.drawImage(rodImg, drawX, drawY, rodW, rodH);
     return;
   }
+
+  // Fallback: процедурная отрисовка удилища, если изображение еще загружается
+  const ctrlX = bx - 60 - bendFactor * 55;
+  const ctrlY = by - (by - ty) * 0.55;
 
   let mainColor = '#d4a373'; // reed / бамбук
   let nodeColor = '#78350f'; // узлы бамбука
