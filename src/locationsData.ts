@@ -129,6 +129,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#94a3b8',
     waterType: 'deep_water',
     weightModifier: 6.2,
+    image: '/assets/locations/loc_ladoga_lake.jpg',
   },
   {
     id: 'loc_akhtuba_pits',
