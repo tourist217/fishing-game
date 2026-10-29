@@ -153,6 +153,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#fbbf24',
     waterType: 'slow_current',
     weightModifier: 10.0,
+    image: '/assets/locations/loc_caspian_delta.jpg',
   },
 ];
 
