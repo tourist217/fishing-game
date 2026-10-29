@@ -103,6 +103,7 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
   const castTargetRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.65 });
   const castProgressRef = useRef<number>(1);
   const crankAngleRef = useRef<number>(0);
+  const currentBendRef = useRef<number>(0);
 
   // Генерируем новую случайную точку при переходе в заброс (waiting/hooked)
   useEffect(() => {
@@ -316,28 +317,44 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
         }
       }
 
-      // 6. Вычисление Нагрузки и Изгиба Удочки Дугой (Progressive Arc Bending)
-      let bendFactor = 0;
+      // 6. Вычисление Нагрузки и Плавного Изгиба Удочки (Progressive Arc Bending)
+      let targetBend = 0;
       if (curGameState === 'hooked') {
-        // При поклевке вершинка пружинит и кивает в такт поплавку
-        bendFactor = 0.12 + Math.max(0, Math.sin(time * 14)) * 0.18;
+        // При поклевке вершинка слегка пружинит в такт поплавку
+        targetBend = 0.12 + Math.max(0, Math.sin(time * 14)) * 0.10;
+        currentBendRef.current += (targetBend - currentBendRef.current) * 0.15;
       } else if (curGameState === 'reeling') {
-        // При вываживании - изгиб дугой зависит от натяжения + рывки рыбы
-        const fishPulse = Math.sin(time * 4) * 0.10 + Math.sin(time * 9.5) * 0.05;
-        bendFactor = Math.min(1.0, Math.max(0.12, (curTension / 100) * 0.85 + fishPulse));
-        // Вращение ручки катушки ТОЛЬКО при нажатии на кнопку "ТЯНУТЬ"!
         if (isPullingRef.current) {
+          // Игрок ЗАЖАЛ кнопку "ТЯНУТЬ!":
+          // Удочка пружинит и сгибается под нагрузкой натяжения лески + легкие упругие рывки рыбы
+          const fishStruggle = Math.sin(time * 6.5) * 0.05;
+          targetBend = Math.min(1.0, Math.max(0.18, (curTension / 100) * 0.82 + fishStruggle));
+          currentBendRef.current += (targetBend - currentBendRef.current) * 0.12;
+
+          // Вращение ручки катушки ТОЛЬКО при нажатии на кнопку "ТЯНУТЬ"!
           crankAngleRef.current += 0.28 + (curTension / 100) * 0.22;
+        } else {
+          // Игрок ОТПУСТИЛ кнопку "ТЯНУТЬ":
+          // Удочка плавно и естественно выпрямляется обратно в спокойное положение (без лишней тряски)
+          targetBend = 0;
+          currentBendRef.current += (0 - currentBendRef.current) * 0.07;
         }
       } else if (curGameState === 'caught') {
-        bendFactor = 0.20;
+        targetBend = 0.15;
+        currentBendRef.current += (targetBend - currentBendRef.current) * 0.10;
+      } else {
+        // Спокойное состояние (idle, waiting) - удочка неподвижна и прямая
+        targetBend = 0;
+        currentBendRef.current += (0 - currentBendRef.current) * 0.10;
       }
 
-      // Геометрия Удочки: привязка комля в правом нижнем углу
-      const buttX = width * 0.94;
+      const bendFactor = Math.min(1.0, Math.max(0, currentBendRef.current));
+
+      // Геометрия Удочки: компактная длина и естественный угол наклона в правой части
+      const buttX = width * 0.93;
       const buttY = height * 1.02;
-      const targetTipX = width * 0.28;
-      const targetTipY = height * 0.35;
+      const targetTipX = width * 0.65;
+      const targetTipY = height * 0.42;
 
       const dx = targetTipX - buttX;
       const dy = targetTipY - buttY;
@@ -350,7 +367,7 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
 
       const handleLen = totalLen * 0.26;
       const blankLen = totalLen * 0.74;
-      const rodScale = handleLen / 195.0;
+      const rodScale = handleLen / 150.0;
 
       // Точка выхода бланка из рукоятки
       const p0 = {
@@ -358,22 +375,22 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
         y: buttY + uy * handleLen
       };
 
-      const b = Math.min(1.0, Math.max(0, bendFactor));
+      const b = bendFactor;
 
       // Контрольные точки кубической кривой Безье (Параболический изгиб дугой)
       const c1 = {
-        x: p0.x + ux * blankLen * (0.34 - 0.04 * b) + nx * (36 * b * rodScale),
-        y: p0.y + uy * blankLen * (0.34 - 0.04 * b) + ny * (36 * b * rodScale)
+        x: p0.x + ux * blankLen * (0.34 - 0.04 * b) + nx * (30 * b * rodScale),
+        y: p0.y + uy * blankLen * (0.34 - 0.04 * b) + ny * (30 * b * rodScale)
       };
 
       const c2 = {
-        x: p0.x + ux * blankLen * (0.68 - 0.16 * b) + nx * (175 * b * rodScale),
-        y: p0.y + uy * blankLen * (0.68 - 0.16 * b) + ny * (175 * b * rodScale)
+        x: p0.x + ux * blankLen * (0.68 - 0.16 * b) + nx * (140 * b * rodScale),
+        y: p0.y + uy * blankLen * (0.68 - 0.16 * b) + ny * (140 * b * rodScale)
       };
 
       const p3 = {
-        x: p0.x + ux * blankLen * (1.0 - 0.38 * b) + nx * (235 * b * rodScale),
-        y: p0.y + uy * blankLen * (1.0 - 0.38 * b) + ny * (235 * b * rodScale)
+        x: p0.x + ux * blankLen * (1.0 - 0.38 * b) + nx * (180 * b * rodScale),
+        y: p0.y + uy * blankLen * (1.0 - 0.38 * b) + ny * (180 * b * rodScale)
       };
 
       // Экранные координаты тюльпана (вершинки) для привязки лески
