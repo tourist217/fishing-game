@@ -46,7 +46,7 @@ const MAP_POINTS = [
   { id: 'loc_lower_volga', x: 32, y: 380 },     // Широкое русло Волги с песчаными косами
   { id: 'loc_ladoga_lake', x: 65, y: 280 },     // Островная протока с ивами
   { id: 'loc_akhtuba_pits', x: 38, y: 180 },    // Глубокий омут (Ахтубинские ямы)
-  { id: 'loc_caspian_delta', x: 52, y: 70 },    // Лотосовые поля Дельты Каспия на закате
+  { id: 'loc_caspian_delta', x: 52, y: 80 },    // Лотосовые поля Дельты Каспия на закате
 ];
 
 export const MapScreen: React.FC<MapScreenProps> = ({
@@ -117,9 +117,9 @@ export const MapScreen: React.FC<MapScreenProps> = ({
       <div
         style={{
           position: 'absolute',
-          top: 'max(10px, env(safe-area-inset-top, 10px))',
-          left: 12,
-          right: 12,
+          top: 8,
+          left: 8,
+          right: 8,
           zIndex: 30,
           display: 'flex',
           alignItems: 'center',
