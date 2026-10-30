@@ -229,6 +229,16 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
           75% { transform: scale(0.96) translate(-0.3px, 1.2px); }
           100% { transform: scale(0.96) translate(0, 1px); }
         }
+        @keyframes waitingButtonPulse {
+          0%, 100% {
+            transform: scale(1);
+            filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.45)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
+          }
+          50% {
+            transform: scale(1.025);
+            filter: drop-shadow(0 0 24px rgba(56, 189, 248, 0.8)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
+          }
+        }
       `}</style>
 
       {/* Центральная игровая зона с 2D Canvas водоёма, удочки и поплавка */}
@@ -592,22 +602,34 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
         )}
 
         {gameState === 'waiting' && (
-          <button
-            disabled
+          <div
             style={{
-              height: '52px',
-              background: 'rgba(22, 28, 38, 0.85)',
-              border: '1.5px solid rgba(56, 189, 248, 0.35)',
-              borderRadius: '24px',
-              color: '#38bdf8',
-              fontSize: '14px',
-              fontWeight: 800,
-              cursor: 'default',
-              boxShadow: '0 0 16px rgba(56, 189, 248, 0.25)',
+              width: 'min(100%, 310px)',
+              height: '76px',
+              alignSelf: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              pointerEvents: 'none',
+              animation: 'waitingButtonPulse 2.4s ease-in-out infinite',
             }}
           >
-            ОЖИДАНИЕ ПОКЛЁВКИ... 🌊
-          </button>
+            <img
+              src="/assets/ui/btn_waiting.png"
+              alt="Ожидание поклёвки..."
+              draggable={false}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                pointerEvents: 'none',
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+              }}
+            />
+          </div>
         )}
 
         {gameState === 'hooked' && (
