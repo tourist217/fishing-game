@@ -55,7 +55,6 @@ export const MapScreen: React.FC<MapScreenProps> = ({
   onSelectLocation,
   onGoFishing,
 }) => {
-  const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [selectedLocId, setSelectedLocId] = useState<string>(currentLocationId);
   const [showPreviewModal, setShowPreviewModal] = useState<boolean>(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -76,7 +75,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({
 
   // Автоскролл к текущей точке игрока при открытии карты
   useEffect(() => {
-    if (viewMode === 'map' && scrollContainerRef.current) {
+    if (scrollContainerRef.current) {
       const point = MAP_POINTS.find((p) => p.id === currentLocationId);
       if (point) {
         const targetScrollTop = Math.max(0, point.y - 260);
@@ -86,7 +85,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({
         });
       }
     }
-  }, [viewMode, currentLocationId]);
+  }, [currentLocationId]);
 
   const scrollToLocation = (locId: string) => {
     const point = MAP_POINTS.find((p) => p.id === locId);
@@ -124,11 +123,11 @@ export const MapScreen: React.FC<MapScreenProps> = ({
         }
       `}</style>
 
-      {/* Верхняя компактная плашка-заголовок карты с переключателем режима */}
+      {/* Верхняя компактная плашка-заголовок карты */}
       <div
         style={{
           position: 'absolute',
-          top: 10,
+          top: 'max(10px, env(safe-area-inset-top, 10px))',
           left: 12,
           right: 12,
           zIndex: 30,
@@ -139,82 +138,51 @@ export const MapScreen: React.FC<MapScreenProps> = ({
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           borderRadius: '18px',
-          padding: '6px 10px',
+          padding: '8px 14px',
           border: '1px solid rgba(255, 255, 255, 0.15)',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '18px' }}>🗺️</span>
-          <div>
-            <div style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', lineHeight: 1.1 }}>
-              Карта водоёмов
-            </div>
-            <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-              {playerLevel} ур. • Открыто {LOCATIONS.filter((l) => playerLevel >= l.levelReq).length}/{LOCATIONS.length}
-            </div>
-          </div>
+          <span style={{ fontSize: '20px' }}>🗺️</span>
+          <span style={{ fontSize: '15px', fontWeight: 900, color: '#ffffff', letterSpacing: '0.3px' }}>
+            Карта водоёмов
+          </span>
         </div>
 
-        {/* Переключатель: Живая река / Список */}
+        {/* Справа надпись: сколько открыто из скольки */}
         <div
           style={{
+            fontSize: '12px',
+            fontWeight: 800,
+            color: '#38bdf8',
+            background: 'rgba(56, 189, 248, 0.14)',
+            border: '1px solid rgba(56, 189, 248, 0.35)',
+            borderRadius: '10px',
+            padding: '4px 10px',
             display: 'flex',
-            background: 'rgba(30, 41, 59, 0.8)',
-            padding: '2px',
-            borderRadius: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            alignItems: 'center',
+            gap: '4px',
           }}
         >
-          <button
-            onClick={() => setViewMode('map')}
-            style={{
-              padding: '4px 10px',
-              borderRadius: '10px',
-              border: 'none',
-              background: viewMode === 'map' ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'transparent',
-              color: viewMode === 'map' ? '#ffffff' : '#94a3b8',
-              fontSize: '11px',
-              fontWeight: 800,
-              cursor: 'pointer',
-              boxShadow: viewMode === 'map' ? '0 2px 8px rgba(34, 197, 94, 0.4)' : 'none',
-              transition: 'all 0.15s',
-            }}
-          >
-            Река
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            style={{
-              padding: '4px 10px',
-              borderRadius: '10px',
-              border: 'none',
-              background: viewMode === 'list' ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'transparent',
-              color: viewMode === 'list' ? '#ffffff' : '#94a3b8',
-              fontSize: '11px',
-              fontWeight: 800,
-              cursor: 'pointer',
-              boxShadow: viewMode === 'list' ? '0 2px 8px rgba(34, 197, 94, 0.4)' : 'none',
-              transition: 'all 0.15s',
-            }}
-          >
-            Список
-          </button>
+          <span style={{ color: '#94a3b8' }}>Открыто:</span>
+          <span style={{ color: '#ffffff', fontWeight: 900 }}>
+            {LOCATIONS.filter((l) => playerLevel >= l.levelReq).length} из {LOCATIONS.length}
+          </span>
         </div>
       </div>
 
-      {/* РЕЖИМ 1: НАСТОЯЩАЯ 3D-КАРТА (БЕЗ РАСТЯЖЕНИЯ, 100% ЕСТЕСТВЕННЫЕ ПРОПОРЦИИ) */}
-      {viewMode === 'map' && (
-        <div
-          ref={scrollContainerRef}
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            position: 'relative',
-            WebkitOverflowScrolling: 'touch',
-          }}
-        >
+      {/* 3D-КАРТА ВОДОЁМОВ (100% ЕСТЕСТВЕННЫЕ ПРОПОРЦИИ) */}
+      <div
+        ref={scrollContainerRef}
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          position: 'relative',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
           {/* Контейнер полного мира карты */}
           <div
             style={{
@@ -515,94 +483,6 @@ export const MapScreen: React.FC<MapScreenProps> = ({
             <span>Мой водоём</span>
           </button>
         </div>
-      )}
-
-      {/* РЕЖИМ 2: КОМПАКТНЫЙ СПИСОК (АЛЬТЕРНАТИВНЫЙ ВИД) */}
-      {viewMode === 'list' && (
-        <div
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: '56px 12px 14px 12px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
-          }}
-        >
-          {LOCATIONS.map((loc) => {
-            const isUnlocked = playerLevel >= loc.levelReq;
-            const isCurrent = currentLocationId === loc.id;
-            const isSelected = inspectedLocation.id === loc.id;
-            const locWeather = LOCATION_WEATHER[loc.id] || { label: 'Ясно', icon: '☀️', temp: '+20°C' };
-
-            return (
-              <div
-                key={loc.id}
-                onClick={() => {
-                  setSelectedLocId(loc.id);
-                  setShowPreviewModal(true);
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '10px 12px',
-                  borderRadius: '16px',
-                  background: isCurrent
-                    ? 'rgba(34, 197, 94, 0.15)'
-                    : isSelected
-                    ? 'rgba(250, 204, 21, 0.12)'
-                    : 'rgba(22, 28, 38, 0.85)',
-                  border: isCurrent
-                    ? '1.5px solid #22c55e'
-                    : isSelected
-                    ? '1.5px solid #facc15'
-                    : '1px solid rgba(255, 255, 255, 0.08)',
-                  cursor: 'pointer',
-                  opacity: isUnlocked ? 1 : 0.65,
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div
-                    style={{
-                      width: '38px',
-                      height: '38px',
-                      borderRadius: '12px',
-                      background: 'rgba(15, 23, 42, 0.7)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '20px',
-                    }}
-                  >
-                    {isUnlocked ? loc.icon : '🔒'}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff' }}>
-                      {loc.name}
-                    </div>
-                    <div style={{ fontSize: '10.5px', color: '#94a3b8' }}>
-                      Ур. {loc.levelReq} • {locWeather.icon} {locWeather.temp}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ textAlign: 'right' }}>
-                  <span
-                    style={{
-                      fontSize: '10.5px',
-                      color: isCurrent ? '#4ade80' : isUnlocked ? '#38bdf8' : '#94a3b8',
-                      fontWeight: 700,
-                    }}
-                  >
-                    {isCurrent ? 'Вы здесь' : isUnlocked ? 'Выбрать' : `Ур. ${loc.levelReq}`}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
 
       {/* НИЖНЯЯ ВСПЛЫВАЮЩАЯ КАРТОЧКА ПРЕДПРОСМОТРА ВОДОЁМА (PREVIEW MODAL) */}
       {showPreviewModal && (
