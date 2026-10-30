@@ -66,8 +66,8 @@ export const BaitSelectModal: React.FC<BaitSelectModalProps> = ({
             position: 'absolute',
             left: '12%',
             right: '12%',
-            top: '3.6%',
-            height: '8.0%',
+            top: '3.2%',
+            height: '9.0%',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -76,30 +76,64 @@ export const BaitSelectModal: React.FC<BaitSelectModalProps> = ({
             zIndex: 10,
           }}
         >
+          <svg viewBox="0 0 320 40" style={{ width: '100%', height: '35px', overflow: 'visible' }}>
+            <defs>
+              <linearGradient id="headerGoldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="25%" stopColor="#fff59d" />
+                <stop offset="60%" stopColor="#fbc02d" />
+                <stop offset="90%" stopColor="#d97706" />
+                <stop offset="100%" stopColor="#92400e" />
+              </linearGradient>
+            </defs>
+            {/* 3D фаска/тень */}
+            <text
+              x="50%"
+              y="28"
+              textAnchor="middle"
+              fill="#2b1407"
+              stroke="#2b1407"
+              strokeWidth="4.2"
+              strokeLinejoin="round"
+              style={{
+                fontSize: '26px',
+                fontWeight: 900,
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                letterSpacing: '0.5px',
+                paintOrder: 'stroke fill',
+              }}
+            >
+              Наживки
+            </text>
+            {/* Основной золотой текст с контуром */}
+            <text
+              x="50%"
+              y="26"
+              textAnchor="middle"
+              fill="url(#headerGoldGrad)"
+              stroke="#3d1b06"
+              strokeWidth="2.6"
+              strokeLinejoin="round"
+              style={{
+                fontSize: '26px',
+                fontWeight: 900,
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                letterSpacing: '0.5px',
+                paintOrder: 'stroke fill',
+              }}
+            >
+              Наживки
+            </text>
+          </svg>
           <div
             style={{
-              fontSize: 'clamp(18px, 4.4vw, 22px)',
-              fontWeight: 900,
-              lineHeight: 1.1,
-              background: 'linear-gradient(180deg, #fffbeb 0%, #fef08a 25%, #facc15 60%, #ca8a04 85%, #854d0e 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              filter:
-                'drop-shadow(0 1px 0 #451a03) drop-shadow(0 2px 0 #321302) drop-shadow(0 3px 2px rgba(0, 0, 0, 0.85))',
-              letterSpacing: '0.3px',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-            }}
-          >
-            Наживки
-          </div>
-          <div
-            style={{
-              color: '#fae8c8',
+              color: '#fef08a',
               fontSize: 'clamp(10px, 2.3vw, 11.5px)',
               fontWeight: 700,
-              marginTop: '-2px',
-              textShadow: '0 1px 2px rgba(0, 0, 0, 0.9), 0 2px 4px rgba(0, 0, 0, 0.7)',
+              marginTop: '-3px',
+              textShadow: '0 1px 2px rgba(0, 0, 0, 0.9), 0 2px 4px rgba(0, 0, 0, 0.85)',
               letterSpacing: '0.2px',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
             }}
           >
             Выберите наживку для успешного клёва
