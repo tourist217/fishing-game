@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { FishingLocation } from '../locationsData';
 import type { ActiveFishState } from '../hooks/useFishingSimulation';
 import { formatWeight } from '../utils/fishUtils';
@@ -94,6 +94,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
   const isKeepnetFull = inventoryCount >= maxKeepnetCapacity;
   const hasEnoughEnergy = energy >= 5;
   const canCast = currentBaitCount > 0 && hasLineOnRod && !isKeepnetFull && hasEnoughEnergy;
+  const pullButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const handlePullStart = (e?: React.SyntheticEvent) => {
     if (e && e.cancelable) e.preventDefault();
@@ -115,20 +116,92 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
     }
   }, [gameState, isPulling, onPullEnd]);
 
-  // Глобальный слушатель отпускания мыши/пальца для предотвращения залипания
+  // Нативные non-passive слушатели для iOS Safari / Telegram WebApp
+  // Полностью блокируют вызов контекстного меню, лупы и выделения текста при зажатии кнопки "Тянуть"
+  useEffect(() => {
+    const btn = pullButtonRef.current;
+    if (!btn || gameState !== 'reeling') return;
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
+      setIsPulling(true);
+      onPullStart();
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      // Предотвращаем скролл и запуск лупы при микродвижениях зажатого пальца
+      if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
+      setIsPulling(false);
+      onPullEnd();
+    };
+
+    const onTouchCancel = (e: TouchEvent) => {
+      if (e.cancelable) e.preventDefault();
+      setIsPulling(false);
+      onPullEnd();
+    };
+
+    const onContextMenu = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    };
+
+    const onSelectStart = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    };
+
+    btn.addEventListener('touchstart', onTouchStart, { passive: false });
+    btn.addEventListener('touchmove', onTouchMove, { passive: false });
+    btn.addEventListener('touchend', onTouchEnd, { passive: false });
+    btn.addEventListener('touchcancel', onTouchCancel, { passive: false });
+    btn.addEventListener('contextmenu', onContextMenu);
+    btn.addEventListener('selectstart', onSelectStart);
+
+    return () => {
+      btn.removeEventListener('touchstart', onTouchStart);
+      btn.removeEventListener('touchmove', onTouchMove);
+      btn.removeEventListener('touchend', onTouchEnd);
+      btn.removeEventListener('touchcancel', onTouchCancel);
+      btn.removeEventListener('contextmenu', onContextMenu);
+      btn.removeEventListener('selectstart', onSelectStart);
+    };
+  }, [gameState, onPullStart, onPullEnd]);
+
+  // Глобальная блокировка контекстного меню, лупы и сброс залипания пальца
   useEffect(() => {
     if (!isPulling) return;
+
     const handleGlobalEnd = () => {
       setIsPulling(false);
       onPullEnd();
     };
+
+    const preventCallout = (e: Event) => {
+      e.preventDefault();
+    };
+
     window.addEventListener('mouseup', handleGlobalEnd);
     window.addEventListener('touchend', handleGlobalEnd);
     window.addEventListener('touchcancel', handleGlobalEnd);
+    window.addEventListener('contextmenu', preventCallout, { capture: true });
+    window.addEventListener('selectstart', preventCallout, { capture: true });
+
     return () => {
       window.removeEventListener('mouseup', handleGlobalEnd);
       window.removeEventListener('touchend', handleGlobalEnd);
       window.removeEventListener('touchcancel', handleGlobalEnd);
+      window.removeEventListener('contextmenu', preventCallout, { capture: true });
+      window.removeEventListener('selectstart', preventCallout, { capture: true });
     };
   }, [isPulling, onPullEnd]);
 
@@ -540,6 +613,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
         {gameState === 'hooked' && (
           <button
             onClick={onStartReeling}
+            onContextMenu={(e) => e.preventDefault()}
             style={{
               height: '52px',
               background: 'linear-gradient(180deg, #f59e0b 0%, #d97706 60%, #b45309 100%)',
@@ -551,6 +625,11 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
               boxShadow: '0 0 24px rgba(245, 158, 11, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4)',
               cursor: 'pointer',
               animation: 'pulse 0.8s infinite',
+              touchAction: 'manipulation',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              WebkitTouchCallout: 'none',
+              WebkitTapHighlightColor: 'transparent',
             }}
           >
             ПОДСЕЧЬ! 🎣
@@ -559,12 +638,15 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
 
         {gameState === 'reeling' && (
           <button
+            ref={pullButtonRef}
             onMouseDown={handlePullStart}
             onMouseUp={handlePullEnd}
-            onTouchStart={handlePullStart}
-            onTouchEnd={handlePullEnd}
             onMouseLeave={() => {
               if (isPulling) handlePullEnd();
+            }}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
             }}
             style={{
               position: 'relative',
@@ -585,6 +667,8 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
               cursor: 'pointer',
               userSelect: 'none',
               WebkitUserSelect: 'none',
+              WebkitTouchCallout: 'none',
+              touchAction: 'none',
               WebkitTapHighlightColor: 'transparent',
               outline: 'none',
               boxShadow: isPulling
@@ -608,6 +692,10 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                 fontSize: '18px',
                 fontWeight: 900,
                 letterSpacing: '1px',
+                pointerEvents: 'none',
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                WebkitTouchCallout: 'none',
                 textShadow: isPulling
                   ? '0 2px 4px rgba(0,0,0,0.8), 0 0 12px rgba(251, 191, 36, 0.8)'
                   : '0 2px 4px rgba(0,0,0,0.6)',
