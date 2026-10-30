@@ -7,6 +7,7 @@ import { triggerHaptic } from '../utils/haptics';
 import { AVAILABLE_BAITS } from '../hooks/useBaitState';
 import { TIME_CONFIGS, WEATHER_CONFIGS, type TimeOfDay, type WeatherType } from '../utils/weatherTime';
 import { CoinIcon } from './CoinIcon';
+import { BoardHeader } from './BoardHeader';
 
 interface FishJournalModalProps {
   journal: FishJournal;
@@ -59,103 +60,103 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
         position: 'absolute',
         inset: 0,
         zIndex: 50,
-        background: 'rgba(5, 10, 18, 0.88)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
+        background: 'rgba(0, 0, 0, 0.78)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 'max(84px, var(--tg-content-safe-area-inset-top, calc(env(safe-area-inset-top, 44px) + 40px))) 12px calc(12px + env(safe-area-inset-bottom, 0px)) 12px',
+        padding: 'max(10px, env(safe-area-inset-top, 10px)) 8px max(10px, env(safe-area-inset-bottom, 10px)) 8px',
         userSelect: 'none',
+        overflow: 'hidden',
       }}
     >
+      {/* 1. СЛОЙ ФОНА: Универсальная деревянная доска */}
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: '100%',
-          maxWidth: '360px',
-          height: '100%',
-          maxHeight: '100%',
-          background: 'linear-gradient(180deg, #16202c 0%, #0f172a 100%)',
-          borderRadius: '26px',
-          border: '1.5px solid rgba(255, 255, 255, 0.14)',
-          boxShadow: '0 12px 36px rgba(0, 0, 0, 0.65)',
+          position: 'relative',
+          width: 'min(94vh * 0.727, 100vw - 16px, 420px)',
+          aspectRatio: '745 / 1024',
+          maxHeight: '94vh',
+          backgroundImage: "url('/assets/ui/universal_board.png')",
+          backgroundSize: '100% 100%',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          filter: 'drop-shadow(0 18px 45px rgba(0, 0, 0, 0.95))',
           display: 'flex',
           flexDirection: 'column',
+          boxSizing: 'border-box',
           overflow: 'hidden',
-          position: 'relative',
+          userSelect: 'none',
         }}
       >
-        {/* Шапка журнала */}
-        <div
+        {/* 2. СЛОЙ ЗАГОЛОВКА: Единый 3D золотой заголовок поверх верхней деревянной планки */}
+        <BoardHeader
+          title="Рыболовный журнал"
+          subtitle={`Виды: ${caughtSpeciesCount}/${totalSpecies} • Трофеи: ${trophyCount}`}
+        />
+
+        {/* 3. СЛОЙ КНОПКИ ЗАКРЫТИЯ (Круглый красный крестик в правом верхнем углу) */}
+        <button
+          onClick={onClose}
+          aria-label="Закрыть"
           style={{
-            padding: '14px 16px 10px 16px',
-            background: 'rgba(30, 41, 59, 0.6)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            position: 'absolute',
+            right: '5.5%',
+            top: '4.0%',
+            width: '30px',
+            height: '30px',
+            borderRadius: '50%',
+            background: 'linear-gradient(180deg, #dc2626 0%, #991b1b 100%)',
+            border: '1.5px solid rgba(254, 202, 202, 0.7)',
+            color: '#ffffff',
+            fontSize: '13px',
+            fontWeight: 900,
             display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 4px 10px rgba(0, 0, 0, 0.65)',
+            zIndex: 20,
+            transition: 'transform 0.1s ease',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <img
-                src="/assets/icons/journal.png"
-                alt="Журнал"
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '10px',
-                  objectFit: 'cover',
-                  border: '1.5px solid rgba(251, 191, 36, 0.4)',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
-                }}
-              />
-              <div>
-                <div style={{ fontSize: '15px', fontWeight: 900, color: '#ffffff', lineHeight: 1.1 }}>
-                  Рыболовный журнал
-                </div>
-                <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                  Энциклопедия рыб и галерея трофеев
-                </div>
-              </div>
-            </div>
+          ✕
+        </button>
 
-            <button
-              onClick={onClose}
-              style={{
-                width: '28px',
-                height: '28px',
-                borderRadius: '50%',
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: 'none',
-                color: '#cbd5e1',
-                fontSize: '13px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              ✕
-            </button>
-          </div>
-
+        {/* 4. СЛОЙ КОНТЕНТА: Рабочая область внутри деревянной рамы */}
+        <div
+          style={{
+            position: 'absolute',
+            left: '7.5%',
+            right: '7.5%',
+            top: '12.8%',
+            bottom: '6.2%',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '7px',
+            padding: '2px',
+            boxSizing: 'border-box',
+            overflow: 'hidden',
+            zIndex: 10,
+          }}
+        >
           {/* Прогресс-бар коллекции всех видов */}
           <div
             style={{
-              background: 'rgba(15, 23, 42, 0.75)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '14px',
-              padding: '8px 12px',
+              background: 'rgba(20, 12, 6, 0.75)',
+              border: '1px solid rgba(251, 191, 36, 0.25)',
+              borderRadius: '12px',
+              padding: '6px 10px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '6px',
+              gap: '4px',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '11px', fontWeight: 800, color: '#e2e8f0' }}>
+              <span style={{ fontSize: '11px', fontWeight: 800, color: '#fef3c7' }}>
                 Коллекция видов
               </span>
               <span style={{ fontSize: '11px', fontWeight: 900, color: '#38bdf8' }}>
@@ -167,7 +168,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
               style={{
                 width: '100%',
                 height: '6px',
-                background: 'rgba(255, 255, 255, 0.1)',
+                background: 'rgba(0, 0, 0, 0.45)',
                 borderRadius: '4px',
                 overflow: 'hidden',
               }}
@@ -224,7 +225,8 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
           <div
             style={{
               display: 'flex',
-              background: 'rgba(15, 23, 42, 0.7)',
+              background: 'rgba(20, 12, 6, 0.8)',
+              border: '1px solid rgba(251, 191, 36, 0.25)',
               borderRadius: '12px',
               padding: '3px',
               gap: '4px',

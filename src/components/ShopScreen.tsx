@@ -11,6 +11,8 @@ import {
 } from '../data/provisionsData';
 import { CoinIcon } from './CoinIcon';
 import { GemIcon } from './GemIcon';
+import { BoardHeader } from './BoardHeader';
+import { triggerHaptic } from '../utils/haptics';
 
 interface GearState {
   ownedRods: string[];
@@ -147,149 +149,188 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        gap: '12px',
+        alignItems: 'center',
+        justifyContent: 'center',
         overflow: 'hidden',
+        padding: 'max(4px, env(safe-area-inset-top, 4px)) 4px 6px 4px',
+        width: '100%',
+        userSelect: 'none',
       }}
     >
-      {/* Шапка магазина в стиле дизайн-системы */}
+      {/* 1. СЛОЙ ФОНА: Универсальная деревянная доска */}
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: 'rgba(22, 28, 38, 0.85)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          padding: '12px 14px',
-          borderRadius: '22px',
-          border: '1.5px solid rgba(245, 158, 11, 0.3)',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '12px',
-              background: 'rgba(15, 23, 42, 0.75)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '22px',
-            }}
-          >
-            🏪
-          </div>
-          <div>
-            <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff' }}>
-              Рыболовный магазин
-            </div>
-            <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
-              Снасти, наживки и экипировка
-            </div>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div
-            style={{
-              background: 'rgba(251, 191, 36, 0.16)',
-              border: '1.5px solid rgba(251, 191, 36, 0.4)',
-              borderRadius: '14px',
-              padding: '6px 11px',
-              color: '#fbbf24',
-              fontWeight: 800,
-              fontSize: '13px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-            }}
-          >
-            <CoinIcon size={17} />
-            <span>{coins.toLocaleString('ru-RU')}</span>
-          </div>
-
-          <div
-            style={{
-              background: 'rgba(56, 189, 248, 0.16)',
-              border: '1.5px solid rgba(56, 189, 248, 0.4)',
-              borderRadius: '14px',
-              padding: '6px 11px',
-              color: '#38bdf8',
-              fontWeight: 800,
-              fontSize: '13px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              boxShadow: '0 0 12px rgba(56, 189, 248, 0.15)',
-            }}
-          >
-            <GemIcon size={17} />
-            <span>{gems.toLocaleString('ru-RU')}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Вкладки категорий магазина */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '6px',
-          overflowX: 'auto',
-          paddingBottom: '2px',
-        }}
-      >
-        {[
-          { id: 'rods' as ShopTab, label: 'Удочки 🎣' },
-          { id: 'reels' as ShopTab, label: 'Катушки ⚙️' },
-          { id: 'lines' as ShopTab, label: 'Лески 🧵' },
-          { id: 'baits' as ShopTab, label: 'Наживки 🍞' },
-          { id: 'upgrades' as ShopTab, label: 'Мастерская 🛠️' },
-          { id: 'provisions' as ShopTab, label: 'Провизия ☕' },
-        ].map((tab) => {
-          const isActive = shopTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setShopTab(tab.id)}
-              style={{
-                flex: '0 0 auto',
-                background: isActive
-                  ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(217, 119, 6, 0.14) 100%)'
-                  : 'rgba(22, 28, 38, 0.75)',
-                border: isActive
-                  ? '1.5px solid #f59e0b'
-                  : '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '16px',
-                padding: '8px 12px',
-                color: isActive ? '#fef08a' : '#94a3b8',
-                fontWeight: 800,
-                fontSize: '12px',
-                cursor: 'pointer',
-                boxShadow: isActive ? '0 0 12px rgba(245, 158, 11, 0.25)' : 'none',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Контент магазина */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: 'auto',
+          position: 'relative',
+          width: 'min(calc((100dvh - 84px) * 0.727), 100vw - 12px, 430px)',
+          aspectRatio: '745 / 1024',
+          maxHeight: 'calc(100dvh - 84px)',
+          backgroundImage: "url('/assets/ui/universal_board.png')",
+          backgroundSize: '100% 100%',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          filter: 'drop-shadow(0 14px 36px rgba(0, 0, 0, 0.85))',
           display: 'flex',
           flexDirection: 'column',
-          gap: '10px',
-          paddingRight: '4px',
+          boxSizing: 'border-box',
+          overflow: 'hidden',
         }}
       >
-        {/* --- ВКЛАДКА 1: УДОЧКИ --- */}
+        {/* 2. СЛОЙ ЗАГОЛОВКА: Единый 3D золотой заголовок поверх верхней деревянной планки */}
+        <BoardHeader
+          title="Рыболовный магазин"
+          subtitle="Снасти, наживки и походная провизия"
+        />
+
+        {/* 3. СЛОЙ КОНТЕНТА: Рабочая область внутри деревянной рамы */}
+        <div
+          style={{
+            position: 'absolute',
+            left: '7.5%',
+            right: '7.5%',
+            top: '12.8%',
+            bottom: '6.2%',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '7px',
+            padding: '2px',
+            boxSizing: 'border-box',
+            overflow: 'hidden',
+            zIndex: 10,
+          }}
+        >
+          {/* Инфо-панель баланса */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              background: 'rgba(25, 14, 7, 0.85)',
+              border: '1px solid rgba(251, 191, 36, 0.28)',
+              borderRadius: '13px',
+              padding: '6px 10px',
+              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.5)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div
+                style={{
+                  background: 'rgba(251, 191, 36, 0.18)',
+                  border: '1px solid rgba(251, 191, 36, 0.4)',
+                  borderRadius: '10px',
+                  padding: '4px 8px',
+                  color: '#fbbf24',
+                  fontWeight: 900,
+                  fontSize: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                <CoinIcon size={14} />
+                <span>{coins.toLocaleString('ru-RU')}</span>
+              </div>
+
+              <div
+                style={{
+                  background: 'rgba(56, 189, 248, 0.18)',
+                  border: '1px solid rgba(56, 189, 248, 0.4)',
+                  borderRadius: '10px',
+                  padding: '4px 8px',
+                  color: '#38bdf8',
+                  fontWeight: 900,
+                  fontSize: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                <GemIcon size={14} />
+                <span>{gems.toLocaleString('ru-RU')}</span>
+              </div>
+            </div>
+
+            <div
+              style={{
+                fontSize: '11px',
+                fontWeight: 800,
+                color: '#fed7aa',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              <span>⚡</span>
+              <span style={{ color: energy < 20 ? '#f87171' : '#4ade80', fontWeight: 900 }}>
+                {energy}/{maxEnergy}
+              </span>
+            </div>
+          </div>
+
+          {/* Вкладки категорий магазина */}
+          <div
+            style={{
+              display: 'flex',
+              gap: '4px',
+              overflowX: 'auto',
+              paddingBottom: '2px',
+              scrollbarWidth: 'none',
+              background: 'rgba(20, 12, 6, 0.8)',
+              border: '1px solid rgba(251, 191, 36, 0.25)',
+              borderRadius: '12px',
+              padding: '3px',
+              flexShrink: 0,
+            }}
+          >
+            {[
+              { id: 'rods' as ShopTab, label: 'Удочки 🎣' },
+              { id: 'reels' as ShopTab, label: 'Катушки ⚙️' },
+              { id: 'lines' as ShopTab, label: 'Лески 🧵' },
+              { id: 'baits' as ShopTab, label: 'Наживки 🍞' },
+              { id: 'provisions' as ShopTab, label: 'Провизия ☕' },
+              { id: 'upgrades' as ShopTab, label: 'Мастерская 🛠️' },
+            ].map((tab) => {
+              const isActive = shopTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setShopTab(tab.id);
+                    triggerHaptic('selection');
+                  }}
+                  style={{
+                    flex: '0 0 auto',
+                    background: isActive
+                      ? 'linear-gradient(135deg, #facc15 0%, #ca8a04 100%)'
+                      : 'transparent',
+                    border: 'none',
+                    borderRadius: '9px',
+                    padding: '6px 9px',
+                    color: isActive ? '#1c1917' : '#fef3c7',
+                    fontWeight: 900,
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Контент магазина */}
+          <div
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+              paddingRight: '2px',
+            }}
+          >
+            {/* --- ВКЛАДКА 1: УДОЧКИ --- */}
         {shopTab === 'rods' &&
           rods.map((rod) => {
             const isOwned = ownedRods.includes(rod.id);
@@ -305,7 +346,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
               <div
                 key={rod.id}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
+                  background: 'rgba(25, 14, 7, 0.82)',
                   borderRadius: '14px',
                   padding: '12px',
                   border: isEquipped
@@ -449,7 +490,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
               <div
                 key={reel.id}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
+                  background: 'rgba(25, 14, 7, 0.82)',
                   borderRadius: '14px',
                   padding: '12px',
                   border: isEquipped
@@ -593,7 +634,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
               <div
                 key={line.id}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
+                  background: 'rgba(25, 14, 7, 0.82)',
                   borderRadius: '14px',
                   padding: '12px',
                   border: isEquipped
@@ -731,7 +772,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
               <div
                 key={bait.id}
                 style={{
-                  background: isLocked ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.05)',
+                  background: isLocked ? 'rgba(15, 8, 4, 0.6)' : 'rgba(25, 14, 7, 0.82)',
                   borderRadius: '14px',
                   padding: '12px',
                   border: isLocked
@@ -881,7 +922,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
               return (
                 <div
                   style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
+                    background: 'rgba(25, 14, 7, 0.82)',
                     borderRadius: '14px',
                     padding: '12px',
                     border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -958,7 +999,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
               return (
                 <div
                   style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
+                    background: 'rgba(25, 14, 7, 0.82)',
                     borderRadius: '14px',
                     padding: '12px',
                     border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -1010,7 +1051,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
               return (
                 <div
                   style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
+                    background: 'rgba(25, 14, 7, 0.82)',
                     borderRadius: '14px',
                     padding: '12px',
                     border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -1099,7 +1140,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
               return (
                 <div
                   style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
+                    background: 'rgba(25, 14, 7, 0.82)',
                     borderRadius: '16px',
                     padding: '14px',
                     border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -1208,7 +1249,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
               return (
                 <div
                   style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
+                    background: 'rgba(25, 14, 7, 0.82)',
                     borderRadius: '16px',
                     padding: '14px',
                     border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -1397,6 +1438,8 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
             )}
           </>
         )}
+      </div>
+        </div>
       </div>
     </div>
   );

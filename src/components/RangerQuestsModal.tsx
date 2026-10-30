@@ -1,6 +1,9 @@
 import React from 'react';
 import type { DailyQuest } from '../types/quests';
 import { triggerHaptic } from '../utils/haptics';
+import { BoardHeader } from './BoardHeader';
+import { CoinIcon } from './CoinIcon';
+import { GemIcon } from './GemIcon';
 
 interface RangerQuestsModalProps {
   quests: DailyQuest[];
@@ -13,17 +16,11 @@ interface RangerQuestsModalProps {
   onClose: () => void;
 }
 
-const QUEST_CONFIGS = [
-  { buttonTop: '58.4%' },
-  { buttonTop: '69.6%' },
-  { buttonTop: '80.8%' },
-];
-
 export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
   quests,
   allCompletedBonusClaimed,
   timeUntilMidnight,
-  completedCount: _completedCount,
+  completedCount,
   canClaimBonus,
   onClaimQuestReward,
   onClaimDailyBonus,
@@ -36,9 +33,9 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
         position: 'absolute',
         inset: 0,
         zIndex: 60,
-        background: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
+        background: 'rgba(0, 0, 0, 0.78)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
@@ -47,22 +44,33 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
         overflow: 'hidden',
       }}
     >
-      {/* Главный стенд объявлений Егеря: чистый студийный арт без артефактов и заплаток */}
+      {/* 1. СЛОЙ ФОНА: Универсальная деревянная доска */}
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
           position: 'relative',
-          width: 'min(94vh * 0.558, 100vw - 16px, 430px)',
-          aspectRatio: '768 / 1376',
+          width: 'min(94vh * 0.727, 100vw - 16px, 420px)',
+          aspectRatio: '745 / 1024',
           maxHeight: '94vh',
-          backgroundImage: "url('/assets/ui/ranger_quests_variant_c.jpg')",
+          backgroundImage: "url('/assets/ui/universal_board.png')",
           backgroundSize: '100% 100%',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
-          filter: 'drop-shadow(0 16px 40px rgba(0, 0, 0, 0.9))',
+          filter: 'drop-shadow(0 18px 45px rgba(0, 0, 0, 0.95))',
+          display: 'flex',
+          flexDirection: 'column',
+          boxSizing: 'border-box',
+          overflow: 'hidden',
+          userSelect: 'none',
         }}
       >
-        {/* Кнопка закрытия (X) в правом верхнем углу */}
+        {/* 2. СЛОЙ ЗАГОЛОВКА: Единый 3D золотой заголовок поверх верхней деревянной планки */}
+        <BoardHeader
+          title="Заказы егеря"
+          subtitle="Ежедневные поручения и суперприз"
+        />
+
+        {/* 3. СЛОЙ КНОПКИ ЗАКРЫТИЯ (Круглый красный крестик в правом верхнем углу) */}
         <button
           onClick={() => {
             triggerHaptic('light');
@@ -71,188 +79,314 @@ export const RangerQuestsModal: React.FC<RangerQuestsModalProps> = ({
           aria-label="Закрыть"
           style={{
             position: 'absolute',
-            left: '85.0%',
+            right: '5.5%',
             top: '4.0%',
-            width: '12.0%',
-            height: '6.5%',
+            width: '30px',
+            height: '30px',
             borderRadius: '50%',
-            background: 'transparent',
-            border: 'none',
+            background: 'linear-gradient(180deg, #dc2626 0%, #991b1b 100%)',
+            border: '1.5px solid rgba(254, 202, 202, 0.7)',
+            color: '#ffffff',
+            fontSize: '13px',
+            fontWeight: 900,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             cursor: 'pointer',
-            WebkitTapHighlightColor: 'transparent',
+            boxShadow: '0 4px 10px rgba(0, 0, 0, 0.65)',
+            zIndex: 20,
+            transition: 'transform 0.1s ease',
           }}
-        />
+        >
+          ✕
+        </button>
 
-        {/* Живой таймер на свободном пергаменте справа от «Новые заказы:» */}
+        {/* 4. СЛОЙ КОНТЕНТА: Рабочая область внутри деревянной рамы */}
         <div
           style={{
             position: 'absolute',
-            left: '46.0%',
-            top: '28.8%',
-            width: '36.0%',
-            height: '3.6%',
+            left: '7.5%',
+            right: '7.5%',
+            top: '12.8%',
+            bottom: '6.2%',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-start',
-            color: '#381604',
-            fontWeight: 900,
-            fontSize: 'clamp(13px, 2.8vw, 18px)',
-            fontFamily: 'Georgia, serif',
-            letterSpacing: '1px',
-            background: 'transparent',
-            border: 'none',
-            pointerEvents: 'none',
+            flexDirection: 'column',
+            gap: '8px',
+            padding: '2px',
+            boxSizing: 'border-box',
+            overflowY: 'auto',
+            zIndex: 10,
           }}
         >
-          {timeUntilMidnight}
-        </div>
-
-        {/* Кнопка забрать финальную награду дня, когда выполнены все 3 заказа */}
-        {canClaimBonus && (
-          <button
-            onClick={() => {
-              onClaimDailyBonus();
-              triggerHaptic('notification');
-            }}
-            style={{
-              position: 'absolute',
-              left: '25.0%',
-              top: '49.0%',
-              width: '50.0%',
-              height: '4.8%',
-              borderRadius: '14px',
-              border: '2px solid #86efac',
-              background: 'linear-gradient(180deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
-              color: '#ffffff',
-              fontWeight: 900,
-              fontSize: 'clamp(12px, 2.8vw, 15px)',
-              cursor: 'pointer',
-              boxShadow: '0 0 24px rgba(34, 197, 94, 0.95), inset 0 1px 2px rgba(255, 255, 255, 0.5)',
-              textShadow: '0 1px 3px rgba(0,0,0,0.9)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              zIndex: 10,
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            <span>🎁</span>
-            <span>Забрать награду!</span>
-          </button>
-        )}
-
-        {allCompletedBonusClaimed && (
+          {/* Инфо-полоса таймера и счетчика заданий */}
           <div
             style={{
-              position: 'absolute',
-              left: '26.0%',
-              top: '49.2%',
-              width: '48.0%',
-              height: '4.2%',
+              background: 'rgba(20, 12, 6, 0.78)',
+              border: '1px solid rgba(251, 191, 36, 0.25)',
               borderRadius: '12px',
-              background: 'rgba(20, 10, 5, 0.85)',
-              border: '1.5px solid #22c55e',
-              color: '#4ade80',
-              fontWeight: 900,
-              fontSize: 'clamp(11px, 2.5vw, 14px)',
+              padding: '6px 10px',
               display: 'flex',
+              justifyContent: 'space-between',
               alignItems: 'center',
-              justifyContent: 'center',
-              gap: '5px',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.7)',
-              zIndex: 10,
+              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.5)',
             }}
           >
-            <span>✓</span>
-            <span>Награда получена</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11.5px', color: '#fef3c7', fontWeight: 800 }}>
+              <span>🕒</span>
+              <span>Сброс через:</span>
+              <span style={{ color: '#38bdf8', fontFamily: 'monospace', fontWeight: 900 }}>{timeUntilMidnight}</span>
+            </div>
+            <div style={{ fontSize: '11.5px', fontWeight: 900, color: '#facc15' }}>
+              Выполнено: {completedCount} / 3
+            </div>
           </div>
-        )}
 
-        {/* 3 карточки заданий Егеря (кнопки сбора/статуса) */}
-        {quests.slice(0, 3).map((quest, idx) => {
-          const config = QUEST_CONFIGS[idx];
+          {/* Карточка Суперприза */}
+          <div
+            style={{
+              background: 'linear-gradient(180deg, rgba(35, 20, 10, 0.85) 0%, rgba(20, 10, 5, 0.9) 100%)',
+              border: '1.5px solid #d97706',
+              borderRadius: '14px',
+              padding: '8px 10px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+              boxShadow: '0 3px 10px rgba(0, 0, 0, 0.55), inset 0 1px 2px rgba(254, 240, 138, 0.15)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '16px' }}>🎁</span>
+                <span style={{ fontSize: '12px', fontWeight: 900, color: '#fef08a' }}>
+                  Суперприз за 3 заказа
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: 800 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', color: '#fbbf24' }}>
+                  +150 <CoinIcon size={13} />
+                </span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', color: '#38bdf8' }}>
+                  +10 <GemIcon size={13} />
+                </span>
+                <span style={{ color: '#a78bfa' }}>
+                  +250 XP
+                </span>
+              </div>
+            </div>
 
-          return (
-            <React.Fragment key={quest.id || idx}>
-              {quest.isClaimed ? (
+            {canClaimBonus ? (
+              <button
+                onClick={() => {
+                  onClaimDailyBonus();
+                  triggerHaptic('notification');
+                }}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: '10px',
+                  border: '1.5px solid #86efac',
+                  background: 'linear-gradient(180deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
+                  color: '#ffffff',
+                  fontWeight: 900,
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  boxShadow: '0 0 16px rgba(34, 197, 94, 0.8), inset 0 1px 2px rgba(255, 255, 255, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                }}
+              >
+                <span>🎁</span>
+                <span>Забрать суперприз дня!</span>
+              </button>
+            ) : allCompletedBonusClaimed ? (
+              <div
+                style={{
+                  padding: '6px',
+                  borderRadius: '10px',
+                  background: 'rgba(20, 10, 5, 0.6)',
+                  border: '1px solid rgba(74, 222, 128, 0.4)',
+                  color: '#4ade80',
+                  fontWeight: 800,
+                  fontSize: '11px',
+                  textAlign: 'center',
+                }}
+              >
+                ✓ Суперприз дня получен!
+              </div>
+            ) : (
+              <div
+                style={{
+                  width: '100%',
+                  height: '5px',
+                  background: 'rgba(0, 0, 0, 0.5)',
+                  borderRadius: '3px',
+                  overflow: 'hidden',
+                }}
+              >
                 <div
                   style={{
-                    position: 'absolute',
-                    left: '68.0%',
-                    top: config.buttonTop,
-                    width: '16.7%',
-                    height: '3.1%',
-                    borderRadius: '10px',
-                    background: 'rgba(20, 10, 5, 0.85)',
-                    border: '1px solid rgba(74, 222, 128, 0.45)',
-                    color: '#4ade80',
-                    fontWeight: 900,
-                    fontSize: 'clamp(9px, 2.0vw, 12px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.5)',
-                    textShadow: '0 1px 2px rgba(0,0,0,0.9)',
+                    width: `${Math.min(100, (completedCount / 3) * 100)}%`,
+                    height: '100%',
+                    background: 'linear-gradient(90deg, #facc15 0%, #22c55e 100%)',
+                    borderRadius: '3px',
+                    transition: 'width 0.3s ease',
                   }}
-                >
-                  ✓ Готово
-                </div>
-              ) : quest.isCompleted ? (
-                <button
-                  onClick={() => {
-                    onClaimQuestReward(quest.id);
-                    triggerHaptic('notification');
-                  }}
-                  style={{
-                    position: 'absolute',
-                    left: '68.0%',
-                    top: config.buttonTop,
-                    width: '16.7%',
-                    height: '3.1%',
-                    borderRadius: '10px',
-                    border: '1.5px solid #86efac',
-                    background: 'linear-gradient(180deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
-                    color: '#ffffff',
-                    fontWeight: 900,
-                    fontSize: 'clamp(9.5px, 2.1vw, 12.5px)',
-                    cursor: 'pointer',
-                    boxShadow: '0 0 14px rgba(34, 197, 94, 0.9), inset 0 1px 2px rgba(255, 255, 255, 0.4)',
-                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.8)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    WebkitTapHighlightColor: 'transparent',
-                    animation: 'pulse 1.5s infinite',
-                  }}
-                >
-                  Забрать! 🎁
-                </button>
-              ) : null}
-            </React.Fragment>
-          );
-        })}
+                />
+              </div>
+            )}
+          </div>
 
-        {/* Нижняя кнопка возврата на базу (Вернуться на базу) */}
-        <button
-          onClick={() => {
-            triggerHaptic('light');
-            onClose();
-          }}
-          aria-label="Вернуться на базу"
-          style={{
-            position: 'absolute',
-            left: '20.0%',
-            top: '90.5%',
-            width: '60.0%',
-            height: '4.8%',
-            borderRadius: '16px',
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-        />
+          {/* 3 карточки заказов */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '7px', flex: 1 }}>
+            {quests.slice(0, 3).map((quest, idx) => {
+              const diffLabel =
+                quest.difficulty === 'easy' ? 'Лёгкий' : quest.difficulty === 'medium' ? 'Средний' : 'Сложный';
+              const diffColor =
+                quest.difficulty === 'easy' ? '#4ade80' : quest.difficulty === 'medium' ? '#facc15' : '#f87171';
+              const progressPct = quest.targetCount > 0 ? Math.min(100, Math.round((quest.currentCount / quest.targetCount) * 100)) : 0;
+
+              return (
+                <div
+                  key={quest.id || idx}
+                  style={{
+                    background: 'rgba(25, 14, 7, 0.82)',
+                    border: '1px solid rgba(251, 191, 36, 0.25)',
+                    borderRadius: '13px',
+                    padding: '8px 10px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '5px',
+                    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.45)',
+                  }}
+                >
+                  {/* Верхняя строка карточки: название и сложность */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 900, color: '#fef3c7', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <span>{quest.icon || '🎯'}</span>
+                      <span>{quest.title}</span>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: '9.5px',
+                        fontWeight: 800,
+                        color: diffColor,
+                        background: 'rgba(0, 0, 0, 0.4)',
+                        padding: '2px 6px',
+                        borderRadius: '6px',
+                        border: `1px solid ${diffColor}44`,
+                      }}
+                    >
+                      {diffLabel}
+                    </span>
+                  </div>
+
+                  {/* Описание задания */}
+                  <div style={{ fontSize: '10.5px', color: '#cbd5e1', lineHeight: 1.25 }}>
+                    {quest.description}
+                  </div>
+
+                  {/* Прогресс-бар задания */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div
+                      style={{
+                        flex: 1,
+                        height: '5px',
+                        background: 'rgba(0, 0, 0, 0.5)',
+                        borderRadius: '3px',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${progressPct}%`,
+                          height: '100%',
+                          background: quest.isCompleted ? '#22c55e' : '#38bdf8',
+                          borderRadius: '3px',
+                          transition: 'width 0.3s ease',
+                        }}
+                      />
+                    </div>
+                    <span style={{ fontSize: '10px', fontWeight: 800, color: quest.isCompleted ? '#4ade80' : '#94a3b8' }}>
+                      {quest.currentCount} / {quest.targetCount}
+                    </span>
+                  </div>
+
+                  {/* Награды и кнопка действия */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '10.5px', fontWeight: 800 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', color: '#fbbf24' }}>
+                        +{quest.rewardCoins} <CoinIcon size={12} />
+                      </span>
+                      {quest.rewardGems ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', color: '#38bdf8' }}>
+                          +{quest.rewardGems} <GemIcon size={12} />
+                        </span>
+                      ) : null}
+                      <span style={{ color: '#a78bfa' }}>
+                        +{quest.rewardExp} XP
+                      </span>
+                    </div>
+
+                    {quest.isClaimed ? (
+                      <span
+                        style={{
+                          fontSize: '10px',
+                          fontWeight: 800,
+                          color: '#4ade80',
+                          background: 'rgba(34, 197, 94, 0.15)',
+                          border: '1px solid rgba(74, 222, 128, 0.35)',
+                          borderRadius: '8px',
+                          padding: '3px 8px',
+                        }}
+                      >
+                        ✓ Получено
+                      </span>
+                    ) : quest.isCompleted ? (
+                      <button
+                        onClick={() => {
+                          onClaimQuestReward(quest.id);
+                          triggerHaptic('notification');
+                        }}
+                        style={{
+                          padding: '4px 10px',
+                          borderRadius: '8px',
+                          border: '1px solid #86efac',
+                          background: 'linear-gradient(180deg, #22c55e 0%, #15803d 100%)',
+                          color: '#ffffff',
+                          fontWeight: 900,
+                          fontSize: '10.5px',
+                          cursor: 'pointer',
+                          boxShadow: '0 0 10px rgba(34, 197, 94, 0.6)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        <span>Забрать</span>
+                        <span>🎁</span>
+                      </button>
+                    ) : (
+                      <span
+                        style={{
+                          fontSize: '9.5px',
+                          fontWeight: 700,
+                          color: '#94a3b8',
+                          background: 'rgba(0, 0, 0, 0.35)',
+                          padding: '3px 7px',
+                          borderRadius: '6px',
+                        }}
+                      >
+                        В процессе
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );

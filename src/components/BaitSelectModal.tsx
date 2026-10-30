@@ -1,5 +1,6 @@
 import React from 'react';
 import { AVAILABLE_BAITS } from '../hooks/useBaitState';
+import { BoardHeader } from './BoardHeader';
 
 interface BaitSelectModalProps {
   onClose: () => void;
@@ -61,84 +62,7 @@ export const BaitSelectModal: React.FC<BaitSelectModalProps> = ({
         }}
       >
         {/* 2. СЛОЙ ЗАГОЛОВКА: Единый 3D золотой заголовок поверх верхней деревянной планки */}
-        <div
-          style={{
-            position: 'absolute',
-            left: '12%',
-            right: '12%',
-            top: '3.2%',
-            height: '9.0%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            pointerEvents: 'none',
-            zIndex: 10,
-          }}
-        >
-          <svg viewBox="0 0 320 40" style={{ width: '100%', height: '35px', overflow: 'visible' }}>
-            <defs>
-              <linearGradient id="headerGoldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#ffffff" />
-                <stop offset="25%" stopColor="#fff59d" />
-                <stop offset="60%" stopColor="#fbc02d" />
-                <stop offset="90%" stopColor="#d97706" />
-                <stop offset="100%" stopColor="#92400e" />
-              </linearGradient>
-            </defs>
-            {/* 3D фаска/тень */}
-            <text
-              x="50%"
-              y="28"
-              textAnchor="middle"
-              fill="#2b1407"
-              stroke="#2b1407"
-              strokeWidth="4.2"
-              strokeLinejoin="round"
-              style={{
-                fontSize: '26px',
-                fontWeight: 900,
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                letterSpacing: '0.5px',
-                paintOrder: 'stroke fill',
-              }}
-            >
-              Наживки
-            </text>
-            {/* Основной золотой текст с контуром */}
-            <text
-              x="50%"
-              y="26"
-              textAnchor="middle"
-              fill="url(#headerGoldGrad)"
-              stroke="#3d1b06"
-              strokeWidth="2.6"
-              strokeLinejoin="round"
-              style={{
-                fontSize: '26px',
-                fontWeight: 900,
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                letterSpacing: '0.5px',
-                paintOrder: 'stroke fill',
-              }}
-            >
-              Наживки
-            </text>
-          </svg>
-          <div
-            style={{
-              color: '#fef08a',
-              fontSize: 'clamp(10px, 2.3vw, 11.5px)',
-              fontWeight: 700,
-              marginTop: '-3px',
-              textShadow: '0 1px 2px rgba(0, 0, 0, 0.9), 0 2px 4px rgba(0, 0, 0, 0.85)',
-              letterSpacing: '0.2px',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-            }}
-          >
-            Выберите наживку для успешного клёва
-          </div>
-        </div>
+        <BoardHeader title="Наживки" subtitle="Выберите наживку для успешного клёва" />
 
         {/* 3. СЛОЙ КНОПКИ ЗАКРЫТИЯ (Круглый красный крестик в правом верхнем углу) */}
         <button
