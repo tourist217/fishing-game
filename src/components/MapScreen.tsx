@@ -87,16 +87,6 @@ export const MapScreen: React.FC<MapScreenProps> = ({
     }
   }, [currentLocationId]);
 
-  const scrollToLocation = (locId: string) => {
-    const point = MAP_POINTS.find((p) => p.id === locId);
-    if (point && scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        top: Math.max(0, point.y - 240),
-        behavior: 'smooth',
-      });
-    }
-  };
-
   return (
     <div
       style={{
@@ -453,35 +443,6 @@ export const MapScreen: React.FC<MapScreenProps> = ({
               );
             })}
           </div>
-
-          {/* Плавающая кнопка быстрого возврата к текущей локации */}
-          <button
-            onClick={() => scrollToLocation(currentLocationId)}
-            style={{
-              position: 'absolute',
-              bottom: showPreviewModal ? '240px' : '75px',
-              right: '16px',
-              zIndex: 35,
-              background: 'rgba(15, 23, 42, 0.92)',
-              border: '1.5px solid #38bdf8',
-              color: '#38bdf8',
-              padding: '7px 12px',
-              borderRadius: '16px',
-              fontSize: '11px',
-              fontWeight: 800,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              cursor: 'pointer',
-              boxShadow: '0 6px 18px rgba(0, 0, 0, 0.55)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              transition: 'bottom 0.2s ease',
-            }}
-          >
-            <span>🎯</span>
-            <span>Мой водоём</span>
-          </button>
         </div>
 
       {/* НИЖНЯЯ ВСПЛЫВАЮЩАЯ КАРТОЧКА ПРЕДПРОСМОТРА ВОДОЁМА (PREVIEW MODAL) */}
