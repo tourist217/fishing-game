@@ -142,13 +142,13 @@ export const InventoryScreen: React.FC<InventoryScreenProps> = ({
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <img
-                src="/assets/ui/wicker_basket.png"
+                src="/assets/ui/keepnet_basket.png"
                 alt="Садок"
                 style={{
-                  width: '38px',
-                  height: '38px',
+                  width: '44px',
+                  height: '44px',
                   objectFit: 'contain',
-                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
+                  filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))',
                   flexShrink: 0,
                 }}
               />
@@ -246,14 +246,14 @@ export const InventoryScreen: React.FC<InventoryScreenProps> = ({
                 }}
               >
                 <img
-                  src="/assets/ui/wicker_basket.png"
+                  src="/assets/ui/keepnet_basket.png"
                   alt="Пустой садок"
                   style={{
-                    width: '58px',
-                    height: '58px',
+                    width: '64px',
+                    height: '64px',
                     objectFit: 'contain',
                     filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.6))',
-                    opacity: 0.85,
+                    opacity: 0.9,
                   }}
                 />
                 <div

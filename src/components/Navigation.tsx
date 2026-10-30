@@ -166,12 +166,12 @@ export const Navigation = ({
     {
       id: 'map' as ActiveTab,
       label: 'Карта',
-      icon: (active: boolean) => <MapNavIcon active={active} />,
+      iconSrc: '/assets/ui/nav_map.png',
     },
     {
       id: 'shop' as ActiveTab,
       label: 'Магазин',
-      icon: (active: boolean) => <ShopNavIcon active={active} />,
+      iconSrc: '/assets/ui/nav_shop.png',
     },
     {
       id: 'base' as ActiveTab,
@@ -182,13 +182,13 @@ export const Navigation = ({
     {
       id: 'keepnet' as ActiveTab,
       label: 'Садок',
-      icon: (active: boolean) => <KeepnetNavIcon active={active} />,
+      iconSrc: '/assets/ui/nav_keepnet.png',
       badge: inventoryCount > 0 ? inventoryCount : undefined,
     },
     {
       id: 'inventory' as ActiveTab,
       label: 'Инвентарь',
-      icon: (active: boolean) => <BackpackNavIcon active={active} />,
+      iconSrc: '/assets/ui/nav_inventory.png',
     },
   ];
 
@@ -248,12 +248,30 @@ export const Navigation = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                filter: isActive ? 'drop-shadow(0 0 8px rgba(74, 222, 128, 0.6))' : 'none',
-                transform: isActive ? 'scale(1.08)' : 'scale(1)',
-                transition: 'transform 0.15s ease',
+                width: tab.isCenter ? '26px' : '28px',
+                height: tab.isCenter ? '26px' : '28px',
+                filter: isActive
+                  ? 'drop-shadow(0 0 10px rgba(74, 222, 128, 0.8)) brightness(1.15)'
+                  : 'brightness(0.92)',
+                transform: isActive ? 'scale(1.12)' : 'scale(1)',
+                transition: 'transform 0.15s ease, filter 0.15s ease',
               }}
             >
-              {tab.icon(isActive)}
+              {'iconSrc' in tab && tab.iconSrc ? (
+                <img
+                  src={tab.iconSrc}
+                  alt={tab.label}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                    pointerEvents: 'none',
+                    userSelect: 'none',
+                  }}
+                />
+              ) : (
+                tab.icon!(isActive)
+              )}
             </span>
 
             {/* Лейбл */}

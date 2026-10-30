@@ -672,20 +672,12 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
             }}
             style={{
               position: 'relative',
-              width: '100%',
-              height: '52px',
-              background: isPulling
-                ? 'linear-gradient(180deg, #b91c1c 0%, #991b1b 50%, #7f1d1d 100%)'
-                : 'linear-gradient(180deg, #ef4444 0%, #dc2626 50%, #991b1b 100%)',
-              border: isTutorialReel
-                ? '3px solid #fde047'
-                : isPulling
-                ? '2.5px solid #fbbf24'
-                : '2px solid #fca5a5',
-              borderRadius: '24px',
-              color: '#ffffff',
-              fontSize: '18px',
-              fontWeight: 900,
+              width: 'min(100%, 310px)',
+              height: '76px',
+              alignSelf: 'center',
+              background: 'transparent',
+              border: 'none',
+              padding: 0,
               cursor: 'pointer',
               userSelect: 'none',
               WebkitUserSelect: 'none',
@@ -693,38 +685,33 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
               touchAction: 'none',
               WebkitTapHighlightColor: 'transparent',
               outline: 'none',
-              boxShadow: isPulling
-                ? '0 0 26px rgba(245, 158, 11, 0.8), inset 0 2px 8px rgba(0, 0, 0, 0.6)'
+              filter: isPulling
+                ? 'drop-shadow(0 0 28px rgba(239, 68, 68, 0.95)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6)) brightness(1.12)'
                 : isTutorialReel
-                ? '0 0 35px rgba(251, 191, 36, 0.95), 0 0 15px rgba(239, 68, 68, 0.8)'
-                : '0 0 24px rgba(239, 68, 68, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4)',
-              transform: isPulling ? 'scale(0.97) translateY(1px)' : 'scale(1)',
-              animation: isPulling ? 'pullButtonJitter 0.15s infinite linear' : 'none',
-              transition: isPulling ? 'none' : 'transform 0.1s ease, box-shadow 0.1s ease',
+                ? 'drop-shadow(0 0 32px rgba(251, 191, 36, 0.95)) drop-shadow(0 6px 14px rgba(239, 68, 68, 0.8))'
+                : 'drop-shadow(0 0 22px rgba(239, 68, 68, 0.75)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5))',
+              transform: isPulling ? 'scale(0.96) translateY(2px)' : 'scale(1)',
+              animation: isPulling ? 'pullButtonJitter 0.12s infinite linear' : 'none',
+              transition: isPulling ? 'none' : 'transform 0.1s ease, filter 0.1s ease',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '0 16px',
             }}
             title="Зажмите и удерживайте, чтобы тянуть леску"
           >
-            {/* Текст кнопки по центру */}
-            <span
+            <img
+              src="/assets/ui/btn_pull.png"
+              alt="Тянуть"
+              draggable={false}
               style={{
-                fontSize: '18px',
-                fontWeight: 900,
-                letterSpacing: '1px',
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
                 pointerEvents: 'none',
                 userSelect: 'none',
                 WebkitUserSelect: 'none',
-                WebkitTouchCallout: 'none',
-                textShadow: isPulling
-                  ? '0 2px 4px rgba(0,0,0,0.8), 0 0 12px rgba(251, 191, 36, 0.8)'
-                  : '0 2px 4px rgba(0,0,0,0.6)',
               }}
-            >
-              ТЯНУТЬ! 🔄
-            </span>
+            />
           </button>
         )}
       </div>
