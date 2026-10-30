@@ -1211,6 +1211,7 @@ export const HomeScreen = ({
           onSelectBait={onSelectBait}
           baits={baits}
           playerLevel={level}
+          onOpenShop={onOpenShop}
         />
       )}
 
