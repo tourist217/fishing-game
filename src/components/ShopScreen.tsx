@@ -76,6 +76,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
     upgrades,
     onBuyUpgrade,
     onBuyRod,
+    onUpgradeRod,
     onEquipRod,
     onBuyReel,
     onEquipReel,
@@ -118,6 +119,11 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
   const handleEquipRod = (id: string) => {
     if (onEquipRod) onEquipRod(id);
     else if (gear?.equipRod) gear.equipRod(id);
+  };
+
+  const handleUpgradeRod = (item: RodTier) => {
+    if (onUpgradeRod) onUpgradeRod(item);
+    else if (gear?.upgradeRod) gear.upgradeRod(item);
   };
 
   const handleBuyReel = (item: ReelTier) => {
@@ -340,7 +346,12 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
             const isLevelUnlocked = level >= lvlReq;
             const isGems = rod.currency === 'gems';
             const canAfford = isGems ? gems >= price : coins >= price;
-            const strength = (rod as any).maxFishWeightKg ?? (rod as any).strength ?? (rod as any).maxWeight ?? rod.maxStrengthKg;
+            const rLevel = (gear as any)?.rodLevels?.[rod.id] || 1;
+            const currentStrength = GearData.getRodStrength(rod, rLevel);
+            const nextStrength = rLevel < 5 ? GearData.getRodStrength(rod, rLevel + 1) : currentStrength;
+            const canUpgrade = isOwned && rLevel < 5 && rod.id !== 'rod_gold';
+            const upgradeCost = canUpgrade ? GearData.getRodUpgradeCost(rod, rLevel + 1) : 0;
+            const canAffordUpgrade = isGems ? gems >= upgradeCost : coins >= upgradeCost;
 
             return (
               <div
@@ -381,8 +392,22 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                        Прочность: <span style={{ color: '#38bdf8' }}>{strength} кг</span> • Ур. {lvlReq}
+                      <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+                        {!isOwned ? (
+                          <>
+                            Базовая: <span style={{ color: '#38bdf8', fontWeight: 800 }}>{GearData.formatStrength(rod.baseStrengthKg)}</span>
+                            {' '}(до {GearData.formatStrength(rod.maxStrengthKg)}) • Требуется {lvlReq} ур.
+                          </>
+                        ) : (
+                          <>
+                            Уровень: <span style={{ color: '#38bdf8', fontWeight: 800 }}>{rLevel} / 5</span>
+                            {' • '}
+                            Прочность: <span style={{ color: '#4ade80', fontWeight: 800 }}>{GearData.formatStrength(currentStrength)}</span>
+                            {rLevel < 5 && (
+                              <span style={{ color: '#64748b' }}> (макс. {GearData.formatStrength(rod.maxStrengthKg)})</span>
+                            )}
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -402,13 +427,13 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                   )}
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
                   {!isOwned && (
                     <button
                       disabled={!canAfford || !isLevelUnlocked}
                       onClick={() => handleBuyRod(rod)}
                       style={{
-                        flex: 1,
+                        width: '100%',
                         padding: '10px',
                         borderRadius: '8px',
                         border: isGems && canAfford && isLevelUnlocked ? '1px solid #7dd3fc' : 'none',
@@ -434,40 +459,99 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
                     </button>
                   )}
 
-                  {isOwned && !isEquipped && (
-                    <button
-                      onClick={() => handleEquipRod(rod.id)}
-                      style={{
-                        flex: 1,
-                        padding: '10px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: '#334155',
-                        color: '#fff',
-                        fontWeight: 'bold',
-                        fontSize: '12px',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Экипировать
-                    </button>
-                  )}
+                  {isOwned && (
+                    <>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        {!isEquipped ? (
+                          <button
+                            onClick={() => handleEquipRod(rod.id)}
+                            style={{
+                              flex: 1,
+                              padding: '9px',
+                              borderRadius: '8px',
+                              border: 'none',
+                              background: '#334155',
+                              color: '#fff',
+                              fontWeight: 'bold',
+                              fontSize: '12px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Экипировать
+                          </button>
+                        ) : (
+                          <div
+                            style={{
+                              flex: 1,
+                              padding: '9px',
+                              borderRadius: '8px',
+                              background: 'rgba(16, 185, 129, 0.2)',
+                              color: '#34d399',
+                              fontWeight: 'bold',
+                              fontSize: '12px',
+                              textAlign: 'center',
+                              border: '1px solid rgba(16, 185, 129, 0.4)',
+                            }}
+                          >
+                            ✓ Экипировано
+                          </div>
+                        )}
+                      </div>
 
-                  {isOwned && isEquipped && (
-                    <div
-                      style={{
-                        flex: 1,
-                        padding: '10px',
-                        borderRadius: '8px',
-                        background: 'rgba(16, 185, 129, 0.2)',
-                        color: '#34d399',
-                        fontWeight: 'bold',
-                        fontSize: '12px',
-                        textAlign: 'center',
-                      }}
-                    >
-                      ✓ Экипировано
-                    </div>
+                      {canUpgrade && (
+                        <button
+                          disabled={!canAffordUpgrade}
+                          onClick={() => handleUpgradeRod(rod)}
+                          style={{
+                            width: '100%',
+                            padding: '9px 12px',
+                            borderRadius: '8px',
+                            border: canAffordUpgrade
+                              ? '1px solid #10b981'
+                              : '1px solid rgba(255, 255, 255, 0.08)',
+                            background: canAffordUpgrade
+                              ? 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                              : 'rgba(51, 65, 85, 0.6)',
+                            color: canAffordUpgrade ? '#fff' : '#64748b',
+                            fontWeight: 'bold',
+                            fontSize: '12px',
+                            cursor: canAffordUpgrade ? 'pointer' : 'not-allowed',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            boxShadow: canAffordUpgrade ? '0 2px 8px rgba(16, 185, 129, 0.25)' : 'none',
+                          }}
+                        >
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span>⬆</span>
+                            <span>Улучшить до {rLevel + 1} ур.</span>
+                            <span style={{ fontSize: '10px', color: canAffordUpgrade ? '#a7f3d0' : '#64748b' }}>
+                              ({GearData.formatStrength(currentStrength)} → {GearData.formatStrength(nextStrength)})
+                            </span>
+                          </span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: canAffordUpgrade ? (isGems ? '#38bdf8' : '#fde047') : '#64748b' }}>
+                            {upgradeCost} {isGems ? <GemIcon size={14} /> : <CoinIcon size={14} />}
+                          </span>
+                        </button>
+                      )}
+
+                      {rLevel >= 5 && (
+                        <div
+                          style={{
+                            textAlign: 'center',
+                            fontSize: '11px',
+                            fontWeight: 800,
+                            color: '#fbbf24',
+                            background: 'rgba(251, 191, 36, 0.1)',
+                            padding: '5px',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(251, 191, 36, 0.2)',
+                          }}
+                        >
+                          ★ Максимальный уровень ({GearData.formatStrength(currentStrength)})
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

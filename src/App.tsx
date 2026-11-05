@@ -305,6 +305,7 @@ export default function App() {
             resetModalSignal={baseClickNonce}
             onSelectBait={baits.selectBait}
             onEquipRod={gear.equipRod}
+            onUpgradeRod={gear.upgradeRod}
             onGoFishing={() => {
               if (player.isKeepnetFull) {
                 setActiveTab('keepnet');

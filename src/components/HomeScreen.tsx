@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react';
 import type { FishingLocation } from '../locationsData';
-import { ROD_TIERS, type PlayerGearState } from '../gearData';
+import {
+  ROD_TIERS,
+  getRodStrength,
+  getRodUpgradeCost,
+  formatStrength,
+  type PlayerGearState,
+  type RodTier,
+} from '../gearData';
 import { AVAILABLE_BAITS } from '../hooks/useBaitState';
 import { APP_VERSION } from '../version';
 import type { FishJournal } from '../hooks/usePlayerState';
@@ -188,6 +195,7 @@ interface HomeScreenProps {
   baits: Record<string, number>;
   onSelectBait: (baitId: string) => void;
   onEquipRod?: (rodId: string) => void;
+  onUpgradeRod?: (rod: RodTier) => boolean | void;
   onGoFishing: () => void;
   onOpenMap: () => void;
   onOpenShop: () => void;
@@ -240,6 +248,7 @@ export const HomeScreen = ({
   onClaimAllSpeciesReward,
   onSelectBait,
   onEquipRod,
+  onUpgradeRod,
   onGoFishing,
   onOpenMap: _onOpenMap,
   onOpenShop,
@@ -1123,54 +1132,149 @@ export const HomeScreen = ({
               style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '8px',
-                maxHeight: '240px',
+                gap: '10px',
+                maxHeight: '320px',
                 overflowY: 'auto',
+                paddingRight: '2px',
               }}
             >
               {ROD_TIERS.filter((r) => gear.ownedRods.includes(r.id)).map((rod) => {
                 const isSelected = gear.equippedRodId === rod.id;
                 const rLevel = gear.rodLevels[rod.id] || 1;
+                const curStrength = getRodStrength(rod, rLevel);
+                const nextStrength = rLevel < 5 ? getRodStrength(rod, rLevel + 1) : curStrength;
+                const canUpgrade = rLevel < 5 && rod.id !== 'rod_gold';
+                const nextCost = canUpgrade ? getRodUpgradeCost(rod, rLevel + 1) : 0;
+                const canAffordUpgrade = coins >= nextCost;
+
                 return (
-                  <button
+                  <div
                     key={rod.id}
-                    onClick={() => {
-                      if (onEquipRod) onEquipRod(rod.id);
-                      setActiveModal(null);
-                    }}
                     style={{
                       background: isSelected
-                        ? 'rgba(56, 189, 248, 0.2)'
+                        ? 'rgba(56, 189, 248, 0.12)'
                         : 'rgba(255, 255, 255, 0.05)',
                       border: isSelected
-                        ? '1px solid #38bdf8'
+                        ? '1.5px solid #38bdf8'
                         : '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '14px',
-                      padding: '10px 12px',
+                      borderRadius: '16px',
+                      padding: '12px',
                       display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      cursor: 'pointer',
-                      color: '#fff',
+                      flexDirection: 'column',
+                      gap: '10px',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <RodIcon material={rod.material} />
-                      <div style={{ textAlign: 'left' }}>
-                        <div style={{ fontSize: '13px', fontWeight: 700 }}>
-                          {rod.name} [{rLevel} ур.]
-                        </div>
-                        <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                          Прочность: {rod.baseStrengthKg} - {rod.maxStrengthKg} кг
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <RodIcon material={rod.material} />
+                        <div style={{ textAlign: 'left' }}>
+                          <div style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff' }}>
+                            {rod.name}
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+                            Уровень: <span style={{ color: '#38bdf8', fontWeight: 800 }}>{rLevel} / 5</span>
+                            {' • '}
+                            Прочность: <span style={{ color: '#4ade80', fontWeight: 800 }}>{formatStrength(curStrength)}</span>
+                            {rLevel < 5 && (
+                              <span style={{ color: '#64748b' }}> (макс. {formatStrength(rod.maxStrengthKg)})</span>
+                            )}
+                          </div>
                         </div>
                       </div>
+
+                      {/* Кнопка экипировки */}
+                      {isSelected ? (
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 800,
+                            color: '#38bdf8',
+                            background: 'rgba(56, 189, 248, 0.15)',
+                            padding: '4px 10px',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(56, 189, 248, 0.3)',
+                          }}
+                        >
+                          ✓ Выбрано
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            if (onEquipRod) onEquipRod(rod.id);
+                          }}
+                          style={{
+                            background: '#2563eb',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: '6px 12px',
+                            color: '#ffffff',
+                            fontSize: '11px',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Выбрать
+                        </button>
+                      )}
                     </div>
-                    {isSelected && (
-                      <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 800 }}>
-                        Экипировано ✓
-                      </span>
+
+                    {/* Кнопка улучшения */}
+                    {canUpgrade && (
+                      <button
+                        disabled={!canAffordUpgrade}
+                        onClick={() => {
+                          if (onUpgradeRod) onUpgradeRod(rod);
+                        }}
+                        style={{
+                          width: '100%',
+                          background: canAffordUpgrade
+                            ? 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                            : 'rgba(51, 65, 85, 0.6)',
+                          border: canAffordUpgrade
+                            ? '1px solid #10b981'
+                            : '1px solid rgba(255, 255, 255, 0.08)',
+                          borderRadius: '10px',
+                          padding: '8px 10px',
+                          color: canAffordUpgrade ? '#ffffff' : '#94a3b8',
+                          fontSize: '12px',
+                          fontWeight: 800,
+                          cursor: canAffordUpgrade ? 'pointer' : 'not-allowed',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          boxShadow: canAffordUpgrade ? '0 2px 8px rgba(16, 185, 129, 0.25)' : 'none',
+                        }}
+                      >
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>⬆</span>
+                          <span>Улучшить до {rLevel + 1} ур.</span>
+                          <span style={{ fontSize: '10px', color: canAffordUpgrade ? '#a7f3d0' : '#64748b' }}>
+                            ({formatStrength(curStrength)} → {formatStrength(nextStrength)})
+                          </span>
+                        </span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: canAffordUpgrade ? '#fde047' : '#94a3b8' }}>
+                          {nextCost} <CoinIcon size={14} />
+                        </span>
+                      </button>
                     )}
-                  </button>
+
+                    {rLevel >= 5 && (
+                      <div
+                        style={{
+                          textAlign: 'center',
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          color: '#fbbf24',
+                          background: 'rgba(251, 191, 36, 0.1)',
+                          padding: '4px',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(251, 191, 36, 0.2)',
+                        }}
+                      >
+                        ★ Максимальный уровень ({formatStrength(curStrength)})
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>

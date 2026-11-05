@@ -109,6 +109,30 @@ export const ROD_TIERS: RodTier[] = [
   },
 ];
 
+// Функция форматирования веса / прочности для понятного отображения в интерфейсе
+export function formatStrength(kg: number): string {
+  if (kg < 1) {
+    return `${Math.round(kg * 1000)} г`;
+  }
+  return `${kg % 1 === 0 ? kg : kg.toFixed(2).replace(/\.?0+$/, '')} кг`;
+}
+
+// Таблица точной стоимости прокачки удилищ по уровням (2..5)
+export const ROD_UPGRADE_COSTS: Record<string, Record<number, number>> = {
+  // Камышовое удилище 30, 60, 100, 150 монет
+  rod_reed: { 2: 30, 3: 60, 4: 100, 5: 150 },
+  // Бамбуковое удилище 300, 450, 600, 800 монет
+  rod_bamboo: { 2: 300, 3: 450, 4: 600, 5: 800 },
+  // Телескопическая удочка 750, 950, 1200, 1400 монет
+  rod_plastic: { 2: 750, 3: 950, 4: 1200, 5: 1400 },
+  // Стеклопластик 1900, 2200, 2400, 2600 монет
+  rod_fiberglass: { 2: 1900, 3: 2200, 4: 2400, 5: 2600 },
+  // Композитный спиннинг 4800, 5500, 6200, 8000 монет
+  rod_composite: { 2: 4800, 3: 5500, 4: 6200, 5: 8000 },
+  // Карбоновая удочка 15000, 17000, 21000, 25000 монет
+  rod_carbon: { 2: 15000, 3: 17000, 4: 21000, 5: 25000 },
+};
+
 // Функция расчёта текущей прочности бланка по его уровню (1..5)
 export function getRodStrength(rod: RodTier, currentLevel: number): number {
   if (currentLevel <= 1) return rod.baseStrengthKg;
@@ -119,6 +143,9 @@ export function getRodStrength(rod: RodTier, currentLevel: number): number {
 
 // Стоимость улучшения удилища на следующий уровень
 export function getRodUpgradeCost(rod: RodTier, nextLevel: number): number {
+  if (ROD_UPGRADE_COSTS[rod.id]?.[nextLevel] !== undefined) {
+    return ROD_UPGRADE_COSTS[rod.id][nextLevel];
+  }
   if (rod.currency === 'gems') {
     return nextLevel * 50;
   }
