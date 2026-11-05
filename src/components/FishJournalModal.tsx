@@ -280,17 +280,17 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
               );
             })}
           </div>
-        </div>
 
-        {/* ВКЛАДКА 1: ЭНЦИКЛОПЕДИЯ ВСЕХ ВИДОВ */}
-        {activeTab === 'species' && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            {/* Сетка карточек всех видов рыб */}
+          {/* ВКЛАДКА 1: ЭНЦИКЛОПЕДИЯ ВСЕХ ВИДОВ */}
+          {activeTab === 'species' && (
             <div
               style={{
                 flex: 1,
+                minHeight: 0,
                 overflowY: 'auto',
-                padding: '10px 12px',
+                WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-y',
+                padding: '6px 4px',
                 display: 'grid',
                 gridTemplateColumns: 'repeat(2, 1fr)',
                 gap: '8px',
@@ -425,21 +425,23 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                 );
               })}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ВКЛАДКА 2: КНИГА ТРОФЕЕВ */}
-        {activeTab === 'trophies' && (
-          <div
-            style={{
-              flex: 1,
-              overflowY: 'auto',
-              padding: '12px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-            }}
-          >
+          {/* ВКЛАДКА 2: КНИГА ТРОФЕЕВ */}
+          {activeTab === 'trophies' && (
+            <div
+              style={{
+                flex: 1,
+                minHeight: 0,
+                overflowY: 'auto',
+                WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-y',
+                padding: '6px 4px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+              }}
+            >
             {trophyCount === 0 ? (
               <div
                 style={{
@@ -543,136 +545,107 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
           </div>
         )}
 
-        {/* ВКЛАДКА 3: МЕДАЛИ И НАГРАДЫ */}
-        {activeTab === 'medals' && (
-          <div
-            style={{
-              flex: 1,
-              overflowY: 'auto',
-              padding: '12px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-            }}
-          >
-            {[
-              {
-                icon: '🥉',
-                title: 'Первый заброс',
-                desc: 'Поймать первую рыбу в игре',
-                progress: Math.min(1, caughtSpeciesCount),
-                total: 1,
-                reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+50 <CoinIcon size={12} /></span>,
-              },
-              {
-                icon: '🥈',
-                title: 'Рыбацкий азарт',
-                desc: 'Поймать 5 разных видов рыб',
-                progress: Math.min(5, caughtSpeciesCount),
-                total: 5,
-                reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+250 <CoinIcon size={12} />, +10 💎</span>,
-              },
-              {
-                icon: '🥇',
-                title: 'Опытный натуралист',
-                desc: 'Открыть 12 видов рыб в журнале',
-                progress: Math.min(12, caughtSpeciesCount),
-                total: 12,
-                reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+1 000 <CoinIcon size={12} />, +30 💎</span>,
-              },
-              {
-                icon: '👑',
-                title: 'Гроза трофеев',
-                desc: 'Выловить 3 трофейных экземпляра',
-                progress: Math.min(3, trophyCount),
-                total: 3,
-                reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+2 000 <CoinIcon size={12} />, +50 💎</span>,
-              },
-              {
-                icon: '🌟',
-                title: 'Хозяин всех рек',
-                desc: 'Собрать полную коллекцию (все 21 вид)',
-                progress: caughtSpeciesCount,
-                total: totalSpecies,
-                reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+5 000 <CoinIcon size={12} />, +100 💎</span>,
-              },
-            ].map((medal, i) => {
-              const isCompleted = medal.progress >= medal.total;
-              return (
-                <div
-                  key={i}
-                  style={{
-                    background: isCompleted ? 'rgba(34, 197, 94, 0.12)' : 'rgba(30, 41, 59, 0.7)',
-                    border: isCompleted ? '1.5px solid #22c55e' : '1px solid rgba(255, 255, 255, 0.08)',
-                    borderRadius: '16px',
-                    padding: '10px 12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '28px' }}>{medal.icon}</span>
-                    <div>
-                      <div style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff' }}>
-                        {medal.title}
-                      </div>
-                      <div style={{ fontSize: '10.5px', color: '#94a3b8', marginTop: '1px' }}>
-                        {medal.desc}
-                      </div>
-                      <div style={{ fontSize: '10px', color: '#38bdf8', fontWeight: 800, marginTop: '2px' }}>
-                        Прогресс: {medal.progress} / {medal.total}
+          {/* ВКЛАДКА 3: МЕДАЛИ И НАГРАДЫ */}
+          {activeTab === 'medals' && (
+            <div
+              style={{
+                flex: 1,
+                minHeight: 0,
+                overflowY: 'auto',
+                WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-y',
+                padding: '6px 4px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+              }}
+            >
+              {[
+                {
+                  icon: '🥉',
+                  title: 'Первый заброс',
+                  desc: 'Поймать первую рыбу в игре',
+                  progress: Math.min(1, caughtSpeciesCount),
+                  total: 1,
+                  reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+50 <CoinIcon size={12} /></span>,
+                },
+                {
+                  icon: '🥈',
+                  title: 'Рыбацкий азарт',
+                  desc: 'Поймать 5 разных видов рыб',
+                  progress: Math.min(5, caughtSpeciesCount),
+                  total: 5,
+                  reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+250 <CoinIcon size={12} />, +10 💎</span>,
+                },
+                {
+                  icon: '🥇',
+                  title: 'Опытный натуралист',
+                  desc: 'Открыть 12 видов рыб в журнале',
+                  progress: Math.min(12, caughtSpeciesCount),
+                  total: 12,
+                  reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+1 000 <CoinIcon size={12} />, +30 💎</span>,
+                },
+                {
+                  icon: '👑',
+                  title: 'Гроза трофеев',
+                  desc: 'Выловить 3 трофейных экземпляра',
+                  progress: Math.min(3, trophyCount),
+                  total: 3,
+                  reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+2 000 <CoinIcon size={12} />, +50 💎</span>,
+                },
+                {
+                  icon: '🌟',
+                  title: 'Хозяин всех рек',
+                  desc: 'Собрать полную коллекцию (все 21 вид)',
+                  progress: caughtSpeciesCount,
+                  total: totalSpecies,
+                  reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+5 000 <CoinIcon size={12} />, +100 💎</span>,
+                },
+              ].map((medal, i) => {
+                const isCompleted = medal.progress >= medal.total;
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      background: isCompleted ? 'rgba(34, 197, 94, 0.12)' : 'rgba(30, 41, 59, 0.7)',
+                      border: isCompleted ? '1.5px solid #22c55e' : '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '16px',
+                      padding: '10px 12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '28px' }}>{medal.icon}</span>
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff' }}>
+                          {medal.title}
+                        </div>
+                        <div style={{ fontSize: '10.5px', color: '#94a3b8', marginTop: '1px' }}>
+                          {medal.desc}
+                        </div>
+                        <div style={{ fontSize: '10px', color: '#38bdf8', fontWeight: 800, marginTop: '2px' }}>
+                          Прогресс: {medal.progress} / {medal.total}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '10px', fontWeight: 800, color: '#fbbf24' }}>
-                      {medal.reward}
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '10px', fontWeight: 800, color: '#fbbf24' }}>
+                        {medal.reward}
+                      </div>
+                      {isCompleted && (
+                        <span style={{ fontSize: '10px', color: '#4ade80', fontWeight: 900 }}>
+                          ✓ Выполнено
+                        </span>
+                      )}
                     </div>
-                    {isCompleted && (
-                      <span style={{ fontSize: '10px', color: '#4ade80', fontWeight: 900 }}>
-                        ✓ Выполнено
-                      </span>
-                    )}
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Кнопка быстрого возврата на базу */}
-        <div
-          style={{
-            padding: '8px 14px',
-            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-            background: 'rgba(15, 23, 42, 0.75)',
-            display: 'flex',
-            justifyContent: 'center',
-          }}
-        >
-          <button
-            onClick={onClose}
-            style={{
-              width: '100%',
-              padding: '8px 14px',
-              borderRadius: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%)',
-              color: '#94a3b8',
-              fontSize: '11.5px',
-              fontWeight: 800,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-            }}
-          >
-            <span>🏠</span>
-            <span>Вернуться на базу</span>
-          </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Всплывающее подробное досье выбранной рыбы (Бестиарий) */}
