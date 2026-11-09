@@ -715,7 +715,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                 }}
               >
                 {/* 1. Шапка карточки досье */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ fontSize: '18px' }}>📖</span>
                     <span style={{ fontSize: '13px', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -754,7 +754,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                     alignItems: 'center',
                     textAlign: 'center',
                     position: 'relative',
-                    overflow: 'hidden',
+                    flexShrink: 0,
                   }}
                 >
                   {/* Трофейная ленточка если выловлен трофей */}
@@ -774,6 +774,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                         display: 'flex',
                         alignItems: 'center',
                         gap: '4px',
+                        zIndex: 2,
                       }}
                     >
                       <span>🏆</span>
@@ -783,19 +784,17 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
 
                   {/* Изображение рыбы */}
                   {(() => {
-                    // Тестовое увеличение в 2 раза для Ротана и Уклейки по запросу
                     const isEnlargedTest = inspectedFish.id === 'rotan' || inspectedFish.id === 'bleak';
 
                     return (
                       <div
                         style={{
-                          width: isEnlargedTest ? '100%' : '130px',
-                          height: isEnlargedTest ? '155px' : '80px',
+                          width: '100%',
+                          height: '140px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           position: 'relative',
-                          overflow: 'visible',
                         }}
                       >
                         {isDiscovered ? (
@@ -804,47 +803,52 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                               src={inspectedFish.image}
                               alt={inspectedFish.name}
                               style={{
-                                width: isEnlargedTest ? '280px' : '100%',
-                                height: isEnlargedTest ? '280px' : '100%',
-                                maxWidth: isEnlargedTest ? '96%' : '100%',
-                                maxHeight: isEnlargedTest ? '150px' : '100%',
+                                maxWidth: '92%',
+                                maxHeight: '135px',
                                 objectFit: 'contain',
-                                transform: isEnlargedTest ? 'scale(1.15)' : 'none',
+                                transform: isEnlargedTest ? 'scale(1.15)' : 'scale(1.05)',
                                 filter: isEnlargedTest
                                   ? 'drop-shadow(0 12px 24px rgba(0, 0, 0, 0.85))'
-                                  : 'drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5))',
-                                transition: 'all 0.2s ease',
+                                  : 'drop-shadow(0 8px 16px rgba(0, 0, 0, 0.65))',
+                                transition: 'transform 0.2s ease',
                               }}
                             />
                           ) : (
-                            <span style={{ fontSize: isEnlargedTest ? '72px' : '56px' }}>{inspectedFish.icon}</span>
+                            <span style={{ fontSize: '64px' }}>{inspectedFish.icon}</span>
                           )
                         ) : (
-                          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div
+                            style={{
+                              position: 'relative',
+                              width: '100%',
+                              height: '100%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
                             {inspectedFish.image ? (
                               <img
                                 src={inspectedFish.image}
                                 alt="Неизвестный вид"
                                 style={{
-                                  width: isEnlargedTest ? '280px' : '100%',
-                                  height: isEnlargedTest ? '280px' : '100%',
-                                  maxWidth: isEnlargedTest ? '96%' : '100%',
-                                  maxHeight: isEnlargedTest ? '150px' : '100%',
+                                  maxWidth: '92%',
+                                  maxHeight: '135px',
                                   objectFit: 'contain',
-                                  transform: isEnlargedTest ? 'scale(1.15)' : 'none',
+                                  transform: isEnlargedTest ? 'scale(1.15)' : 'scale(1.05)',
                                   filter: 'brightness(0) invert(0.25)',
                                   opacity: 0.7,
                                 }}
                               />
                             ) : (
-                              <span style={{ fontSize: isEnlargedTest ? '72px' : '56px', filter: 'brightness(0) invert(0.25)', opacity: 0.7 }}>
+                              <span style={{ fontSize: '64px', filter: 'brightness(0) invert(0.25)', opacity: 0.7 }}>
                                 {inspectedFish.icon}
                               </span>
                             )}
                             <span
                               style={{
                                 position: 'absolute',
-                                fontSize: isEnlargedTest ? '36px' : '28px',
+                                fontSize: '32px',
                                 color: '#38bdf8',
                                 filter: 'drop-shadow(0 0 8px rgba(56, 189, 248, 0.8))',
                               }}
@@ -887,6 +891,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                       gridTemplateColumns: 'repeat(3, 1fr)',
                       gap: '8px',
                       textAlign: 'center',
+                      flexShrink: 0,
                     }}
                   >
                     <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '14px', padding: '8px 4px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
@@ -918,6 +923,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                       textAlign: 'center',
                       fontSize: '11px',
                       color: '#94a3b8',
+                      flexShrink: 0,
                     }}
                   >
                     🔒 Экземпляр ещё не выловлен. Записи рекордов откроются после первой поимки!
@@ -932,6 +938,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                     padding: '12px',
                     border: '1px solid rgba(255, 255, 255, 0.06)',
                     textAlign: 'left',
+                    flexShrink: 0,
                   }}
                 >
                   <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#38bdf8', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -953,6 +960,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                     padding: '12px',
                     border: '1px solid rgba(255, 255, 255, 0.06)',
                     textAlign: 'left',
+                    flexShrink: 0,
                   }}
                 >
                   <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#facc15', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -1001,6 +1009,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                     padding: '12px',
                     border: '1px solid rgba(255, 255, 255, 0.06)',
                     textAlign: 'left',
+                    flexShrink: 0,
                   }}
                 >
                   <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#38bdf8', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -1049,6 +1058,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                     padding: '12px',
                     border: '1px solid rgba(255, 255, 255, 0.06)',
                     textAlign: 'left',
+                    flexShrink: 0,
                   }}
                 >
                   <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#4ade80', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -1099,6 +1109,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                     padding: '12px',
                     border: '1px solid rgba(255, 255, 255, 0.06)',
                     textAlign: 'left',
+                    flexShrink: 0,
                   }}
                 >
                   <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#cbd5e1', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -1131,6 +1142,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                     cursor: 'pointer',
                     boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)',
                     marginTop: '4px',
+                    flexShrink: 0,
                   }}
                 >
                   Закрыть досье
