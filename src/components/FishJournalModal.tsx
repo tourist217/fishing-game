@@ -292,7 +292,8 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                 touchAction: 'pan-y',
                 padding: '6px 4px',
                 display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
+                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                gridAutoRows: '112px',
                 gap: '8px',
                 alignContent: 'start',
               }}
@@ -311,7 +312,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                     style={{
                       position: 'relative',
                       width: '100%',
-                      aspectRatio: '270 / 185',
+                      height: '112px',
                       borderRadius: '16px',
                       overflow: 'hidden',
                       cursor: 'pointer',
@@ -324,6 +325,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                         ? '0 0 16px rgba(250, 204, 21, 0.35), 0 6px 14px rgba(0, 0, 0, 0.6)'
                         : '0 6px 14px rgba(0, 0, 0, 0.5)',
                       transition: 'transform 0.12s ease',
+                      flexShrink: 0,
                     }}
                   >
                     {/* Бейдж трофея если пойман */}
