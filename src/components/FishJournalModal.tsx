@@ -754,6 +754,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                     alignItems: 'center',
                     textAlign: 'center',
                     position: 'relative',
+                    overflow: 'hidden',
                   }}
                 >
                   {/* Трофейная ленточка если выловлен трофей */}
@@ -781,63 +782,80 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                   )}
 
                   {/* Изображение рыбы */}
-                  <div
-                    style={{
-                      width: '130px',
-                      height: '80px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      position: 'relative',
-                    }}
-                  >
-                    {isDiscovered ? (
-                      inspectedFish.image ? (
-                        <img
-                          src={inspectedFish.image}
-                          alt={inspectedFish.name}
-                          style={{
-                            maxWidth: '100%',
-                            maxHeight: '100%',
-                            objectFit: 'contain',
-                            filter: 'drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5))',
-                          }}
-                        />
-                      ) : (
-                        <span style={{ fontSize: '56px' }}>{inspectedFish.icon}</span>
-                      )
-                    ) : (
-                      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {inspectedFish.image ? (
-                          <img
-                            src={inspectedFish.image}
-                            alt="Неизвестный вид"
-                            style={{
-                              maxWidth: '100%',
-                              maxHeight: '100%',
-                              objectFit: 'contain',
-                              filter: 'brightness(0) invert(0.25)',
-                              opacity: 0.7,
-                            }}
-                          />
+                  {(() => {
+                    // Тестовое увеличение в 2 раза для Ротана и Уклейки по запросу
+                    const isEnlargedTest = inspectedFish.id === 'rotan' || inspectedFish.id === 'bleak';
+
+                    return (
+                      <div
+                        style={{
+                          width: isEnlargedTest ? '100%' : '130px',
+                          height: isEnlargedTest ? '155px' : '80px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          position: 'relative',
+                          overflow: 'visible',
+                        }}
+                      >
+                        {isDiscovered ? (
+                          inspectedFish.image ? (
+                            <img
+                              src={inspectedFish.image}
+                              alt={inspectedFish.name}
+                              style={{
+                                width: isEnlargedTest ? '280px' : '100%',
+                                height: isEnlargedTest ? '280px' : '100%',
+                                maxWidth: isEnlargedTest ? '96%' : '100%',
+                                maxHeight: isEnlargedTest ? '150px' : '100%',
+                                objectFit: 'contain',
+                                transform: isEnlargedTest ? 'scale(1.15)' : 'none',
+                                filter: isEnlargedTest
+                                  ? 'drop-shadow(0 12px 24px rgba(0, 0, 0, 0.85))'
+                                  : 'drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5))',
+                                transition: 'all 0.2s ease',
+                              }}
+                            />
+                          ) : (
+                            <span style={{ fontSize: isEnlargedTest ? '72px' : '56px' }}>{inspectedFish.icon}</span>
+                          )
                         ) : (
-                          <span style={{ fontSize: '56px', filter: 'brightness(0) invert(0.25)', opacity: 0.7 }}>
-                            {inspectedFish.icon}
-                          </span>
+                          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {inspectedFish.image ? (
+                              <img
+                                src={inspectedFish.image}
+                                alt="Неизвестный вид"
+                                style={{
+                                  width: isEnlargedTest ? '280px' : '100%',
+                                  height: isEnlargedTest ? '280px' : '100%',
+                                  maxWidth: isEnlargedTest ? '96%' : '100%',
+                                  maxHeight: isEnlargedTest ? '150px' : '100%',
+                                  objectFit: 'contain',
+                                  transform: isEnlargedTest ? 'scale(1.15)' : 'none',
+                                  filter: 'brightness(0) invert(0.25)',
+                                  opacity: 0.7,
+                                }}
+                              />
+                            ) : (
+                              <span style={{ fontSize: isEnlargedTest ? '72px' : '56px', filter: 'brightness(0) invert(0.25)', opacity: 0.7 }}>
+                                {inspectedFish.icon}
+                              </span>
+                            )}
+                            <span
+                              style={{
+                                position: 'absolute',
+                                fontSize: isEnlargedTest ? '36px' : '28px',
+                                color: '#38bdf8',
+                                filter: 'drop-shadow(0 0 8px rgba(56, 189, 248, 0.8))',
+                              }}
+                            >
+                              ❓
+                            </span>
+                          </div>
                         )}
-                        <span
-                          style={{
-                            position: 'absolute',
-                            fontSize: '28px',
-                            color: '#38bdf8',
-                            filter: 'drop-shadow(0 0 8px rgba(56, 189, 248, 0.8))',
-                          }}
-                        >
-                          ❓
-                        </span>
                       </div>
-                    )}
-                  </div>
+                    );
+                  })()}
 
                   <div style={{ fontSize: '18px', fontWeight: 900, color: '#ffffff', marginTop: '6px' }}>
                     {isDiscovered ? inspectedFish.name : '??? (Неизвестный вид)'}
