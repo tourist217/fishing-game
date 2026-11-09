@@ -309,25 +309,21 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                       triggerHaptic('selection');
                     }}
                     style={{
-                      background: isDiscovered
-                        ? 'rgba(30, 41, 59, 0.7)'
-                        : 'rgba(15, 23, 42, 0.5)',
-                      borderRadius: '16px',
-                      padding: '10px',
-                      border: isDiscovered
-                        ? entry.hasTrophy
-                          ? '1.5px solid #fde047'
-                          : '1px solid rgba(56, 189, 248, 0.25)'
-                        : '1px dashed rgba(255, 255, 255, 0.08)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      textAlign: 'center',
-                      cursor: 'pointer',
                       position: 'relative',
+                      width: '100%',
+                      aspectRatio: '270 / 185',
+                      borderRadius: '16px',
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      backgroundImage: isDiscovered
+                        ? "url('/assets/ui/card_fish_bg.png')"
+                        : "url('/assets/ui/card_fish_locked.png')",
+                      backgroundSize: '100% 100%',
+                      backgroundRepeat: 'no-repeat',
                       boxShadow: entry?.hasTrophy
-                        ? '0 0 14px rgba(250, 204, 21, 0.25)'
-                        : 'none',
+                        ? '0 0 16px rgba(250, 204, 21, 0.35), 0 6px 14px rgba(0, 0, 0, 0.6)'
+                        : '0 6px 14px rgba(0, 0, 0, 0.5)',
+                      transition: 'transform 0.12s ease',
                     }}
                   >
                     {/* Бейдж трофея если пойман */}
@@ -338,6 +334,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                           top: '6px',
                           right: '6px',
                           fontSize: '12px',
+                          zIndex: 5,
                           filter: 'drop-shadow(0 0 4px #fde047)',
                         }}
                       >
@@ -345,81 +342,104 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                       </span>
                     )}
 
-                    {/* Картинка / силуэт */}
-                    <div
-                      style={{
-                        width: '74px',
-                        height: '52px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginBottom: '6px',
-                      }}
-                    >
-                      {isDiscovered ? (
-                        fish.image ? (
-                          <img
-                            src={fish.image}
-                            alt={fish.name}
-                            style={{
-                              maxWidth: '70px',
-                              maxHeight: '48px',
-                              objectFit: 'contain',
-                              filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))',
-                            }}
-                          />
-                        ) : (
-                          <span style={{ fontSize: '32px' }}>{fish.icon}</span>
-                        )
-                      ) : (
+                    {isDiscovered && (
+                      <>
+                        {/* Верх: толща воды с рыбой (высота ~44% карточки) */}
                         <div
                           style={{
-                            width: '44px',
-                            height: '44px',
-                            borderRadius: '50%',
-                            background: 'rgba(15, 23, 42, 0.8)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            position: 'absolute',
+                            top: '6.5%',
+                            left: '6%',
+                            right: '6%',
+                            height: '43.5%',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontSize: '20px',
-                            color: '#64748b',
+                            pointerEvents: 'none',
                           }}
                         >
-                          ❓
+                          {fish.image ? (
+                            <img
+                              src={fish.image}
+                              alt={fish.name}
+                              style={{
+                                maxWidth: '80%',
+                                maxHeight: '85%',
+                                objectFit: 'contain',
+                                filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.75))',
+                              }}
+                            />
+                          ) : (
+                            <span style={{ fontSize: '26px' }}>{fish.icon}</span>
+                          )}
                         </div>
-                      )}
-                    </div>
 
-                    {/* Название */}
-                    <div
-                      style={{
-                        fontSize: '12px',
-                        fontWeight: 800,
-                        color: isDiscovered ? '#ffffff' : '#64748b',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        width: '100%',
-                      }}
-                    >
-                      {isDiscovered ? fish.name : 'Неизвестная рыба'}
-                    </div>
-
-                    {/* Статистика вылова */}
-                    {isDiscovered ? (
-                      <div style={{ marginTop: '4px', fontSize: '9.5px', color: '#94a3b8' }}>
-                        <div>
-                          Рекорд: <span style={{ color: '#38bdf8', fontWeight: 800 }}>{formatWeight(entry.maxWeight)}</span>
+                        {/* Низ: тёмная деревянная зона под полосой */}
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: '51.5%',
+                            bottom: '6.5%',
+                            left: '6%',
+                            right: '6%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            textAlign: 'center',
+                            gap: '2px',
+                            padding: '0 4px',
+                            boxSizing: 'border-box',
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: '11.5px',
+                              fontWeight: 900,
+                              color: '#fffbeb',
+                              textShadow: '0 1px 3px rgba(0, 0, 0, 0.95)',
+                              letterSpacing: '0.2px',
+                              lineHeight: 1.1,
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              maxWidth: '100%',
+                            }}
+                          >
+                            {fish.name}
+                          </div>
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '3px',
+                              fontSize: '9px',
+                              lineHeight: 1.1,
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            <span style={{ fontSize: '9.5px' }}>⚖️</span>
+                            <span style={{ color: '#cbd5e1', fontWeight: 700 }}>Рекорд:</span>
+                            <span style={{ color: '#38bdf8', fontWeight: 900 }}>{formatWeight(entry.maxWeight)}</span>
+                          </div>
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '3px',
+                              fontSize: '8.5px',
+                              lineHeight: 1.1,
+                              color: '#94a3b8',
+                              fontWeight: 600,
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            <span style={{ fontSize: '9px' }}>🧺</span>
+                            <span>Выловлено:</span>
+                            <span style={{ color: '#f1f5f9', fontWeight: 800 }}>{entry.count} шт.</span>
+                          </div>
                         </div>
-                        <div style={{ color: '#64748b', marginTop: '1px' }}>
-                          Выловлено: {entry.count} шт.
-                        </div>
-                      </div>
-                    ) : (
-                      <div style={{ marginTop: '4px', fontSize: '9px', color: '#475569' }}>
-                        Ещё не поймана
-                      </div>
+                      </>
                     )}
                   </div>
                 );
