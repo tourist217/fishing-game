@@ -365,8 +365,18 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                               src={fish.image}
                               alt={fish.name}
                               style={{
-                                maxWidth: '80%',
-                                maxHeight: '85%',
+                                maxWidth:
+                                  fish.id === 'crucian_carp' || fish.id === 'bleak' || fish.id === 'rotan'
+                                    ? '95%'
+                                    : '80%',
+                                maxHeight:
+                                  fish.id === 'crucian_carp' || fish.id === 'bleak' || fish.id === 'rotan'
+                                    ? '95%'
+                                    : '85%',
+                                transform:
+                                  fish.id === 'crucian_carp' || fish.id === 'bleak' || fish.id === 'rotan'
+                                    ? 'scale(1.25)'
+                                    : 'none',
                                 objectFit: 'contain',
                                 filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.75))',
                               }}
@@ -784,13 +794,16 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
 
                   {/* Изображение рыбы */}
                   {(() => {
-                    const isEnlargedTest = inspectedFish.id === 'rotan' || inspectedFish.id === 'bleak';
+                    const isEnlarged =
+                      inspectedFish.id === 'rotan' ||
+                      inspectedFish.id === 'bleak' ||
+                      inspectedFish.id === 'crucian_carp';
 
                     return (
                       <div
                         style={{
                           width: '100%',
-                          height: '140px',
+                          height: isEnlarged ? '150px' : '140px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -804,10 +817,10 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                               alt={inspectedFish.name}
                               style={{
                                 maxWidth: '92%',
-                                maxHeight: '135px',
+                                maxHeight: isEnlarged ? '145px' : '135px',
                                 objectFit: 'contain',
-                                transform: isEnlargedTest ? 'scale(1.15)' : 'scale(1.05)',
-                                filter: isEnlargedTest
+                                transform: isEnlarged ? 'scale(1.42)' : 'scale(1.05)',
+                                filter: isEnlarged
                                   ? 'drop-shadow(0 12px 24px rgba(0, 0, 0, 0.85))'
                                   : 'drop-shadow(0 8px 16px rgba(0, 0, 0, 0.65))',
                                 transition: 'transform 0.2s ease',
@@ -833,9 +846,9 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                                 alt="Неизвестный вид"
                                 style={{
                                   maxWidth: '92%',
-                                  maxHeight: '135px',
+                                  maxHeight: isEnlarged ? '145px' : '135px',
                                   objectFit: 'contain',
-                                  transform: isEnlargedTest ? 'scale(1.15)' : 'scale(1.05)',
+                                  transform: isEnlarged ? 'scale(1.42)' : 'scale(1.05)',
                                   filter: 'brightness(0) invert(0.25)',
                                   opacity: 0.7,
                                 }}
