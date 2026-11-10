@@ -19,6 +19,15 @@ interface TelegramWebApp {
   onEvent?: (eventType: string, eventHandler: () => void) => void;
   offEvent?: (eventType: string, eventHandler: () => void) => void;
   initDataUnsafe?: { user?: { first_name?: string } };
+  openTelegramLink?: (url: string) => void;
+  openLink?: (url: string, options?: { try_instant_view?: boolean }) => void;
+  shareToStory?: (
+    media_url: string,
+    params?: {
+      text?: string;
+      widget_link?: { url: string; name?: string };
+    }
+  ) => void;
 }
 
 declare global {

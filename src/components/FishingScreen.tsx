@@ -45,6 +45,8 @@ interface FishingScreenProps {
   dailyProvisions?: DailyProvisionsState;
   onBuyProvision?: (id: 'tea' | 'sandwich') => boolean;
   onBuyEnergyWithGems?: () => boolean;
+  onAddCoins?: (amount: number) => void;
+  onAddEnergy?: (amount: number) => void;
   getRarityLabel: (rarity: string) => { text: string; color: string };
   isTutorialCast?: boolean;
   isTutorialReel?: boolean;
@@ -72,6 +74,8 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
   dailyProvisions,
   onBuyProvision,
   onBuyEnergyWithGems,
+  onAddCoins,
+  onAddEnergy,
   onSelectBait,
   onStartFishing,
   onStartReeling,
@@ -723,6 +727,13 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
             currentFish={currentFish}
             canDismiss={canDismissModal}
             onDismiss={onDismissModal}
+            onClaimShareReward={(type, amount) => {
+              if (type === 'coins') {
+                onAddCoins?.(amount);
+              } else {
+                onAddEnergy?.(amount);
+              }
+            }}
           />
         ) : (
           <div

@@ -233,6 +233,8 @@ export default function App() {
             dailyProvisions={player.dailyProvisions}
             onBuyProvision={player.buyProvision}
             onBuyEnergyWithGems={player.buyEnergyWithGems}
+            onAddCoins={player.addCoins}
+            onAddEnergy={player.addEnergy}
             onOpenKeepnet={() => {
               fishing.resetToIdle();
               setIsAtPond(false);

@@ -1,27 +1,64 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { ActiveFishState } from '../hooks/useFishingSimulation';
 import { formatWeight } from '../utils/fishUtils';
 import { playTrophyFanfare } from '../utils/audio';
-import { triggerFishHaptic } from '../utils/haptics';
+import { triggerFishHaptic, triggerHaptic } from '../utils/haptics';
 import { CoinIcon } from './CoinIcon';
-import { GemIcon } from './GemIcon';
+import {
+  getRemainingDailyShares,
+  recordShareClaim,
+  shareTrophyFish,
+  MAX_DAILY_SHARES,
+  SHARE_COIN_REWARD,
+  SHARE_ENERGY_REWARD,
+} from '../utils/telegramShare';
 
 interface TrophyCardModalProps {
   currentFish: ActiveFishState;
   canDismiss: boolean;
   onDismiss: () => void;
+  onClaimShareReward?: (type: 'coins' | 'energy', amount: number) => void;
 }
 
 export const TrophyCardModal: React.FC<TrophyCardModalProps> = ({
   currentFish,
   canDismiss,
   onDismiss,
+  onClaimShareReward,
 }) => {
+  const [shareStep, setShareStep] = useState<'initial' | 'mode_select' | 'reward_select' | 'claimed'>('initial');
+  const [remainingShares, setRemainingShares] = useState<number>(() => getRemainingDailyShares());
+  const [claimedReward, setClaimedReward] = useState<'coins' | 'energy' | null>(null);
+
+  const isLegendary = currentFish.sizeCategory === 'legendary';
+
   // При открытии трофейной карточки запускаем звук фанфар и победную вибрацию
   useEffect(() => {
     playTrophyFanfare();
     triggerFishHaptic(currentFish.weight, 'trophy', 'catch');
   }, [currentFish.weight]);
+
+  const handleShareClick = (mode: 'story' | 'message') => {
+    triggerHaptic?.('selection');
+    shareTrophyFish(currentFish, mode);
+    if (remainingShares > 0) {
+      setShareStep('reward_select');
+    } else {
+      setShareStep('claimed');
+    }
+  };
+
+  const handleClaimReward = (type: 'coins' | 'energy') => {
+    triggerHaptic?.('notification');
+    const recorded = recordShareClaim();
+    if (recorded) {
+      const amount = type === 'coins' ? SHARE_COIN_REWARD : SHARE_ENERGY_REWARD;
+      onClaimShareReward?.(type, amount);
+      setRemainingShares(getRemainingDailyShares());
+      setClaimedReward(type);
+      setShareStep('claimed');
+    }
+  };
 
   return (
     <div
@@ -144,8 +181,10 @@ export const TrophyCardModal: React.FC<TrophyCardModalProps> = ({
           style={{
             position: 'absolute',
             top: '-18px',
-            background: 'linear-gradient(135deg, #eab308 0%, #ca8a04 50%, #a16207 100%)',
-            border: '2px solid #fef08a',
+            background: isLegendary
+              ? 'linear-gradient(135deg, #f43f5e 0%, #e11d48 50%, #9f1239 100%)'
+              : 'linear-gradient(135deg, #eab308 0%, #ca8a04 50%, #a16207 100%)',
+            border: isLegendary ? '2px solid #fda4af' : '2px solid #fef08a',
             padding: '4px 18px',
             borderRadius: '16px',
             color: '#ffffff',
@@ -153,15 +192,17 @@ export const TrophyCardModal: React.FC<TrophyCardModalProps> = ({
             fontSize: '12px',
             letterSpacing: '1px',
             textTransform: 'uppercase',
-            boxShadow: '0 4px 16px rgba(234, 179, 8, 0.6), inset 0 1px 2px rgba(255,255,255,0.6)',
+            boxShadow: isLegendary
+              ? '0 4px 16px rgba(225, 29, 72, 0.6), inset 0 1px 2px rgba(255,255,255,0.6)'
+              : '0 4px 16px rgba(234, 179, 8, 0.6), inset 0 1px 2px rgba(255,255,255,0.6)',
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
           }}
         >
-          <span>👑</span>
-          <span>РЕКОРДНЫЙ ТРОФЕЙ</span>
-          <span>👑</span>
+          <span>{isLegendary ? '👑' : '🏆'}</span>
+          <span>{isLegendary ? 'РЕКОРД ВИДА (ЛЕГЕНДА)' : 'РЕКОРДНЫЙ ТРОФЕЙ'}</span>
+          <span>{isLegendary ? '👑' : '🏆'}</span>
         </div>
 
         {/* Изображение трофейной рыбы */}
@@ -255,40 +296,208 @@ export const TrophyCardModal: React.FC<TrophyCardModalProps> = ({
           </span>
         </div>
 
-        {/* Награды с трофейным бонусом */}
+        {/* Награды (Монеты и Опыт) */}
         <div
           style={{
             width: '100%',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            gap: '16px',
+            gap: '24px',
             marginTop: '8px',
-            paddingTop: '12px',
+            paddingTop: '10px',
             borderTop: '1px solid rgba(253, 224, 71, 0.2)',
             fontSize: '13px',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <span style={{ color: '#94a3b8' }}>Цена:</span>
-            <span style={{ color: '#fbbf24', fontWeight: 900, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+            <span style={{ color: '#fbbf24', fontWeight: 900, fontSize: '14.5px', display: 'flex', alignItems: 'center', gap: '3px' }}>
               +{currentFish.price} <CoinIcon size={14} />
             </span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ color: '#94a3b8' }}>Бонус:</span>
-            <span style={{ color: '#38bdf8', fontWeight: 900, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '3px' }}>
-              +5 <GemIcon size={14} />
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <span style={{ color: '#94a3b8' }}>Опыт:</span>
-            <span style={{ color: '#4ade80', fontWeight: 900, fontSize: '14px' }}>
+            <span style={{ color: '#4ade80', fontWeight: 900, fontSize: '14.5px' }}>
               +{currentFish.exp} XP
             </span>
           </div>
+        </div>
+
+        {/* Блок шеринга в Telegram с наградой */}
+        <div
+          style={{
+            width: '100%',
+            marginTop: '12px',
+            padding: '10px 12px',
+            background: 'rgba(15, 23, 42, 0.8)',
+            borderRadius: '16px',
+            border: '1.5px solid rgba(56, 189, 248, 0.4)',
+            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.4)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          {shareStep === 'initial' && (
+            <>
+              <button
+                onClick={() => setShareStep('mode_select')}
+                style={{
+                  width: '100%',
+                  padding: '10px 14px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                  color: '#ffffff',
+                  fontWeight: 900,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  boxShadow: '0 4px 12px rgba(2, 132, 199, 0.45)',
+                  transition: 'transform 0.1s ease',
+                }}
+                onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.97)')}
+                onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                onTouchStart={(e) => (e.currentTarget.style.transform = 'scale(0.97)')}
+                onTouchEnd={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+              >
+                <span>✈️</span>
+                <span>Поделиться уловом</span>
+              </button>
+              <div style={{ fontSize: '11px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                {remainingShares > 0 ? (
+                  <>
+                    <span>Награда: <strong style={{ color: '#fde047' }}>+10 🪙</strong> или <strong style={{ color: '#38bdf8' }}>+10 ⚡</strong></span>
+                    <span style={{ color: '#38bdf8', fontWeight: 800 }}>({remainingShares}/{MAX_DAILY_SHARES})</span>
+                  </>
+                ) : (
+                  <span style={{ color: '#64748b' }}>Дневной лимит наград исчерпан ({MAX_DAILY_SHARES}/{MAX_DAILY_SHARES})</span>
+                )}
+              </div>
+            </>
+          )}
+
+          {shareStep === 'mode_select' && (
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#e2e8f0', marginBottom: '2px' }}>
+                Куда отправить улов?
+              </div>
+              <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
+                <button
+                  onClick={() => handleShareClick('story')}
+                  style={{
+                    flex: 1,
+                    padding: '8px 6px',
+                    borderRadius: '10px',
+                    border: '1px solid rgba(56, 189, 248, 0.5)',
+                    background: 'rgba(14, 165, 233, 0.25)',
+                    color: '#ffffff',
+                    fontWeight: 800,
+                    fontSize: '11.5px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <span>📱</span>
+                  <span>В историю</span>
+                </button>
+                <button
+                  onClick={() => handleShareClick('message')}
+                  style={{
+                    flex: 1,
+                    padding: '8px 6px',
+                    borderRadius: '10px',
+                    border: '1px solid rgba(56, 189, 248, 0.5)',
+                    background: 'rgba(14, 165, 233, 0.25)',
+                    color: '#ffffff',
+                    fontWeight: 800,
+                    fontSize: '11.5px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <span>💬</span>
+                  <span>Другу в чат</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {shareStep === 'reward_select' && (
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 900, color: '#fef08a' }}>
+                🎁 Выберите награду за шеринг:
+              </div>
+              <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                <button
+                  onClick={() => handleClaimReward('coins')}
+                  style={{
+                    flex: 1,
+                    padding: '9px 6px',
+                    borderRadius: '12px',
+                    border: '1.5px solid #fbbf24',
+                    background: 'linear-gradient(180deg, #d97706 0%, #b45309 100%)',
+                    color: '#ffffff',
+                    fontWeight: 900,
+                    fontSize: '12.5px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '5px',
+                    boxShadow: '0 2px 8px rgba(217, 119, 6, 0.5)',
+                  }}
+                >
+                  <span>+10</span>
+                  <CoinIcon size={14} />
+                </button>
+                <button
+                  onClick={() => handleClaimReward('energy')}
+                  style={{
+                    flex: 1,
+                    padding: '9px 6px',
+                    borderRadius: '12px',
+                    border: '1.5px solid #38bdf8',
+                    background: 'linear-gradient(180deg, #0284c7 0%, #0369a1 100%)',
+                    color: '#ffffff',
+                    fontWeight: 900,
+                    fontSize: '12.5px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '5px',
+                    boxShadow: '0 2px 8px rgba(2, 132, 199, 0.5)',
+                  }}
+                >
+                  <span>+10 ⚡</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {shareStep === 'claimed' && (
+            <div style={{ fontSize: '12px', fontWeight: 800, color: '#4ade80', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span>✅</span>
+              <span>
+                {claimedReward === 'coins' && 'Получено: +10 монет 🪙!'}
+                {claimedReward === 'energy' && 'Получено: +10 энергии ⚡!'}
+                {!claimedReward && 'Вы поделились уловом!'}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Сочная золотая кнопка «Забрать трофей» */}
@@ -297,29 +506,39 @@ export const TrophyCardModal: React.FC<TrophyCardModalProps> = ({
           disabled={!canDismiss}
           style={{
             width: '100%',
-            marginTop: '16px',
-            padding: '13px 18px',
+            marginTop: '12px',
+            padding: '12px 18px',
             borderRadius: '16px',
-            border: '2px solid #fef08a',
+            border: isLegendary ? '2px solid #fda4af' : '2px solid #fef08a',
             background: canDismiss
-              ? 'linear-gradient(180deg, #facc15 0%, #eab308 50%, #ca8a04 100%)'
+              ? isLegendary
+                ? 'linear-gradient(180deg, #f43f5e 0%, #e11d48 50%, #be123c 100%)'
+                : 'linear-gradient(180deg, #facc15 0%, #eab308 50%, #ca8a04 100%)'
               : 'rgba(51, 65, 85, 0.7)',
-            color: canDismiss ? '#1c1917' : '#94a3b8',
+            color: canDismiss ? '#ffffff' : '#94a3b8',
             fontWeight: 900,
-            fontSize: '15px',
+            fontSize: '14.5px',
             cursor: canDismiss ? 'pointer' : 'default',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '8px',
             boxShadow: canDismiss
-              ? '0 0 24px rgba(250, 204, 21, 0.6), 0 4px 12px rgba(0, 0, 0, 0.5)'
+              ? isLegendary
+                ? '0 0 24px rgba(225, 29, 72, 0.6), 0 4px 12px rgba(0, 0, 0, 0.5)'
+                : '0 0 24px rgba(250, 204, 21, 0.6), 0 4px 12px rgba(0, 0, 0, 0.5)'
               : 'none',
             transition: 'all 0.18s ease',
           }}
         >
           <span>🧺</span>
-          <span>{canDismiss ? 'Забрать трофей в садок' : 'Фиксируем трофей...'}</span>
+          <span>
+            {canDismiss
+              ? isLegendary
+                ? 'Забрать легенду в садок'
+                : 'Забрать трофей в садок'
+              : 'Фиксируем улов...'}
+          </span>
         </button>
       </div>
     </div>

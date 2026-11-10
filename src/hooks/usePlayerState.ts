@@ -476,6 +476,13 @@ export function usePlayerState() {
     localStorage.setItem('fg_energy', next.toString());
   }, [maxEnergy]);
 
+  const addEnergy = useCallback((amount: number) => {
+    const next = energyRef.current + amount;
+    energyRef.current = next;
+    setEnergy(next);
+    localStorage.setItem('fg_energy', next.toString());
+  }, []);
+
   const buyProvision = useCallback((provisionId: 'tea' | 'sandwich'): boolean => {
     if (energyRef.current >= maxEnergy) return false;
 
@@ -569,6 +576,7 @@ export function usePlayerState() {
     isKeepnetFull: inventory.length >= maxKeepnetCapacity,
     spendEnergy,
     restoreEnergy,
+    addEnergy,
     buyProvision,
     buyEnergyWithGems,
     inventory,
