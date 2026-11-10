@@ -2,7 +2,6 @@ import React from 'react';
 import type { Fish, FishSizeCategory } from '../fishData';
 import { formatWeight } from '../utils/fishUtils';
 import { CoinIcon } from './CoinIcon';
-import { GemIcon } from './GemIcon';
 import { triggerHaptic } from '../utils/haptics';
 import { BoardHeader } from './BoardHeader';
 
@@ -35,7 +34,6 @@ export const InventoryScreen: React.FC<InventoryScreenProps> = ({
   onClose,
 }) => {
   const totalValue = inventory.reduce((sum, item) => sum + (Number(item.price) || 1), 0);
-  const trophyCount = inventory.filter((item) => item.sizeCategory === 'trophy').length;
   const capacityPercent = Math.min(100, (inventory.length / maxCapacity) * 100);
 
   return (
@@ -224,11 +222,6 @@ export const InventoryScreen: React.FC<InventoryScreenProps> = ({
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', color: '#fef08a' }}>
                   +{totalValue} <CoinIcon size={13} />
                 </span>
-                {trophyCount > 0 && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', color: '#7dd3fc' }}>
-                    +{trophyCount * 5} <GemIcon size={12} />
-                  </span>
-                )}
               </button>
             )}
           </div>
@@ -397,11 +390,6 @@ export const InventoryScreen: React.FC<InventoryScreenProps> = ({
                     >
                       <span>+{itemPrice}</span>
                       <CoinIcon size={13} />
-                      {isTrophy && (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', color: '#7dd3fc', marginLeft: '2px' }}>
-                          +5 <GemIcon size={12} />
-                        </span>
-                      )}
                     </button>
                   </div>
                 );

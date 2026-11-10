@@ -369,26 +369,18 @@ export function usePlayerState() {
     });
   }, [expToNextLevel, maxEnergy]);
 
-  // Продажа одной рыбы (трофеи дают бонус в алмазах!)
+  // Продажа одной рыбы
   const sellFish = useCallback((uid: string, fallbackPrice?: number) => {
     const targetItem = inventory.find((item) => item.uid === uid);
     const amountToCredit = targetItem
       ? (Number(targetItem.price) || Number(fallbackPrice) || 1)
       : (Number(fallbackPrice) || 1);
 
-    if (targetItem?.sizeCategory === 'trophy') {
-      setGems((prev) => {
-        const next = prev + 5;
-        localStorage.setItem('fg_gems', next.toString());
-        return next;
-      });
-    }
-
     setCoins((prevCoins) => prevCoins + amountToCredit);
     setInventory((prevInv) => prevInv.filter((item) => item.uid !== uid));
   }, [inventory]);
 
-  // Продажа всего садка (трофеи приносят по +5 💎 за штуку!)
+  // Продажа всего садка за монеты
   const sellAllFish = useCallback((): number => {
     if (inventory.length === 0) return 0;
 
@@ -396,15 +388,6 @@ export function usePlayerState() {
       (sum, item) => sum + (Number(item.price) || 1),
       0
     );
-
-    const trophyCount = inventory.filter((item) => item.sizeCategory === 'trophy').length;
-    if (trophyCount > 0) {
-      setGems((prev) => {
-        const next = prev + trophyCount * 5;
-        localStorage.setItem('fg_gems', next.toString());
-        return next;
-      });
-    }
 
     setCoins((prevCoins) => prevCoins + totalEarned);
     setInventory([]);
