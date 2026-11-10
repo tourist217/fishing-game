@@ -190,22 +190,37 @@ export const InventoryScreen: React.FC<InventoryScreenProps> = ({
                   onSellAll();
                 }}
                 style={{
-                  background: 'linear-gradient(180deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
-                  border: '1.5px solid #86efac',
-                  borderRadius: '12px',
-                  padding: '7px 11px',
+                  position: 'relative',
+                  backgroundImage: "url('/assets/ui/btn_sell_all.png')",
+                  backgroundSize: '100% 100%',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'center',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  height: '39px',
+                  padding: '0 24px 2px 24px',
                   color: '#ffffff',
                   fontWeight: 900,
-                  fontSize: '11.5px',
+                  fontSize: '10.5px',
+                  whiteSpace: 'nowrap',
+                  boxSizing: 'border-box',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: '4px',
-                  boxShadow: '0 0 12px rgba(34, 197, 94, 0.65)',
+                  filter: 'drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 10px rgba(45, 212, 191, 0.25))',
                   flexShrink: 0,
+                  transition: 'transform 0.1s ease',
+                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.9), 0 2px 4px rgba(0, 0, 0, 0.8)',
                 }}
+                onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.96)')}
+                onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                onTouchStart={(e) => (e.currentTarget.style.transform = 'scale(0.96)')}
+                onTouchEnd={(e) => (e.currentTarget.style.transform = 'scale(1)')}
               >
-                <span>Продать всё</span>
+                <span style={{ letterSpacing: '0.2px' }}>Продать всё</span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', color: '#fef08a' }}>
                   +{totalValue} <CoinIcon size={13} />
                 </span>
