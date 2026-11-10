@@ -16,6 +16,9 @@ export interface FishJournalEntry {
   hasTrophy: boolean;
   trophyWeight?: number;
   trophyCaughtAt?: number;
+  hasLegendary?: boolean;
+  legendaryWeight?: number;
+  legendaryCaughtAt?: number;
 }
 
 export type FishJournal = Record<string, FishJournalEntry>;
@@ -322,6 +325,7 @@ export function usePlayerState() {
       const fId = fish.fish.id;
       const prevEntry = prevJournal[fId];
       const isTrophy = (fish as any).sizeCategory === 'trophy' || (prevEntry?.hasTrophy ?? false);
+      const isLegendary = (fish as any).sizeCategory === 'legendary' || (prevEntry?.hasLegendary ?? false);
       const updatedEntry: FishJournalEntry = {
         fishId: fId,
         firstCaughtAt: prevEntry ? prevEntry.firstCaughtAt : Date.now(),
@@ -336,6 +340,15 @@ export function usePlayerState() {
           (fish as any).sizeCategory === 'trophy'
             ? Date.now()
             : prevEntry?.trophyCaughtAt,
+        hasLegendary: isLegendary,
+        legendaryWeight:
+          (fish as any).sizeCategory === 'legendary'
+            ? Math.max(prevEntry?.legendaryWeight || 0, fish.weight)
+            : prevEntry?.legendaryWeight,
+        legendaryCaughtAt:
+          (fish as any).sizeCategory === 'legendary'
+            ? Date.now()
+            : prevEntry?.legendaryCaughtAt,
       };
 
       const nextJournal = { ...prevJournal, [fId]: updatedEntry };

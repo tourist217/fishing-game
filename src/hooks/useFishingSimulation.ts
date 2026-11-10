@@ -28,6 +28,8 @@ interface UseFishingSimulationProps {
   triggerHaptic?: (type: 'impact' | 'notification' | 'selection') => void;
   isKeepnetFull?: boolean;
   spendEnergy?: (amount: number) => boolean;
+  playerLevel?: number;
+  rodLevel?: number;
 }
 
 export function useFishingSimulation({
@@ -45,6 +47,8 @@ export function useFishingSimulation({
   triggerHaptic,
   isKeepnetFull,
   spendEnergy,
+  playerLevel = 1,
+  rodLevel = 1,
 }: UseFishingSimulationProps) {
   const [gameState, setGameState] = useState<GameState>('idle');
   const [currentFish, setCurrentFish] = useState<ActiveFishState | null>(null);
@@ -197,7 +201,11 @@ export function useFishingSimulation({
           lineTensileRef.current,
           currentBaitId,
           currentLocationRef.current?.id || 'loc_village_pond',
-          currentLocationRef.current?.weightModifier || 1.0
+          currentLocationRef.current?.weightModifier || 1.0,
+          undefined,
+          undefined,
+          playerLevel,
+          rodLevel
         );
 
         const readyFish: ActiveFishState = {

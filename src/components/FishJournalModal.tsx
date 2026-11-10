@@ -8,6 +8,7 @@ import { AVAILABLE_BAITS } from '../hooks/useBaitState';
 import { TIME_CONFIGS, WEATHER_CONFIGS, type TimeOfDay, type WeatherType } from '../utils/weatherTime';
 import { CoinIcon } from './CoinIcon';
 import { BoardHeader } from './BoardHeader';
+import { getFishMastery } from '../utils/fishMastery';
 
 interface FishJournalModalProps {
   journal: FishJournal;
@@ -301,6 +302,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
               {FISH_DATABASE.map((fish) => {
                 const entry = journal[fish.id];
                 const isDiscovered = Boolean(entry);
+                const mastery = getFishMastery(entry);
 
                 return (
                   <div
@@ -321,15 +323,30 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                         : "url('/assets/ui/card_fish_locked.png')",
                       backgroundSize: '100% 100%',
                       backgroundRepeat: 'no-repeat',
-                      boxShadow: entry?.hasTrophy
+                      boxShadow: entry?.hasLegendary
+                        ? '0 0 18px rgba(225, 29, 72, 0.45), 0 6px 14px rgba(0, 0, 0, 0.7)'
+                        : entry?.hasTrophy
                         ? '0 0 16px rgba(250, 204, 21, 0.35), 0 6px 14px rgba(0, 0, 0, 0.6)'
                         : '0 6px 14px rgba(0, 0, 0, 0.5)',
                       transition: 'transform 0.12s ease',
                       flexShrink: 0,
                     }}
                   >
-                    {/* Бейдж трофея если пойман */}
-                    {entry?.hasTrophy && (
+                    {/* Бейдж легенды или трофея если пойман */}
+                    {entry?.hasLegendary ? (
+                      <span
+                        style={{
+                          position: 'absolute',
+                          top: '5px',
+                          right: '6px',
+                          fontSize: '13px',
+                          zIndex: 5,
+                          filter: 'drop-shadow(0 0 5px #f43f5e) drop-shadow(0 0 8px #fbbf24)',
+                        }}
+                      >
+                        👑
+                      </span>
+                    ) : entry?.hasTrophy ? (
                       <span
                         style={{
                           position: 'absolute',
@@ -342,10 +359,49 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                       >
                         🏆
                       </span>
-                    )}
+                    ) : null}
 
                     {isDiscovered && (
                       <>
+                        {/* Звёзды мастерства (Option 2: уменьшена на 10%) */}
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: '6px',
+                            left: '6px',
+                            display: 'flex',
+                            gap: '1.8px',
+                            background: 'rgba(10, 16, 26, 0.72)',
+                            padding: '1.8px 4px',
+                            borderRadius: '7px',
+                            border: '1px solid rgba(255, 255, 255, 0.16)',
+                            backdropFilter: 'blur(4px)',
+                            WebkitBackdropFilter: 'blur(4px)',
+                            zIndex: 4,
+                            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.5)',
+                            pointerEvents: 'none',
+                          }}
+                        >
+                          {[1, 2, 3, 4, 5].map((starIdx) => {
+                            const isEarned = starIdx <= mastery.stars;
+                            return (
+                              <img
+                                key={starIdx}
+                                src={isEarned ? '/assets/ui/star_gold.png' : '/assets/ui/star_gray.png'}
+                                alt="star"
+                                style={{
+                                  width: '10.5px',
+                                  height: '10.5px',
+                                  objectFit: 'contain',
+                                  filter: isEarned
+                                    ? 'drop-shadow(0 0 3px rgba(250, 204, 21, 0.7))'
+                                    : 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8))',
+                                }}
+                              />
+                            );
+                          })}
+                        </div>
+
                         {/* Верх: толща воды с рыбой (высота ~44% карточки) */}
                         <div
                           style={{
@@ -675,6 +731,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
         {inspectedFish && (() => {
           const entry = journal[inspectedFish.id];
           const isDiscovered = Boolean(entry);
+          const mastery = getFishMastery(entry);
           const times: TimeOfDay[] = ['morning', 'day', 'evening', 'night'];
           const weathers: WeatherType[] = ['clear', 'fog', 'overcast', 'rain'];
 
@@ -702,14 +759,18 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                   maxHeight: '92%',
                   background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
                   borderRadius: '24px',
-                  border: isDiscovered && entry?.hasTrophy
+                  border: isDiscovered && entry?.hasLegendary
+                    ? '1.5px solid #fb7185'
+                    : isDiscovered && entry?.hasTrophy
                     ? '1.5px solid #facc15'
                     : '1.5px solid rgba(56, 189, 248, 0.35)',
                   padding: '16px 14px',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '12px',
-                  boxShadow: entry?.hasTrophy
+                  boxShadow: isDiscovered && entry?.hasLegendary
+                    ? '0 0 30px rgba(225, 29, 72, 0.4), 0 16px 40px rgba(0, 0, 0, 0.85)'
+                    : entry?.hasTrophy
                     ? '0 0 25px rgba(250, 204, 21, 0.3), 0 16px 40px rgba(0, 0, 0, 0.8)'
                     : '0 16px 40px rgba(0, 0, 0, 0.8)',
                   overflowY: 'auto',
@@ -758,8 +819,31 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                     flexShrink: 0,
                   }}
                 >
-                  {/* Трофейная ленточка если выловлен трофей */}
-                  {isDiscovered && entry?.hasTrophy && (
+                  {/* Трофейная или легендарная ленточка */}
+                  {isDiscovered && entry?.hasLegendary ? (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '10px',
+                        right: '10px',
+                        background: 'linear-gradient(135deg, #e11d48 0%, #be123c 50%, #881337 100%)',
+                        color: '#ffffff',
+                        padding: '3px 9px',
+                        borderRadius: '8px',
+                        fontSize: '9.5px',
+                        fontWeight: 900,
+                        boxShadow: '0 0 14px rgba(225, 29, 72, 0.7)',
+                        border: '1px solid #fda4af',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        zIndex: 2,
+                      }}
+                    >
+                      <span>👑</span>
+                      <span>ЛЕГЕНДА</span>
+                    </div>
+                  ) : isDiscovered && entry?.hasTrophy ? (
                     <div
                       style={{
                         position: 'absolute',
@@ -781,7 +865,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                       <span>🏆</span>
                       <span>ТРОФЕЙ</span>
                     </div>
-                  )}
+                  ) : null}
 
                   {/* Изображение рыбы */}
                   <div
@@ -858,7 +942,46 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                     {isDiscovered ? inspectedFish.name : '??? (Неизвестный вид)'}
                   </div>
 
-                  {isDiscovered && entry?.hasTrophy && (
+                  {/* Ряд 5 звёзд мастерства прямо под названием */}
+                  {isDiscovered && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '6px' }}>
+                      {[1, 2, 3, 4, 5].map((starIdx) => {
+                        const isEarned = starIdx <= mastery.stars;
+                        return (
+                          <img
+                            key={starIdx}
+                            src={isEarned ? '/assets/ui/star_gold.png' : '/assets/ui/star_gray.png'}
+                            alt="star"
+                            style={{
+                              width: '18px',
+                              height: '18px',
+                              objectFit: 'contain',
+                              filter: isEarned
+                                ? 'drop-shadow(0 0 5px rgba(250, 204, 21, 0.8))'
+                                : 'drop-shadow(0 1px 3px rgba(0, 0, 0, 0.8))',
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {isDiscovered && entry?.hasLegendary ? (
+                    <div
+                      style={{
+                        marginTop: '6px',
+                        background: 'rgba(225, 29, 72, 0.18)',
+                        color: '#f43f5e',
+                        border: '1px solid rgba(244, 63, 94, 0.4)',
+                        borderRadius: '8px',
+                        padding: '2px 8px',
+                        fontSize: '10.5px',
+                        fontWeight: 900,
+                      }}
+                    >
+                      👑 Абсолютный рекордсмен вида
+                    </div>
+                  ) : isDiscovered && entry?.hasTrophy ? (
                     <div
                       style={{
                         marginTop: '4px',
@@ -873,7 +996,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                     >
                       🏆 Трофейный экземпляр
                     </div>
-                  )}
+                  ) : null}
                 </div>
 
                 {/* 3. Личная статистика игрока */}
@@ -900,9 +1023,9 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                       </div>
                     </div>
                     <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '14px', padding: '8px 4px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                      <div style={{ fontSize: '10px', color: '#94a3b8' }}>Ценность</div>
-                      <div style={{ fontSize: '13px', fontWeight: 900, color: '#4ade80', marginTop: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
-                        {inspectedFish.basePricePerKg} <CoinIcon size={13} />/кг
+                      <div style={{ fontSize: '10px', color: '#94a3b8' }}>Рекорд вида</div>
+                      <div style={{ fontSize: '13px', fontWeight: 900, color: '#fb7185', marginTop: '2px' }}>
+                        {inspectedFish.legendaryWeight ? formatWeight(inspectedFish.legendaryWeight) : '—'}
                       </div>
                     </div>
                   </div>
@@ -922,6 +1045,75 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                     🔒 Экземпляр ещё не выловлен. Записи рекордов откроются после первой поимки!
                   </div>
                 )}
+
+                {/* 3.1. Блок мастерства вида (5 звёзд и бонусы) */}
+                <div
+                  style={{
+                    background: 'rgba(30, 41, 59, 0.55)',
+                    borderRadius: '16px',
+                    padding: '12px',
+                    border: '1px solid rgba(251, 191, 36, 0.25)',
+                    textAlign: 'left',
+                    flexShrink: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 900, color: '#facc15', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <span>⭐</span>
+                      <span>Мастерство вида</span>
+                    </div>
+                    <div style={{ fontSize: '11px', fontWeight: 800, color: mastery.stars === 5 ? '#4ade80' : '#cbd5e1' }}>
+                      {mastery.stars} из 5 звёзд
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {mastery.levels.map((lvl) => (
+                      <div
+                        key={lvl.star}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          background: lvl.isUnlocked ? 'rgba(34, 197, 94, 0.12)' : 'rgba(15, 23, 42, 0.45)',
+                          border: lvl.isUnlocked ? '1px solid rgba(74, 222, 128, 0.25)' : '1px solid rgba(255, 255, 255, 0.05)',
+                          borderRadius: '10px',
+                          padding: '6px 8px',
+                          gap: '8px',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                          <img
+                            src={lvl.isUnlocked ? '/assets/ui/star_gold.png' : '/assets/ui/star_gray.png'}
+                            alt="star"
+                            style={{
+                              width: '16px',
+                              height: '16px',
+                              objectFit: 'contain',
+                              flexShrink: 0,
+                              filter: lvl.isUnlocked ? 'drop-shadow(0 0 4px rgba(250, 204, 21, 0.8))' : 'none',
+                            }}
+                          />
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: '10.5px', fontWeight: 800, color: lvl.isUnlocked ? '#ffffff' : '#94a3b8' }}>
+                              {lvl.condition}
+                            </div>
+                            <div style={{ fontSize: '9.5px', color: lvl.isUnlocked ? '#4ade80' : '#64748b', fontWeight: 700 }}>
+                              {lvl.bonusDescription}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ fontSize: '11px', fontWeight: 900, color: lvl.isUnlocked ? '#4ade80' : '#64748b', flexShrink: 0 }}>
+                          {lvl.isUnlocked ? '✓' : '🔒'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
                 {/* 4. Описание и повадки */}
                 <div

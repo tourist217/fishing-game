@@ -109,6 +109,8 @@ export default function App() {
     triggerHaptic,
     isKeepnetFull: player.isKeepnetFull,
     spendEnergy: player.spendEnergy,
+    playerLevel: player.level,
+    rodLevel: gear.rodLevel,
   });
 
   const isTutorialVisible = () => {

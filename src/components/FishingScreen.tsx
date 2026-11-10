@@ -718,7 +718,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
 
       {/* Модальное окно поимки рыбы */}
       {gameState === 'caught' && currentFish && (
-        currentFish.sizeCategory === 'trophy' ? (
+        currentFish.sizeCategory === 'trophy' || currentFish.sizeCategory === 'legendary' ? (
           <TrophyCardModal
             currentFish={currentFish}
             canDismiss={canDismissModal}
