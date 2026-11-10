@@ -53,7 +53,7 @@ export const FISH_DATABASE: Fish[] = [
     description: 'Небольшая донная рыбка, предпочитающая чистые песчаные отмели и каменистые перекаты. Держится стайками у дна, активно отзывается на мотыля и червя в светлое время суток.',
     basePricePerKg: 35,
     baseExpPerKg: 120,
-    legendaryWeight: 0.15,
+    legendaryWeight: 0.22,
     weightTiers: {
       small: { minKg: 0.015, maxKg: 0.030, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Маленький' },
       medium: { minKg: 0.030, maxKg: 0.055, priceMultiplier: 1.3, expMultiplier: 1.3, label: 'Средний' },
@@ -82,7 +82,7 @@ export const FISH_DATABASE: Fish[] = [
     description: 'Неприхотливый хищный житель заросших прудов и тихих стариц. Заглатывает любую белковую наживку с поразительной жадностью, выручая рыбака в периоды бесклёвья.',
     basePricePerKg: 25,
     baseExpPerKg: 90,
-    legendaryWeight: 0.5,
+    legendaryWeight: 0.8,
     weightTiers: {
       small: { minKg: 0.025, maxKg: 0.060, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Маленький' },
       medium: { minKg: 0.060, maxKg: 0.140, priceMultiplier: 1.3, expMultiplier: 1.2, label: 'Средний' },
@@ -109,7 +109,7 @@ export const FISH_DATABASE: Fish[] = [
     description: 'Юркая стайная верховодка с яркой серебристой чешуёй. Плавает у поверхности, обожает солнечную тёплую погоду и молниеносно сбивает мякиш хлеба и опарыша.',
     basePricePerKg: 45,
     baseExpPerKg: 140,
-    legendaryWeight: 0.13,
+    legendaryWeight: 0.12,
     weightTiers: {
       small: { minKg: 0.010, maxKg: 0.025, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Маленькая' },
       medium: { minKg: 0.025, maxKg: 0.045, priceMultiplier: 1.3, expMultiplier: 1.3, label: 'Средняя' },
@@ -139,7 +139,7 @@ export const FISH_DATABASE: Fish[] = [
     description: 'Классика русской рыбалки. Любит илистое дно и заросли кувшинок. Особенно активен на утренней зорьке в тёплые тихие дни. Предпочитает червя, ароматное тесто и хлеб.',
     basePricePerKg: 20,
     baseExpPerKg: 65,
-    legendaryWeight: 2.1,
+    legendaryWeight: 5.5,
     weightTiers: {
       small: { minKg: 0.080, maxKg: 0.180, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Маленький' },
       medium: { minKg: 0.180, maxKg: 0.450, priceMultiplier: 1.4, expMultiplier: 1.3, label: 'Средний' },
@@ -168,7 +168,7 @@ export const FISH_DATABASE: Fish[] = [
     description: 'Осторожная и чуткая рыба с яркими оранжевыми плавниками. Питается водорослями и мелкими личинками. Лучше всего ловится утром и днём на опарыша, тесто и мотыля.',
     basePricePerKg: 22,
     baseExpPerKg: 70,
-    legendaryWeight: 1.5,
+    legendaryWeight: 2.5,
     weightTiers: {
       small: { minKg: 0.050, maxKg: 0.120, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Маленькая' },
       medium: { minKg: 0.120, maxKg: 0.300, priceMultiplier: 1.3, expMultiplier: 1.2, label: 'Средняя' },
@@ -199,7 +199,7 @@ export const FISH_DATABASE: Fish[] = [
     description: 'Золотистая красавица с алыми плавниками. Обитает в верхних слоях тёплых заводей среди камыша. Любит яркое солнце, ловится на кукурузу, опарыша и хлеб.',
     basePricePerKg: 24,
     baseExpPerKg: 75,
-    legendaryWeight: 1.7,
+    legendaryWeight: 2.2,
     weightTiers: {
       small: { minKg: 0.060, maxKg: 0.140, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Маленькая' },
       medium: { minKg: 0.140, maxKg: 0.350, priceMultiplier: 1.3, expMultiplier: 1.3, label: 'Средняя' },
@@ -229,7 +229,7 @@ export const FISH_DATABASE: Fish[] = [
     description: 'Полосатый разбойник с колючим спинным плавником. Охотится стаями на бровках и у коряжника. Прекрасно берёт в пасмурную погоду и дождь на живца и червя.',
     basePricePerKg: 30,
     baseExpPerKg: 95,
-    legendaryWeight: 2.5,
+    legendaryWeight: 5,
     weightTiers: {
       small: { minKg: 0.070, maxKg: 0.180, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Маленький' },
       medium: { minKg: 0.180, maxKg: 0.450, priceMultiplier: 1.4, expMultiplier: 1.4, label: 'Средний' },
@@ -260,7 +260,7 @@ export const FISH_DATABASE: Fish[] = [
     description: 'Таинственный обитатель заиленных заводей. Бронзовая чешуя покрыта густой защитной слизью. Любит тёплые сумерки и туманное утро, обожает сочного червя.',
     basePricePerKg: 35,
     baseExpPerKg: 110,
-    legendaryWeight: 4.6,
+    legendaryWeight: 8.5,
     weightTiers: {
       small: { minKg: 0.200, maxKg: 0.450, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Маленький' },
       medium: { minKg: 0.450, maxKg: 1.100, priceMultiplier: 1.4, expMultiplier: 1.3, label: 'Средний' },
@@ -287,7 +287,7 @@ export const FISH_DATABASE: Fish[] = [
     description: 'Сильная и осторожная рыба глубоких плёсов и омутов. Оказывает мощное сопротивление при вываживании. Ловится на кукурузу, червя и опарыша.',
     basePricePerKg: 28,
     baseExpPerKg: 100,
-    legendaryWeight: 5.6,
+    legendaryWeight: 8,
     weightTiers: {
       small: { minKg: 0.250, maxKg: 0.600, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Маленький' },
       medium: { minKg: 0.600, maxKg: 1.400, priceMultiplier: 1.4, expMultiplier: 1.3, label: 'Средний' },
@@ -315,7 +315,7 @@ export const FISH_DATABASE: Fish[] = [
     description: 'Широкий серебристый великан русловых ям. Питается со дна, при поклёвке характерно выкладывает поплавок. Активен на рассвете и в тумане, любит мотыля и опарыша.',
     basePricePerKg: 26,
     baseExpPerKg: 85,
-    legendaryWeight: 6,
+    legendaryWeight: 12,
     weightTiers: {
       small: { minKg: 0.200, maxKg: 0.500, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Подлещик' },
       medium: { minKg: 0.500, maxKg: 1.300, priceMultiplier: 1.4, expMultiplier: 1.3, label: 'Средний' },
@@ -345,7 +345,7 @@ export const FISH_DATABASE: Fish[] = [
     description: 'Главная зубастая хищница наших вод. Устраивает засады в зарослях тростника и у затопленных коряг. Особенно свирепствует в затяжной дождь и пасмурную погоду. Клюёт на живца.',
     basePricePerKg: 38,
     baseExpPerKg: 130,
-    legendaryWeight: 18,
+    legendaryWeight: 31,
     weightTiers: {
       small: { minKg: 0.500, maxKg: 1.200, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Травянка' },
       medium: { minKg: 1.200, maxKg: 3.200, priceMultiplier: 1.5, expMultiplier: 1.4, label: 'Средняя' },
@@ -375,7 +375,7 @@ export const FISH_DATABASE: Fish[] = [
     description: 'Глубоководный клыкастый охотник с прекрасным ночным зрением. Предпочитает каменистое дно и перепады глубин. Выходит на охоту в сумерках, тумане и ночью за живцом.',
     basePricePerKg: 42,
     baseExpPerKg: 140,
-    legendaryWeight: 13,
+    legendaryWeight: 20,
     weightTiers: {
       small: { minKg: 0.450, maxKg: 1.100, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Маленький' },
       medium: { minKg: 1.100, maxKg: 2.600, priceMultiplier: 1.5, expMultiplier: 1.4, label: 'Средний' },
@@ -406,7 +406,7 @@ export const FISH_DATABASE: Fish[] = [
     description: 'Стремительный речной корсар открытых просторов. Охотится с оглушительными всплесками, загоняя стайки малька. Пуглив, особенно активен солнечным днём на течении.',
     basePricePerKg: 36,
     baseExpPerKg: 135,
-    legendaryWeight: 10,
+    legendaryWeight: 12,
     weightTiers: {
       small: { minKg: 0.400, maxKg: 1.000, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Маленький' },
       medium: { minKg: 1.000, maxKg: 2.400, priceMultiplier: 1.5, expMultiplier: 1.4, label: 'Средний' },
@@ -435,7 +435,7 @@ export const FISH_DATABASE: Fish[] = [
     description: 'Могучий сазан, одомашненный великан пресных вод. Требует прочных снастей и терпения. Любит тёплые солнечные дни, илистые ямы, сладкую кукурузу и тесто.',
     basePricePerKg: 32,
     baseExpPerKg: 115,
-    legendaryWeight: 25,
+    legendaryWeight: 51,
     weightTiers: {
       small: { minKg: 0.700, maxKg: 1.800, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Маленький' },
       medium: { minKg: 1.800, maxKg: 4.500, priceMultiplier: 1.5, expMultiplier: 1.4, label: 'Средний' },
@@ -466,7 +466,7 @@ export const FISH_DATABASE: Fish[] = [
     description: 'Мощный травоядный исполин, очищающий водоёмы от водорослей. Совершает паровозные рывки при поклёвке. Обожает кукурузу, тесто и хлеб в тёплую ясную погоду.',
     basePricePerKg: 34,
     baseExpPerKg: 125,
-    legendaryWeight: 28,
+    legendaryWeight: 40,
     weightTiers: {
       small: { minKg: 0.800, maxKg: 2.000, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Маленький' },
       medium: { minKg: 2.000, maxKg: 5.500, priceMultiplier: 1.5, expMultiplier: 1.4, label: 'Средний' },
@@ -495,7 +495,7 @@ export const FISH_DATABASE: Fish[] = [
     description: 'Крупная стайная рыба, фильтрующая фитопланктон в толще воды. Отличается низкой посадкой глаз и колоссальной силой. Предпочитает растительные насадки.',
     basePricePerKg: 30,
     baseExpPerKg: 110,
-    legendaryWeight: 34,
+    legendaryWeight: 50,
     weightTiers: {
       small: { minKg: 1.000, maxKg: 2.500, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Маленький' },
       medium: { minKg: 2.500, maxKg: 6.000, priceMultiplier: 1.5, expMultiplier: 1.4, label: 'Средний' },
@@ -523,7 +523,7 @@ export const FISH_DATABASE: Fish[] = [
     description: 'Дикий золотой царь быстрых рек и глубоких ям. Настоящий дикарь с железными мышцами и зазубренным лучом на плавнике. Любит кукурузу, червя и тёплый вечер.',
     basePricePerKg: 48,
     baseExpPerKg: 160,
-    legendaryWeight: 31,
+    legendaryWeight: 45,
     weightTiers: {
       small: { minKg: 1.200, maxKg: 2.800, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Маленький' },
       medium: { minKg: 2.800, maxKg: 6.500, priceMultiplier: 1.6, expMultiplier: 1.5, label: 'Средний' },
@@ -551,12 +551,12 @@ export const FISH_DATABASE: Fish[] = [
     description: 'Царь речных глубин и хозяин омутов. Способен ломать слабые удилища и рвать леску. Выходит на охоту в вечерних сумерках, ночью и во время грозового дождя.',
     basePricePerKg: 55,
     baseExpPerKg: 200,
-    legendaryWeight: 105,
+    legendaryWeight: 66,
     weightTiers: {
-      small: { minKg: 2.500, maxKg: 7.000, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Маленький' },
-      medium: { minKg: 7.000, maxKg: 18.000, priceMultiplier: 1.7, expMultiplier: 1.6, label: 'Средний' },
-      large: { minKg: 18.000, maxKg: 42.000, priceMultiplier: 2.8, expMultiplier: 2.5, label: 'Крупный' },
-      trophy: { minKg: 42.000, maxKg: 95.000, priceMultiplier: 7.5, expMultiplier: 6.0, label: 'ТРОФЕЙ' },
+      small: { minKg: 0.800, maxKg: 3.500, priceMultiplier: 1.0, expMultiplier: 1.0, label: 'Сомёнок' },
+      medium: { minKg: 3.500, maxKg: 9.000, priceMultiplier: 1.7, expMultiplier: 1.6, label: 'Средний' },
+      large: { minKg: 9.000, maxKg: 20.000, priceMultiplier: 2.8, expMultiplier: 2.5, label: 'Крупный' },
+      trophy: { minKg: 20.000, maxKg: 40.000, priceMultiplier: 7.5, expMultiplier: 6.0, label: 'ТРОФЕЙ' },
     },
     baitPreferences: { livebait: 1.0, worm: 0.8 },
     timePreferences: { morning: 0.6, day: 0.2, evening: 1.5, night: 1.8 },
