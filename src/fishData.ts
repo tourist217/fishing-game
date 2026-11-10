@@ -1,4 +1,6 @@
 import { type TimeOfDay, type WeatherType, getCurrentWeather } from './utils/weatherTime';
+import { getFishMastery } from './utils/fishMastery';
+import type { FishJournalEntry } from './hooks/usePlayerState';
 
 export type FishRarity = 'common' | 'rare' | 'epic' | 'legendary';
 export type FishSizeCategory = 'small' | 'medium' | 'large' | 'trophy' | 'legendary';
@@ -641,7 +643,8 @@ export function getRandomFish(
   timeOfDay?: TimeOfDay,
   weather?: WeatherType,
   playerLevel: number = 1,
-  rodLevel: number = 1
+  rodLevel: number = 1,
+  journal?: Record<string, FishJournalEntry>
 ): GeneratedFishResult {
   const currentEnv = getCurrentWeather();
   const effectiveTime = timeOfDay || currentEnv.timeOfDay;
@@ -676,7 +679,13 @@ export function getRandomFish(
     if (baitPref > 0) {
       const timeCoeff = f.timePreferences?.[effectiveTime] ?? 1.0;
       const weatherCoeff = f.weatherPreferences?.[effectiveWeather] ?? 1.0;
-      const finalWeight = baitPref * timeCoeff * weatherCoeff;
+      let finalWeight = baitPref * timeCoeff * weatherCoeff;
+
+      // 3★ Бонус мастерства вида: клёв чаще на 10%
+      if (journal?.[f.id] && getFishMastery(journal[f.id]).stars >= 3) {
+        finalWeight *= 1.10;
+      }
+
       if (finalWeight > 0) {
         weightedList.push({ fish: f, weight: finalWeight });
       }
@@ -797,10 +806,27 @@ export function getRandomFish(
   }
 
   // Легендарная рыба (абсолютный рекорд вида):
-  // Условия: уровень игрока >= 5, удочка улучшена выше базовой 1 уровня, есть legendaryWeight
-  // Шанс: 0.3% (0.003 - очень редкая, меньше 1%)
+  // ПРАВИЛА ВЫЛОВА:
+  // 1. Игрок ОБЯЗАН собрать первые 4 звезды по этому виду рыбы
+  //    (вид открыт, поймано >= 15 шт, поймано >= 60 шт, уже пойман хотя бы один трофей этого вида)
+  // 2. Уровень игрока >= 6 (на первых 4-5 уровнях поймать нельзя)
+  // 3. Удочка прокачана выше 1-го уровня (на стартовую базовую удочку нельзя)
+  // 4. У рыбы задан legendaryWeight
+  // 5. Шанс поклёвки: 0.3% (0.003 - очень редкая, строго меньше 1%)
+  const fishEntry = journal?.[selectedFish.id];
+  const fishMastery = getFishMastery(fishEntry);
+  const hasFourStars = fishMastery.stars >= 4;
+
+  // 4★ Бонус мастерства вида: шанс трофея +1%
+  if (hasFourStars) {
+    trophyChance += 0.01;
+  }
+
   const canCatchLegendary =
-    playerLevel >= 5 && (rodLevel > 1 || rodStrengthKg > 0.4) && Boolean(selectedFish.legendaryWeight);
+    hasFourStars &&
+    playerLevel >= 6 &&
+    (rodLevel > 1 || rodStrengthKg > 0.4) &&
+    Boolean(selectedFish.legendaryWeight);
   const legendaryChance = 0.003;
 
   if (canCatchLegendary && Math.random() < legendaryChance) {
@@ -852,10 +878,19 @@ export function getRandomFish(
 
   // 5. Расчёт стоимости и опыта
   const baseFishCost = weight * selectedFish.basePricePerKg * priceMultiplier;
-  const price = Math.max(1, Math.round(baseFishCost));
+  let price = Math.max(1, Math.round(baseFishCost));
 
   const baseFishExp = weight * selectedFish.baseExpPerKg * expMultiplier;
-  const exp = Math.max(2, Math.round(baseFishExp));
+  let exp = Math.max(2, Math.round(baseFishExp));
+
+  // 2★ Бонус мастерства: цена продажи +5%
+  if (fishMastery.stars >= 2) {
+    price = Math.round(price * 1.05);
+  }
+  // 5★ Бонус мастерства: опыт +25%
+  if (fishMastery.stars >= 5) {
+    exp = Math.round(exp * 1.25);
+  }
 
   // 6. Проверка на риск поломки снасти
   const effectiveGearLimit = Math.min(rodStrengthKg || 0.25, lineTensileKg || 0.4);

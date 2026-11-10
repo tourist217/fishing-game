@@ -111,6 +111,7 @@ export default function App() {
     spendEnergy: player.spendEnergy,
     playerLevel: player.level,
     rodLevel: gear.rodLevel,
+    journal: player.journal,
   });
 
   const isTutorialVisible = () => {

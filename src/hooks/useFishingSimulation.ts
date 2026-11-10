@@ -5,6 +5,7 @@ import type { CaughtFishItem } from '../components/InventoryScreen';
 import type { FishingLocation } from '../locationsData';
 import { getFishDifficultyConfig } from '../utils/fishUtils';
 import { triggerFishHaptic } from '../utils/haptics';
+import type { FishJournalEntry } from './usePlayerState';
 
 
 export interface ActiveFishState extends CaughtFishItem {
@@ -30,6 +31,7 @@ interface UseFishingSimulationProps {
   spendEnergy?: (amount: number) => boolean;
   playerLevel?: number;
   rodLevel?: number;
+  journal?: Record<string, FishJournalEntry>;
 }
 
 export function useFishingSimulation({
@@ -49,6 +51,7 @@ export function useFishingSimulation({
   spendEnergy,
   playerLevel = 1,
   rodLevel = 1,
+  journal,
 }: UseFishingSimulationProps) {
   const [gameState, setGameState] = useState<GameState>('idle');
   const [currentFish, setCurrentFish] = useState<ActiveFishState | null>(null);
@@ -127,6 +130,21 @@ export function useFishingSimulation({
     selectedBaitIdRef.current = selectedBaitId;
   }, [selectedBaitId]);
 
+  const playerLevelRef = useRef(playerLevel);
+  useEffect(() => {
+    playerLevelRef.current = playerLevel;
+  }, [playerLevel]);
+
+  const rodLevelRef = useRef(rodLevel);
+  useEffect(() => {
+    rodLevelRef.current = rodLevel;
+  }, [rodLevel]);
+
+  const journalRef = useRef(journal);
+  useEffect(() => {
+    journalRef.current = journal;
+  }, [journal]);
+
   // Динамический центр безопасной зоны
   const [sweetZoneCenter, setSweetZoneCenter] = useState<number>(50);
   const sweetZoneCenterRef = useRef<number>(50);
@@ -204,8 +222,9 @@ export function useFishingSimulation({
           currentLocationRef.current?.weightModifier || 1.0,
           undefined,
           undefined,
-          playerLevel,
-          rodLevel
+          playerLevelRef.current,
+          rodLevelRef.current,
+          journalRef.current
         );
 
         const readyFish: ActiveFishState = {
