@@ -64,6 +64,13 @@ export const FeederModal: React.FC<FeederModalProps> = ({
     .slice(0, currentFeeder.unlockedHooks)
     .filter(Boolean).length;
 
+  const hasCatch = Boolean(currentFeeder.pendingCatches && currentFeeder.pendingCatches.length > 0);
+
+  // Select card background variant matching tab index and locked/unlocked state
+  const bgImageSrc = `/assets/ui/feeder_card_tab${selectedSlotIndex}_${
+    currentFeeder.isUnlocked ? 'clean' : 'locked'
+  }.png`;
+
   return (
     <div
       style={{
@@ -72,13 +79,13 @@ export const FeederModal: React.FC<FeederModalProps> = ({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(5, 12, 22, 0.88)',
+        backgroundColor: 'rgba(4, 9, 18, 0.88)',
         backdropFilter: 'blur(10px)',
         zIndex: 9999,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '16px',
+        padding: '12px',
         animation: 'fadeIn 0.2s ease-out',
       }}
       onClick={(e) => {
@@ -87,259 +94,338 @@ export const FeederModal: React.FC<FeederModalProps> = ({
     >
       <div
         style={{
+          position: 'relative',
           width: '100%',
-          maxWidth: '430px',
-          maxHeight: '90vh',
-          backgroundColor: '#121e2d',
-          borderRadius: '24px',
-          border: '2px solid rgba(56, 189, 248, 0.3)',
-          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.75)',
+          maxWidth: '520px',
+          aspectRatio: '1024 / 764',
+          maxHeight: '94vh',
           display: 'flex',
           flexDirection: 'column',
-          overflow: 'hidden',
+          userSelect: 'none',
+          filter: 'drop-shadow(0 25px 60px rgba(0, 0, 0, 0.85))',
         }}
       >
-        {/* Header */}
-        <div
+        {/* Background Card with user's custom artwork */}
+        <img
+          src={bgImageSrc}
+          alt="Окно фидера"
           style={{
-            position: 'relative',
-            padding: '14px 18px',
-            background: 'linear-gradient(180deg, #1e3a5f 0%, #132438 100%)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            pointerEvents: 'none',
+            zIndex: 0,
           }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '24px' }}>🎣</span>
-            <div>
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: '18px',
-                  fontWeight: 900,
-                  color: '#f8fafc',
-                  letterSpacing: '0.3px',
-                }}
-              >
-                Донный фидер
-              </h2>
-              <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                Оффлайн-ловля (от {OFFLINE_MINUTES_REQUIRED} минут отсутствия)
-              </div>
-            </div>
-          </div>
+        />
 
-          <button
-            onClick={onClose}
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              border: 'none',
-              color: '#94a3b8',
-              fontSize: '16px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Feeder Slot Tabs */}
-        <div
+        {/* 1. Invisible Close Button over top-right wooden button */}
+        <button
+          onClick={onClose}
+          aria-label="Закрыть"
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '6px',
-            padding: '10px 14px',
-            background: '#0d1824',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+            position: 'absolute',
+            top: '2%',
+            right: '2%',
+            width: '11%',
+            height: '14%',
+            borderRadius: '50%',
+            backgroundColor: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            zIndex: 5,
+            outline: 'none',
+            transition: 'transform 0.1s ease',
           }}
-        >
-          {FEEDER_SLOTS_CONFIG.map((cfg, idx) => {
-            const fData = feeders[idx];
-            const isSelected = selectedSlotIndex === idx;
-            const hasCatch = Boolean(fData?.pendingCatches && fData.pendingCatches.length > 0);
-            const inWater = Boolean(fData?.isCast && !hasCatch);
+          onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.92)')}
+          onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+          onTouchStart={(e) => (e.currentTarget.style.transform = 'scale(0.92)')}
+          onTouchEnd={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+        />
 
-            return (
-              <button
-                key={cfg.slotIndex}
-                onClick={() => setSelectedSlotIndex(idx)}
-                style={{
-                  padding: '8px 4px',
-                  borderRadius: '12px',
-                  border: isSelected
-                    ? '1.5px solid #38bdf8'
-                    : '1px solid rgba(255, 255, 255, 0.08)',
-                  background: isSelected
-                    ? 'linear-gradient(180deg, #1e3a5f 0%, #162a42 100%)'
-                    : 'rgba(255, 255, 255, 0.03)',
-                  color: isSelected ? '#f8fafc' : '#94a3b8',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '3px',
-                  transition: 'all 0.15s ease',
-                  position: 'relative',
-                }}
-              >
-                <div style={{ fontSize: '11px', fontWeight: 800 }}>
-                  Фидер #{idx + 1}
-                </div>
-                <div style={{ fontSize: '9px', opacity: 0.85 }}>
-                  {!fData?.isUnlocked
-                    ? `Ур. ${cfg.levelReq}`
-                    : hasCatch
-                    ? '🎉 Улов!'
-                    : inWater
-                    ? '🌊 В воде'
-                    : 'Готов'}
-                </div>
-                {hasCatch && (
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: '-3px',
-                      right: '-3px',
-                      width: '10px',
-                      height: '10px',
-                      borderRadius: '50%',
-                      background: '#10b981',
-                      border: '1.5px solid #fff',
-                    }}
-                  />
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Scrollable Body */}
+        {/* 2. Top Title and Subtitle */}
         <div
           style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: '14px',
+            position: 'absolute',
+            top: '4.5%',
+            left: '18%',
+            right: '18%',
+            height: '14%',
             display: 'flex',
             flexDirection: 'column',
-            gap: '12px',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            zIndex: 2,
+            pointerEvents: 'none',
           }}
         >
-          {/* Case 1: Slot is locked */}
-          {!currentFeeder.isUnlocked ? (
-            <div
+          <div
+            style={{
+              fontSize: 'clamp(15px, 3.8vw, 21px)',
+              fontWeight: 900,
+              color: '#fef08a',
+              letterSpacing: '0.8px',
+              textShadow: '0 2px 6px rgba(0, 0, 0, 0.9), 0 0 10px rgba(251, 191, 36, 0.5)',
+              textTransform: 'uppercase',
+              lineHeight: 1.1,
+            }}
+          >
+            Донный фидер
+          </div>
+          <div
+            style={{
+              fontSize: 'clamp(8.5px, 2vw, 11px)',
+              fontWeight: 700,
+              color: '#e2e8f0',
+              textShadow: '0 1px 4px rgba(0, 0, 0, 0.85)',
+              marginTop: '2px',
+              opacity: 0.9,
+            }}
+          >
+            Оффлайн-ловля (от {OFFLINE_MINUTES_REQUIRED} минут отсутствия)
+          </div>
+        </div>
+
+        {/* 3. Three Top Tabs: Tab 1, Tab 2, Tab 3 */}
+        {FEEDER_SLOTS_CONFIG.map((cfg, idx) => {
+          const fData = feeders[idx];
+          const isSelected = selectedSlotIndex === idx;
+          const slotCatch = Boolean(fData?.pendingCatches && fData.pendingCatches.length > 0);
+          const inWater = Boolean(fData?.isCast && !slotCatch);
+
+          // Horizontal bounds per tab based on artwork
+          const leftPercent = idx === 0 ? '9.4%' : idx === 1 ? '37.1%' : '63.5%';
+          const widthPercent = idx === 0 ? '27.3%' : '26.0%';
+
+          return (
+            <button
+              key={cfg.slotIndex}
+              onClick={() => setSelectedSlotIndex(idx)}
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                borderRadius: '18px',
-                border: '1px dashed rgba(255, 255, 255, 0.15)',
-                padding: '24px 16px',
-                textAlign: 'center',
+                position: 'absolute',
+                top: '23.3%',
+                left: leftPercent,
+                width: widthPercent,
+                height: '13.1%',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                zIndex: 4,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '12px',
+                justifyContent: 'center',
+                padding: '2px 4px',
+                outline: 'none',
               }}
             >
               <div
                 style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '50%',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '32px',
+                  fontSize: 'clamp(11px, 2.7vw, 15px)',
+                  fontWeight: 900,
+                  color: isSelected ? '#ffffff' : '#cbd5e1',
+                  textShadow: isSelected
+                    ? '0 0 10px rgba(56, 189, 248, 0.9), 0 2px 4px rgba(0, 0, 0, 0.9)'
+                    : '0 1px 4px rgba(0, 0, 0, 0.9)',
+                  lineHeight: 1.15,
+                  letterSpacing: '0.3px',
                 }}
               >
-                🔒
+                Фидер #{idx + 1}
               </div>
-
-              <div>
-                <div style={{ fontSize: '16px', fontWeight: 800, color: '#f8fafc' }}>
-                  {currentSlotConfig.name}
-                </div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
-                  Доступен для приобретения с {currentSlotConfig.levelReq}-го уровня
-                </div>
-              </div>
-
-              {playerLevel < currentSlotConfig.levelReq ? (
-                <div
-                  style={{
-                    padding: '8px 14px',
-                    borderRadius: '12px',
-                    background: 'rgba(239, 68, 68, 0.15)',
-                    color: '#f87171',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                  }}
-                >
-                  Ваш уровень: {playerLevel} (требуется {currentSlotConfig.levelReq})
-                </div>
-              ) : (
-                <button
-                  onClick={() => onBuyFeeder(selectedSlotIndex)}
-                  style={{
-                    padding: '12px 24px',
-                    borderRadius: '14px',
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    border: 'none',
-                    color: '#fff',
-                    fontSize: '14px',
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.35)',
-                  }}
-                >
-                  Купить фидер за {currentSlotConfig.cost.toLocaleString('ru-RU')}
-                  <CoinIcon size={18} />
-                </button>
-              )}
-            </div>
-          ) : (
-            /* Case 2: Slot is unlocked and active */
-            <>
-              {/* Feeder Strength / Durability Card */}
               <div
                 style={{
-                  background: 'linear-gradient(135deg, rgba(30, 58, 95, 0.4) 0%, rgba(18, 33, 53, 0.4) 100%)',
-                  borderRadius: '16px',
-                  border: '1px solid rgba(56, 189, 248, 0.2)',
-                  padding: '12px 14px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px',
+                  fontSize: 'clamp(7.5px, 1.8vw, 10px)',
+                  fontWeight: 800,
+                  color: isSelected
+                    ? slotCatch
+                      ? '#4ade80'
+                      : inWater
+                      ? '#38bdf8'
+                      : '#fef08a'
+                    : '#94a3b8',
+                  textShadow: '0 1px 3px rgba(0, 0, 0, 0.9)',
+                  marginTop: '1px',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '18px' }}>💪</span>
-                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#f8fafc' }}>
-                      Прочность фидера:
+                {!fData?.isUnlocked
+                  ? `🔒 ${cfg.levelReq} ур.`
+                  : slotCatch
+                  ? '🎉 УЛОВ!'
+                  : inWater
+                  ? '🌊 В воде'
+                  : 'Готов'}
+              </div>
+            </button>
+          );
+        })}
+
+        {/* 4. Center Inner Board Content */}
+        {!currentFeeder.isUnlocked ? (
+          /* CASE 1: Locked Slot (Lock is in card artwork) */
+          <>
+            {/* Text description under the lock */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '64.5%',
+                left: '15%',
+                right: '15%',
+                height: '13%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+                zIndex: 3,
+                pointerEvents: 'none',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 'clamp(11px, 2.6vw, 14px)',
+                  fontWeight: 900,
+                  color: '#f8fafc',
+                  textShadow: '0 2px 6px rgba(0, 0, 0, 0.9)',
+                }}
+              >
+                {currentSlotConfig.name}
+              </div>
+              <div
+                style={{
+                  fontSize: 'clamp(8.5px, 2vw, 11px)',
+                  color: playerLevel < currentSlotConfig.levelReq ? '#f87171' : '#cbd5e1',
+                  fontWeight: 700,
+                  textShadow: '0 1px 4px rgba(0, 0, 0, 0.9)',
+                  marginTop: '2px',
+                }}
+              >
+                {playerLevel < currentSlotConfig.levelReq
+                  ? `Требуется ${currentSlotConfig.levelReq} уровень (у вас ${playerLevel})`
+                  : `Доступен для покупки за ${currentSlotConfig.cost.toLocaleString('ru-RU')} монет`}
+              </div>
+            </div>
+
+            {/* Bottom Brown Button for Buying */}
+            <button
+              disabled={playerLevel < currentSlotConfig.levelReq || coins < currentSlotConfig.cost}
+              onClick={() => onBuyFeeder(selectedSlotIndex)}
+              style={{
+                position: 'absolute',
+                top: '78.8%',
+                left: '29.5%',
+                width: '41.5%',
+                height: '9.8%',
+                background: 'transparent',
+                border: 'none',
+                cursor:
+                  playerLevel < currentSlotConfig.levelReq || coins < currentSlotConfig.cost
+                    ? 'not-allowed'
+                    : 'pointer',
+                zIndex: 4,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                outline: 'none',
+                transition: 'transform 0.1s ease',
+                opacity: playerLevel < currentSlotConfig.levelReq ? 0.6 : 1,
+              }}
+              onMouseDown={(e) => {
+                if (playerLevel >= currentSlotConfig.levelReq) {
+                  e.currentTarget.style.transform = 'scale(0.96)';
+                }
+              }}
+              onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+              onTouchStart={(e) => {
+                if (playerLevel >= currentSlotConfig.levelReq) {
+                  e.currentTarget.style.transform = 'scale(0.96)';
+                }
+              }}
+              onTouchEnd={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+            >
+              <span
+                style={{
+                  fontSize: 'clamp(10.5px, 2.5vw, 14px)',
+                  fontWeight: 900,
+                  color: '#fff',
+                  textShadow: '0 2px 5px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.7)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  letterSpacing: '0.3px',
+                }}
+              >
+                {playerLevel < currentSlotConfig.levelReq ? (
+                  `🔒 С ${currentSlotConfig.levelReq} УРОВНЯ`
+                ) : (
+                  <>
+                    КУПИТЬ ЗА {currentSlotConfig.cost.toLocaleString('ru-RU')}
+                    <CoinIcon size={15} />
+                  </>
+                )}
+              </span>
+            </button>
+          </>
+        ) : (
+          /* CASE 2: Unlocked Slot (Clean board with controls) */
+          <>
+            <div
+              style={{
+                position: 'absolute',
+                top: '40.5%',
+                left: '12%',
+                right: '12%',
+                height: '37.5%',
+                overflowY: 'auto',
+                padding: '4px 6px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                zIndex: 3,
+                gap: '4px',
+              }}
+            >
+              {/* Row 1: Strength & Upgrade */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  background: 'rgba(15, 23, 42, 0.65)',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(56, 189, 248, 0.25)',
+                  padding: '4px 8px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ fontSize: 'clamp(12px, 2.8vw, 16px)' }}>💪</span>
+                  <div>
+                    <span
+                      style={{
+                        fontSize: 'clamp(9px, 2.2vw, 12px)',
+                        fontWeight: 800,
+                        color: '#f8fafc',
+                      }}
+                    >
+                      Прочность:{' '}
                     </span>
-                    <span style={{ fontSize: '14px', fontWeight: 900, color: '#38bdf8' }}>
+                    <span
+                      style={{
+                        fontSize: 'clamp(10px, 2.4vw, 13px)',
+                        fontWeight: 900,
+                        color: '#38bdf8',
+                      }}
+                    >
                       {strengthTier.strengthKg} кг
                     </span>
+                    <span style={{ fontSize: 'clamp(7.5px, 1.8vw, 9.5px)', color: '#94a3b8', marginLeft: '4px' }}>
+                      ({currentFeeder.strengthLevel}/9)
+                    </span>
                   </div>
-                  <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700 }}>
-                    Ур. {currentFeeder.strengthLevel}/9
-                  </span>
-                </div>
-
-                <div style={{ fontSize: '10.5px', color: '#94a3b8', lineHeight: 1.35 }}>
-                  🛡️ <strong style={{ color: '#cbd5e1' }}>Фидер не ломается!</strong> Суммарный вес улова не может превысить прочность — слишком крупная рыба сорвётся.
                 </div>
 
                 {nextStrengthTier ? (
@@ -347,9 +433,8 @@ export const FeederModal: React.FC<FeederModalProps> = ({
                     disabled={currentFeeder.isCast || coins < nextStrengthTier.cost}
                     onClick={() => onUpgradeStrength(selectedSlotIndex)}
                     style={{
-                      marginTop: '4px',
-                      padding: '8px 12px',
-                      borderRadius: '10px',
+                      padding: '3px 7px',
+                      borderRadius: '8px',
                       background: currentFeeder.isCast
                         ? 'rgba(255, 255, 255, 0.05)'
                         : coins >= nextStrengthTier.cost
@@ -361,89 +446,67 @@ export const FeederModal: React.FC<FeederModalProps> = ({
                         : coins >= nextStrengthTier.cost
                         ? '#fff'
                         : '#94a3b8',
-                      fontSize: '11px',
+                      fontSize: 'clamp(8px, 1.9vw, 10px)',
                       fontWeight: 800,
-                      cursor: currentFeeder.isCast || coins < nextStrengthTier.cost ? 'not-allowed' : 'pointer',
+                      cursor:
+                        currentFeeder.isCast || coins < nextStrengthTier.cost
+                          ? 'not-allowed'
+                          : 'pointer',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
+                      gap: '3px',
                     }}
                   >
-                    <span>Увеличить до {nextStrengthTier.strengthKg} кг:</span>
+                    <span>+{nextStrengthTier.strengthKg} кг:</span>
                     <span>{nextStrengthTier.cost.toLocaleString('ru-RU')}</span>
-                    <CoinIcon size={14} />
+                    <CoinIcon size={11} />
                   </button>
                 ) : (
-                  <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 800, textAlign: 'center' }}>
-                    ⭐ Максимальная прочность бланка!
-                  </div>
+                  <span style={{ fontSize: '9px', color: '#10b981', fontWeight: 800 }}>
+                    ⭐ Макс
+                  </span>
                 )}
               </div>
 
-              {/* Hooks & Baits Section */}
+              {/* Row 2: 3 Hooks & Baits */}
               <div
                 style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  borderRadius: '16px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  padding: '12px 14px',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '6px',
                 }}
               >
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '10px',
-                  }}
-                >
-                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#f8fafc' }}>
-                    Крючки и наживка ({baitedCount}/{currentFeeder.unlockedHooks}):
-                  </span>
-                  <span style={{ fontSize: '10px', color: '#94a3b8' }}>
-                    1 наживка = 1 рыба
-                  </span>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                  {/* Hook 1 */}
-                  {renderHookCard(0, true, 1)}
-
-                  {/* Hook 2 */}
-                  {renderHookCard(1, isHook2Unlocked, 2)}
-
-                  {/* Hook 3 */}
-                  {renderHookCard(2, isHook3Unlocked, 3)}
-                </div>
+                {renderHookCard(0, true, 1)}
+                {renderHookCard(1, isHook2Unlocked, 2)}
+                {renderHookCard(2, isHook3Unlocked, 3)}
               </div>
 
-              {/* Location Selector */}
-              {!currentFeeder.isCast && (
+              {/* Row 3: Location Selector */}
+              {!currentFeeder.isCast ? (
                 <div
                   style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    borderRadius: '16px',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    padding: '12px 14px',
                     display: 'flex',
-                    flexDirection: 'column',
-                    gap: '6px',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: 'rgba(15, 23, 42, 0.55)',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    padding: '3px 8px',
                   }}
                 >
-                  <div style={{ fontSize: '12px', fontWeight: 800, color: '#f8fafc' }}>
-                    Локация для заброса:
-                  </div>
+                  <span style={{ fontSize: 'clamp(8.5px, 2vw, 11px)', fontWeight: 800, color: '#f8fafc' }}>
+                    Водоём:
+                  </span>
                   <select
                     value={selectedLocationId}
                     onChange={(e) => setSelectedLocationId(e.target.value)}
                     style={{
-                      background: '#1a2e47',
+                      background: '#122538',
                       color: '#f8fafc',
-                      padding: '8px 10px',
-                      borderRadius: '10px',
+                      padding: '2px 6px',
+                      borderRadius: '6px',
                       border: '1px solid rgba(56, 189, 248, 0.3)',
-                      fontSize: '12px',
+                      fontSize: 'clamp(8px, 1.9vw, 10.5px)',
                       fontWeight: 700,
                       outline: 'none',
                       cursor: 'pointer',
@@ -456,115 +519,98 @@ export const FeederModal: React.FC<FeederModalProps> = ({
                     ))}
                   </select>
                 </div>
-              )}
-
-              {/* Action Buttons */}
-              {currentFeeder.pendingCatches && currentFeeder.pendingCatches.length > 0 ? (
-                <button
-                  onClick={() => onOpenCatchResult(selectedSlotIndex)}
-                  style={{
-                    padding: '14px',
-                    borderRadius: '16px',
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    border: 'none',
-                    color: '#fff',
-                    fontSize: '15px',
-                    fontWeight: 900,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    boxShadow: '0 4px 20px rgba(16, 185, 129, 0.4)',
-                    animation: 'pulse 2s infinite',
-                  }}
-                >
-                  🎉 Забрать оффлайн-улов ({currentFeeder.pendingCatches.length} шт.)
-                </button>
-              ) : currentFeeder.isCast ? (
+              ) : (
                 <div
                   style={{
-                    background: 'rgba(14, 165, 233, 0.12)',
-                    borderRadius: '16px',
-                    border: '1px solid rgba(14, 165, 233, 0.3)',
-                    padding: '14px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '10px',
+                    fontSize: 'clamp(8px, 1.9vw, 10px)',
+                    color: '#94a3b8',
                     textAlign: 'center',
+                    lineHeight: 1.2,
                   }}
                 >
-                  <div style={{ fontSize: '13px', fontWeight: 800, color: '#38bdf8' }}>
-                    🌊 Фидер заброшен в воду
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#94a3b8', lineHeight: 1.4 }}>
-                    Рыба клюнет, когда вы выйдете из игры минимум на <strong>{OFFLINE_MINUTES_REQUIRED} минут</strong>.
-                    Возвращайтесь позже за уловом!
-                  </div>
-
-                  <button
-                    onClick={() => onCancelCast(selectedSlotIndex)}
-                    style={{
-                      padding: '8px 12px',
-                      borderRadius: '10px',
-                      background: 'rgba(239, 68, 68, 0.15)',
-                      border: '1px solid rgba(239, 68, 68, 0.3)',
-                      color: '#f87171',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Смотать снасть (отменить заброс)
-                  </button>
+                  🛡️ Заброшен на оффлайн: рыба клюнет через {OFFLINE_MINUTES_REQUIRED} мин отсутствия
                 </div>
-              ) : (
-                <button
-                  disabled={baitedCount === 0}
-                  onClick={() => onCastFeeder(selectedSlotIndex, selectedLocationId)}
-                  style={{
-                    padding: '14px',
-                    borderRadius: '16px',
-                    background:
-                      baitedCount > 0
-                        ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-                        : 'rgba(255, 255, 255, 0.08)',
-                    border: 'none',
-                    color: baitedCount > 0 ? '#fff' : '#64748b',
-                    fontSize: '14px',
-                    fontWeight: 800,
-                    cursor: baitedCount > 0 ? 'pointer' : 'not-allowed',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    boxShadow: baitedCount > 0 ? '0 4px 20px rgba(16, 185, 129, 0.3)' : 'none',
-                  }}
-                >
-                  {baitedCount > 0
-                    ? `Забросить фидер (${baitedCount} крюч.)`
-                    : 'Насадите наживку на крючок'}
-                </button>
               )}
-            </>
-          )}
-        </div>
+            </div>
 
-        {/* Inline Bait Picker Modal */}
+            {/* Bottom Brown Button for Actions */}
+            <button
+              disabled={!hasCatch && !currentFeeder.isCast && baitedCount === 0}
+              onClick={() => {
+                if (hasCatch) {
+                  onOpenCatchResult(selectedSlotIndex);
+                } else if (currentFeeder.isCast) {
+                  onCancelCast(selectedSlotIndex);
+                } else if (baitedCount > 0) {
+                  onCastFeeder(selectedSlotIndex, selectedLocationId);
+                }
+              }}
+              style={{
+                position: 'absolute',
+                top: '78.8%',
+                left: '29.5%',
+                width: '41.5%',
+                height: '9.8%',
+                background: 'transparent',
+                border: 'none',
+                cursor:
+                  !hasCatch && !currentFeeder.isCast && baitedCount === 0
+                    ? 'not-allowed'
+                    : 'pointer',
+                zIndex: 4,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                outline: 'none',
+                transition: 'transform 0.1s ease',
+                opacity: !hasCatch && !currentFeeder.isCast && baitedCount === 0 ? 0.6 : 1,
+              }}
+              onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.96)')}
+              onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+              onTouchStart={(e) => (e.currentTarget.style.transform = 'scale(0.96)')}
+              onTouchEnd={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+            >
+              <span
+                style={{
+                  fontSize: 'clamp(9.5px, 2.3vw, 13px)',
+                  fontWeight: 900,
+                  color: '#fff',
+                  textShadow: '0 2px 5px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.7)',
+                  textAlign: 'center',
+                  lineHeight: 1.15,
+                  letterSpacing: '0.3px',
+                }}
+              >
+                {hasCatch
+                  ? `🎉 ЗАБРАТЬ УЛОВ (${currentFeeder.pendingCatches?.length})`
+                  : currentFeeder.isCast
+                  ? 'СМОТАТЬ СНАСТЬ ↩'
+                  : baitedCount > 0
+                  ? `ЗАБРОСИТЬ (${baitedCount} КРЮЧ.)`
+                  : 'НАСАДИТЕ НАЖИВКУ'}
+              </span>
+            </button>
+          </>
+        )}
+
+        {/* 5. Inline Bait Picker Modal Drawer */}
         {pickingBaitHookIndex !== null && (
           <div
             style={{
               position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(8, 16, 27, 0.94)',
-              backdropFilter: 'blur(6px)',
+              top: '20%',
+              left: '8%',
+              right: '8%',
+              bottom: '8%',
+              background: 'rgba(8, 16, 27, 0.96)',
+              borderRadius: '20px',
+              border: '2px solid rgba(56, 189, 248, 0.4)',
+              boxShadow: '0 10px 40px rgba(0, 0, 0, 0.9)',
               zIndex: 10,
               display: 'flex',
               flexDirection: 'column',
-              padding: '16px',
+              padding: '12px 14px',
+              backdropFilter: 'blur(8px)',
             }}
           >
             <div
@@ -572,11 +618,13 @@ export const FeederModal: React.FC<FeederModalProps> = ({
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: '12px',
+                marginBottom: '8px',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                paddingBottom: '6px',
               }}
             >
-              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#f8fafc' }}>
-                Выберите наживку на крючок #{pickingBaitHookIndex + 1}
+              <h3 style={{ margin: 0, fontSize: '13px', fontWeight: 900, color: '#f8fafc' }}>
+                Наживка на крючок #{pickingBaitHookIndex + 1}
               </h3>
               <button
                 onClick={() => setPickingBaitHookIndex(null)}
@@ -586,6 +634,7 @@ export const FeederModal: React.FC<FeederModalProps> = ({
                   color: '#94a3b8',
                   fontSize: '16px',
                   cursor: 'pointer',
+                  padding: '2px 6px',
                 }}
               >
                 ✕
@@ -598,7 +647,7 @@ export const FeederModal: React.FC<FeederModalProps> = ({
                 overflowY: 'auto',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '8px',
+                gap: '6px',
               }}
             >
               {/* Option to clear hook */}
@@ -608,13 +657,13 @@ export const FeederModal: React.FC<FeederModalProps> = ({
                   setPickingBaitHookIndex(null);
                 }}
                 style={{
-                  padding: '10px 14px',
-                  borderRadius: '12px',
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  border: '1px dashed rgba(239, 68, 68, 0.3)',
+                  padding: '6px 10px',
+                  borderRadius: '10px',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px dashed rgba(239, 68, 68, 0.35)',
                   color: '#f87171',
-                  fontSize: '12px',
-                  fontWeight: 700,
+                  fontSize: '11px',
+                  fontWeight: 800,
                   cursor: 'pointer',
                   textAlign: 'center',
                 }}
@@ -638,21 +687,21 @@ export const FeederModal: React.FC<FeederModalProps> = ({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      padding: '10px 12px',
-                      borderRadius: '12px',
+                      padding: '6px 10px',
+                      borderRadius: '10px',
                       background: hasEnough ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.02)',
                       border: '1px solid rgba(255, 255, 255, 0.08)',
-                      opacity: hasEnough ? 1 : 0.5,
+                      opacity: hasEnough ? 1 : 0.45,
                       cursor: hasEnough ? 'pointer' : 'not-allowed',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '20px' }}>{bait.icon}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '18px' }}>{bait.icon}</span>
                       <div>
-                        <div style={{ fontSize: '13px', fontWeight: 800, color: '#f8fafc' }}>
+                        <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#f8fafc' }}>
                           {bait.name}
                         </div>
-                        <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                        <div style={{ fontSize: '9.5px', color: '#94a3b8' }}>
                           В наличии: {count} шт.
                         </div>
                       </div>
@@ -661,15 +710,15 @@ export const FeederModal: React.FC<FeederModalProps> = ({
                     <button
                       disabled={!hasEnough}
                       style={{
-                        padding: '6px 12px',
-                        borderRadius: '8px',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
                         background: hasEnough
                           ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
                           : 'rgba(255, 255, 255, 0.05)',
                         border: 'none',
                         color: hasEnough ? '#fff' : '#64748b',
-                        fontSize: '11px',
-                        fontWeight: 700,
+                        fontSize: '10px',
+                        fontWeight: 800,
                       }}
                     >
                       {hasEnough ? 'Выбрать' : 'Нет'}
@@ -696,44 +745,44 @@ export const FeederModal: React.FC<FeederModalProps> = ({
           <div
             key={hookIdx}
             style={{
-              borderRadius: '12px',
+              borderRadius: '8px',
               border: '1px dashed rgba(255, 255, 255, 0.15)',
-              background: 'rgba(255, 255, 255, 0.02)',
-              padding: '10px 6px',
+              background: 'rgba(15, 23, 42, 0.5)',
+              padding: '4px 4px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px',
+              gap: '2px',
               textAlign: 'center',
             }}
           >
-            <div style={{ fontSize: '14px' }}>🔒</div>
-            <div style={{ fontSize: '10px', fontWeight: 700, color: '#94a3b8' }}>
+            <div style={{ fontSize: '11px' }}>🔒</div>
+            <div style={{ fontSize: '8.5px', fontWeight: 800, color: '#cbd5e1' }}>
               Крючок #2
             </div>
             <button
               disabled={!canAfford}
               onClick={() => onUnlockHook(selectedSlotIndex, 2)}
               style={{
-                padding: '4px 6px',
-                borderRadius: '8px',
+                padding: '2px 5px',
+                borderRadius: '6px',
                 background: canAfford
                   ? 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'
-                  : 'rgba(255, 255, 255, 0.05)',
+                  : 'rgba(255, 255, 255, 0.06)',
                 border: 'none',
                 color: canAfford ? '#fff' : '#64748b',
-                fontSize: '9.5px',
-                fontWeight: 800,
+                fontSize: '8px',
+                fontWeight: 900,
                 cursor: canAfford ? 'pointer' : 'not-allowed',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '2px',
               }}
             >
-              5 000 <CoinIcon size={11} />
+              5 000 <CoinIcon size={9} />
             </button>
-            <span style={{ fontSize: '8.5px', color: '#64748b' }}>с 5 ур.</span>
+            <span style={{ fontSize: '7px', color: '#64748b' }}>с 5 ур.</span>
           </div>
         );
       } else if (hookNumber === 3) {
@@ -742,44 +791,44 @@ export const FeederModal: React.FC<FeederModalProps> = ({
           <div
             key={hookIdx}
             style={{
-              borderRadius: '12px',
+              borderRadius: '8px',
               border: '1px dashed rgba(234, 179, 8, 0.3)',
-              background: 'rgba(234, 179, 8, 0.03)',
-              padding: '10px 6px',
+              background: 'rgba(15, 23, 42, 0.5)',
+              padding: '4px 4px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px',
+              gap: '2px',
               textAlign: 'center',
             }}
           >
-            <div style={{ fontSize: '14px' }}>💎</div>
-            <div style={{ fontSize: '10px', fontWeight: 700, color: '#fbbf24' }}>
+            <div style={{ fontSize: '11px' }}>💎</div>
+            <div style={{ fontSize: '8.5px', fontWeight: 800, color: '#fbbf24' }}>
               Крючок #3
             </div>
             <button
               disabled={!canAfford}
               onClick={() => onUnlockHook(selectedSlotIndex, 3)}
               style={{
-                padding: '4px 6px',
-                borderRadius: '8px',
+                padding: '2px 5px',
+                borderRadius: '6px',
                 background: canAfford
                   ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
-                  : 'rgba(255, 255, 255, 0.05)',
+                  : 'rgba(255, 255, 255, 0.06)',
                 border: 'none',
                 color: '#fff',
-                fontSize: '9.5px',
-                fontWeight: 800,
+                fontSize: '8px',
+                fontWeight: 900,
                 cursor: canAfford ? 'pointer' : 'not-allowed',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '2px',
               }}
             >
-              75 <GemIcon size={11} />
+              75 <GemIcon size={9} />
             </button>
-            <span style={{ fontSize: '8.5px', color: '#fbbf24' }}>Сразу</span>
+            <span style={{ fontSize: '7px', color: '#fbbf24' }}>Сразу</span>
           </div>
         );
       }
@@ -794,35 +843,36 @@ export const FeederModal: React.FC<FeederModalProps> = ({
           }
         }}
         style={{
-          borderRadius: '12px',
+          borderRadius: '8px',
           border: baitInfo
-            ? '1.5px solid rgba(16, 185, 129, 0.4)'
+            ? '1.5px solid rgba(16, 185, 129, 0.5)'
             : '1px dashed rgba(255, 255, 255, 0.2)',
           background: baitInfo
-            ? 'rgba(16, 185, 129, 0.08)'
-            : 'rgba(255, 255, 255, 0.03)',
-          padding: '10px 6px',
+            ? 'rgba(16, 185, 129, 0.12)'
+            : 'rgba(15, 23, 42, 0.5)',
+          padding: '4px 4px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: '4px',
+          justifyContent: 'center',
+          gap: '2px',
           cursor: isCast ? 'default' : 'pointer',
-          transition: 'all 0.15s ease',
+          transition: 'all 0.12s ease',
         }}
       >
-        <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 700 }}>
+        <span style={{ fontSize: '8px', color: '#cbd5e1', fontWeight: 800 }}>
           Крючок #{hookNumber}
         </span>
 
         {baitInfo ? (
           <>
-            <span style={{ fontSize: '22px' }}>{baitInfo.icon}</span>
+            <span style={{ fontSize: 'clamp(14px, 3.2vw, 18px)' }}>{baitInfo.icon}</span>
             <span
               style={{
-                fontSize: '10px',
-                fontWeight: 800,
+                fontSize: 'clamp(8px, 1.9vw, 9.5px)',
+                fontWeight: 900,
                 color: '#f8fafc',
-                maxWidth: '75px',
+                maxWidth: '65px',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
@@ -831,15 +881,15 @@ export const FeederModal: React.FC<FeederModalProps> = ({
               {baitInfo.name}
             </span>
             {!isCast && (
-              <span style={{ fontSize: '8.5px', color: '#38bdf8' }}>Сменить</span>
+              <span style={{ fontSize: '7.5px', color: '#38bdf8', fontWeight: 700 }}>Сменить</span>
             )}
           </>
         ) : (
           <>
-            <span style={{ fontSize: '20px', opacity: 0.5 }}>🪝</span>
-            <span style={{ fontSize: '9.5px', color: '#64748b' }}>Пусто</span>
+            <span style={{ fontSize: 'clamp(12px, 2.8vw, 16px)', opacity: 0.55 }}>🪝</span>
+            <span style={{ fontSize: '7.5px', color: '#94a3b8' }}>Пусто</span>
             {!isCast && (
-              <span style={{ fontSize: '8.5px', color: '#10b981', fontWeight: 700 }}>
+              <span style={{ fontSize: '7.5px', color: '#10b981', fontWeight: 800 }}>
                 + Насадить
               </span>
             )}
