@@ -221,6 +221,9 @@ interface HomeScreenProps {
   onAddTestGems?: (amount: number) => void;
   onRestartTutorial?: () => void;
   isTutorialWelcome?: boolean;
+  onOpenFeederModal?: () => void;
+  hasFeederCatchesReady?: boolean;
+  activeCastFeederCount?: number;
 }
 
 export const HomeScreen = ({
@@ -265,6 +268,9 @@ export const HomeScreen = ({
   onClaimDailyBonus,
   onRestartTutorial,
   isTutorialWelcome = false,
+  onOpenFeederModal,
+  hasFeederCatchesReady = false,
+  activeCastFeederCount = 0,
 }: HomeScreenProps) => {
   const currentRod = ROD_TIERS.find((r) => r.id === gear.equippedRodId) || ROD_TIERS[0];
   const rodLevel = gear.rodLevels[gear.equippedRodId] || 1;
@@ -719,6 +725,104 @@ export const HomeScreen = ({
               </div>
             );
           })()}
+
+          {/* 3. Донный фидер */}
+          <div
+            onClick={onOpenFeederModal}
+            style={{
+              width: '74px',
+              height: '74px',
+              borderRadius: '20px',
+              cursor: 'pointer',
+              position: 'relative',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.55)',
+              transition: 'transform 0.12s ease',
+              overflow: 'hidden',
+              background: '#152232',
+              border: hasFeederCatchesReady
+                ? '1.5px solid #10b981'
+                : '1.5px solid rgba(251, 191, 36, 0.4)',
+            }}
+          >
+            <img
+              src="/assets/ui/btn_feeder.png"
+              alt="Фидер"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
+              }}
+            />
+            {/* Динамический бейдж статуса фидера */}
+            {hasFeederCatchesReady ? (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '4px',
+                  right: '4px',
+                  padding: '2px 5px',
+                  borderRadius: '8px',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  color: '#fff',
+                  fontSize: '9px',
+                  fontWeight: 900,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1.5px solid rgba(255, 255, 255, 0.8)',
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.6)',
+                  zIndex: 2,
+                  animation: 'pulse 1.8s infinite',
+                }}
+              >
+                🎉 УЛОВ!
+              </span>
+            ) : activeCastFeederCount > 0 ? (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '4px',
+                  right: '4px',
+                  padding: '2px 5px',
+                  borderRadius: '8px',
+                  background: 'linear-gradient(135deg, #0284c7, #0369a1)',
+                  color: '#fff',
+                  fontSize: '9px',
+                  fontWeight: 900,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1.5px solid rgba(255, 255, 255, 0.6)',
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.6)',
+                  zIndex: 2,
+                }}
+              >
+                🌊 {activeCastFeederCount}
+              </span>
+            ) : level < 4 ? (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '4px',
+                  right: '4px',
+                  padding: '2px 5px',
+                  borderRadius: '8px',
+                  background: 'rgba(15, 23, 42, 0.85)',
+                  color: '#94a3b8',
+                  fontSize: '8.5px',
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  zIndex: 2,
+                }}
+              >
+                🔒 4 ур
+              </span>
+            ) : null}
+          </div>
         </div>
 
         {/* Правая колонка: Турниры, Погода, Лидерборд */}

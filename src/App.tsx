@@ -20,6 +20,9 @@ import { FISH_DATABASE } from './fishData';
 import { initUserAnalytics, trackGoal } from './utils/analytics';
 import { useTutorial } from './hooks/useTutorial';
 import { TutorialGuide } from './components/TutorialGuide';
+import { useFeederState } from './hooks/useFeederState';
+import { FeederModal } from './components/FeederModal';
+import { FeederWelcomeModal } from './components/FeederWelcomeModal';
 
 export default function App() {
   // Предварительная загрузка всех картинок рыб в кэш браузера при старте и инициализация аналитики
@@ -77,6 +80,30 @@ export default function App() {
     onAddGems: (amount) => player.setGems((prev) => prev + amount),
     playerLevel: player.level,
   });
+
+  // 5. Оффлайн-фидер
+  const feeder = useFeederState(
+    player.level,
+    player.coins,
+    player.gems,
+    player.spendCoins,
+    player.spendGems,
+    player.addCoins,
+    baits.consumeBait,
+    player.addCaughtFish,
+    player.journal,
+    triggerHaptic
+  );
+
+  const [isFeederModalOpen, setIsFeederModalOpen] = useState<boolean>(false);
+  const [isFeederWelcomeOpen, setIsFeederWelcomeOpen] = useState<boolean>(false);
+
+  // Автоматический показ окна приветствия с уловом при входе в игру
+  useEffect(() => {
+    if (feeder.hasCatchesReady) {
+      setIsFeederWelcomeOpen(true);
+    }
+  }, [feeder.hasCatchesReady]);
 
   // 5. Физика рыбалки и игровой цикл
   const fishing = useFishingSimulation({
@@ -307,6 +334,12 @@ export default function App() {
             canClaimBonus={dailyQuests.canClaimBonus}
             onClaimQuestReward={dailyQuests.claimQuestReward}
             onClaimDailyBonus={dailyQuests.claimDailyBonus}
+            onOpenFeederModal={() => {
+              setIsFeederModalOpen(true);
+              triggerHaptic('selection');
+            }}
+            hasFeederCatchesReady={feeder.hasCatchesReady}
+            activeCastFeederCount={feeder.activeCastCount}
             resetModalSignal={baseClickNonce}
             onSelectBait={baits.selectBait}
             onEquipRod={gear.equipRod}
@@ -495,6 +528,49 @@ export default function App() {
             }
           }}
           onSkip={tutorial.skipTutorial}
+        />
+      )}
+
+      {/* Модальное окно управления донными фидерами */}
+      {isFeederModalOpen && (
+        <FeederModal
+          feeders={feeder.feeders}
+          playerLevel={player.level}
+          coins={player.coins}
+          gems={player.gems}
+          baits={baits.baits}
+          currentLocation={currentLocation}
+          onBuyFeeder={feeder.buyFeeder}
+          onUpgradeStrength={feeder.upgradeStrength}
+          onUnlockHook={feeder.unlockHook}
+          onSetHookBait={feeder.setHookBait}
+          onCastFeeder={feeder.castFeeder}
+          onCancelCast={feeder.cancelCast}
+          onOpenCatchResult={() => {
+            setIsFeederModalOpen(false);
+            setIsFeederWelcomeOpen(true);
+          }}
+          onClose={() => setIsFeederModalOpen(false)}
+        />
+      )}
+
+      {/* Окно возвращения в игру с оффлайн-уловом */}
+      {isFeederWelcomeOpen && feeder.hasCatchesReady && (
+        <FeederWelcomeModal
+          readyFeeders={feeder.readyFeeders}
+          onCollect={(slotIndex, directSell) => {
+            feeder.collectCatches(slotIndex, directSell);
+            if (!feeder.hasCatchesReady) {
+              setIsFeederWelcomeOpen(false);
+            }
+          }}
+          onCollectAll={(directSell) => {
+            feeder.readyFeeders.forEach((f) => {
+              feeder.collectCatches(f.slotIndex, directSell);
+            });
+            setIsFeederWelcomeOpen(false);
+          }}
+          onClose={() => setIsFeederWelcomeOpen(false)}
         />
       )}
     </div>
