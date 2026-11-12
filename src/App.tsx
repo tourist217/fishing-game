@@ -24,6 +24,14 @@ import { useFeederState } from './hooks/useFeederState';
 import { FeederModal } from './components/FeederModal';
 import { FeederWelcomeModal } from './components/FeederWelcomeModal';
 import { handleCatchForTournament, syncInitialPlayerRecord } from './services/tournamentService';
+import {
+  loadCloudUserProfile,
+  scheduleDebouncedCloudSync,
+  flushImmediateCloudSync,
+  getTotalCaughtWeight,
+  type CloudUserProfile,
+} from './services/cloudSyncService';
+import { getPlayerIdentity } from './firebase';
 
 export default function App() {
   // Предварительная загрузка всех картинок рыб в кэш браузера при старте и инициализация аналитики
@@ -106,6 +114,99 @@ export default function App() {
       setIsFeederWelcomeOpen(true);
     }
   }, [feeder.hasCatchesReady]);
+
+  // 6. Облачная синхронизация профиля (ПК ⇄ Телефон через Firestore)
+  useEffect(() => {
+    let isMounted = true;
+    const initCloudProfile = async () => {
+      const cloud = await loadCloudUserProfile();
+      if (!isMounted || !cloud) return;
+
+      const localLvl = Number(localStorage.getItem('fg_level')) || 1;
+      const localCoins = Number(localStorage.getItem('fg_coins')) || 0;
+      const localUpdated = Number(localStorage.getItem('fg_profile_last_updated')) || 0;
+
+      // Если в облаке данные новее, или если на этом устройстве начальный уровень, а в облаке есть прогресс
+      const shouldHydrate =
+        cloud.updatedAt > localUpdated ||
+        (localLvl === 1 && localCoins === 0 && (cloud.level > 1 || cloud.coins > 0));
+
+      if (shouldHydrate) {
+        player.hydratePlayerProfile(cloud);
+        if (cloud.gear) gear.hydrateGearState(cloud.gear);
+        if (cloud.baits) baits.hydrateBaitState(cloud.baits, cloud.upgrades, cloud.selectedBaitId);
+        if (cloud.feeders) feeder.hydrateFeederState(cloud.feeders);
+      }
+    };
+
+    initCloudProfile();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Автоматическая отправка обновлений в облако с дебаунсом 3 сек
+  useEffect(() => {
+    const getFullProfile = (): CloudUserProfile => {
+      const identity = getPlayerIdentity();
+      const totalWeight = getTotalCaughtWeight();
+      return {
+        id: identity.id,
+        name: identity.name,
+        coins: player.coins,
+        exp: player.exp,
+        level: player.level,
+        gems: player.gems,
+        energy: player.energy,
+        lastEnergyTimestamp: Date.now(),
+        inventory: player.inventory,
+        journal: player.journal,
+        hasClaimedAllSpeciesReward: player.hasClaimedAllSpeciesReward,
+        gear: gear.gear,
+        baits: baits.baits,
+        upgrades: baits.upgrades,
+        selectedBaitId: baits.selectedBaitId,
+        feeders: feeder.feeders,
+        totalCaughtWeight: totalWeight,
+        trophiesCount: Object.values(player.journal || {}).filter((j) => j.hasTrophy).length,
+        updatedAt: Date.now(),
+      };
+    };
+
+    scheduleDebouncedCloudSync(getFullProfile);
+
+    const handleBeforeUnload = () => {
+      flushImmediateCloudSync(getFullProfile);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        flushImmediateCloudSync(getFullProfile);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [
+    player.coins,
+    player.exp,
+    player.level,
+    player.gems,
+    player.energy,
+    player.inventory,
+    player.journal,
+    player.hasClaimedAllSpeciesReward,
+    gear.gear,
+    baits.baits,
+    baits.upgrades,
+    baits.selectedBaitId,
+    feeder.feeders,
+  ]);
 
   // 5. Физика рыбалки и игровой цикл
   const fishing = useFishingSimulation({

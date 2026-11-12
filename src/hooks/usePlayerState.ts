@@ -558,6 +558,62 @@ export function usePlayerState() {
     return true;
   }, [hasClaimedAllSpeciesReward, addCoins, addGems]);
 
+  // Облачная гидратация профиля игрока (синхронизация ПК ⇄ Телефон)
+  const hydratePlayerProfile = useCallback(
+    (data: {
+      coins?: number;
+      exp?: number;
+      level?: number;
+      gems?: number;
+      energy?: number;
+      inventory?: CaughtFishItem[];
+      journal?: FishJournal;
+      hasClaimedAllSpeciesReward?: boolean;
+      dailyProvisions?: DailyProvisionsState;
+    }) => {
+      if (typeof data.coins === 'number') {
+        setCoins(data.coins);
+        localStorage.setItem('fg_coins', data.coins.toString());
+      }
+      if (typeof data.level === 'number' && data.level >= 1) {
+        setLevel(data.level);
+        localStorage.setItem('fg_level', data.level.toString());
+      }
+      if (typeof data.exp === 'number' && data.exp >= 0) {
+        setExp(data.exp);
+        localStorage.setItem('fg_exp', data.exp.toString());
+      }
+      if (typeof data.gems === 'number' && data.gems >= 0) {
+        setGems(data.gems);
+        localStorage.setItem('fg_gems', data.gems.toString());
+      }
+      if (typeof data.energy === 'number' && data.energy >= 0) {
+        setEnergy(data.energy);
+        localStorage.setItem('fg_energy', data.energy.toString());
+      }
+      if (Array.isArray(data.inventory)) {
+        setInventory(data.inventory);
+        localStorage.setItem('fg_inventory', JSON.stringify(data.inventory));
+      }
+      if (data.journal && typeof data.journal === 'object') {
+        setJournal(data.journal);
+        localStorage.setItem('fg_fish_journal', JSON.stringify(data.journal));
+      }
+      if (typeof data.hasClaimedAllSpeciesReward === 'boolean') {
+        setHasClaimedAllSpeciesReward(data.hasClaimedAllSpeciesReward);
+        localStorage.setItem(
+          'fg_all_species_claimed',
+          data.hasClaimedAllSpeciesReward ? 'true' : 'false'
+        );
+      }
+      if (data.dailyProvisions) {
+        setDailyProvisions(data.dailyProvisions);
+        localStorage.setItem('fg_daily_provisions', JSON.stringify(data.dailyProvisions));
+      }
+    },
+    []
+  );
+
   return {
     userName,
     coins,
@@ -590,5 +646,6 @@ export function usePlayerState() {
     spendCoins,
     addCoins,
     addExp,
+    hydratePlayerProfile,
   };
 }

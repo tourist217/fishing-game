@@ -14,6 +14,7 @@ import type { FishJournal } from '../hooks/usePlayerState';
 import { FishJournalModal } from './FishJournalModal';
 import { RangerQuestsModal } from './RangerQuestsModal';
 import { TournamentModal } from './TournamentModal';
+import { LeaderboardModal } from './LeaderboardModal';
 import { BaitSelectModal } from './BaitSelectModal';
 import { QuickEnergyModal } from './QuickEnergyModal';
 import type { DailyProvisionsState } from '../data/provisionsData';
@@ -1439,99 +1440,13 @@ export const HomeScreen = ({
         />
       )}
 
-      {/* Лидерборд */}
+      {/* Глобальный лидерборд и Зал славы рыбаков */}
       {activeModal === 'leaderboard' && (
-        <div
-          onClick={() => setActiveModal(null)}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(8px)',
-            zIndex: 50,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: '#0f172a',
-              borderRadius: '24px',
-              padding: '20px',
-              border: '1px solid rgba(251, 191, 36, 0.35)',
-              maxWidth: '320px',
-              width: '100%',
-              textAlign: 'center',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
-              <img
-                src="/assets/icons/leaderboard.png"
-                alt="Лидерборд"
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '16px',
-                  objectFit: 'cover',
-                  border: '1.5px solid rgba(251, 191, 36, 0.4)',
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.5)',
-                }}
-              />
-            </div>
-            <div style={{ fontSize: '17px', fontWeight: 800, color: '#fbbf24', marginBottom: '6px' }}>
-              Клуб и Лидерборд
-            </div>
-            <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.5, margin: '0 0 14px 0' }}>
-              Соревнуйтесь с другими рыболовами за самые крупные трофеи недели и сезонные призы!
-            </p>
-
-            <div
-              style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                borderRadius: '14px',
-                padding: '10px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-                textAlign: 'left',
-                fontSize: '11px',
-                marginBottom: '16px',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#fef08a' }}>
-                <span>🥇 1. Старый_Окунь</span>
-                <span style={{ fontWeight: 800 }}>Карп 8.4 кг</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#e2e8f0' }}>
-                <span>🥈 2. {userName || 'Рыболов'} (Вы)</span>
-                <span style={{ fontWeight: 800 }}>Ур. {level}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8' }}>
-                <span>🥉 3. Клёвый_Парень</span>
-                <span style={{ fontWeight: 800 }}>Щука 4.2 кг</span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setActiveModal(null)}
-              style={{
-                width: '100%',
-                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                border: 'none',
-                color: '#fff',
-                fontWeight: 800,
-                padding: '11px',
-                borderRadius: '12px',
-                cursor: 'pointer',
-              }}
-            >
-              Закрыть
-            </button>
-          </div>
-        </div>
+        <LeaderboardModal
+          playerLevel={level}
+          playerExp={exp}
+          onClose={() => setActiveModal(null)}
+        />
       )}
 
       {/* Достижения */}

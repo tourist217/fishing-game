@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   ROD_TIERS,
   REEL_TIERS,
@@ -256,6 +256,14 @@ export function useGearState(
     });
   };
 
+  // Облачная гидратация снаряжения (синхронизация ПК ⇄ Телефон)
+  const hydrateGearState = useCallback((gearData: PlayerGearState) => {
+    if (gearData && typeof gearData === 'object' && gearData.equippedRodId) {
+      setGear(gearData);
+      localStorage.setItem('fg_gear', JSON.stringify(gearData));
+    }
+  }, []);
+
   return {
     gear,
     currentRod,
@@ -276,5 +284,6 @@ export function useGearState(
     equipReel,
     buyLine,
     equipLine,
+    hydrateGearState,
   };
 }

@@ -565,6 +565,14 @@ export function useFeederState(
   // Active cast feeders count
   const activeCastCount = feeders.filter((f) => f.isCast && !f.pendingCatches).length;
 
+  // Облачная гидратация фидеров (синхронизация ПК ⇄ Телефон)
+  const hydrateFeederState = useCallback((feedersData: FeederSlotData[]) => {
+    if (Array.isArray(feedersData) && feedersData.length === 3) {
+      setFeeders(feedersData);
+      localStorage.setItem('fg_feeders_data', JSON.stringify(feedersData));
+    }
+  }, []);
+
   return {
     feeders,
     FEEDER_SLOTS_CONFIG,
@@ -581,5 +589,6 @@ export function useFeederState(
     readyFeeders,
     activeCastCount,
     checkCatches,
+    hydrateFeederState,
   };
 }

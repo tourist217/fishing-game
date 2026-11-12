@@ -315,6 +315,25 @@ export function useBaitState(
     [coins, spendCoins, triggerHaptic]
   );
 
+  // Облачная гидратация наживок и улучшений (синхронизация ПК ⇄ Телефон)
+  const hydrateBaitState = useCallback(
+    (baitsData: Record<string, number>, upgradesData?: UpgradesState, selBaitId?: string) => {
+      if (baitsData && typeof baitsData === 'object') {
+        setBaits(baitsData);
+        localStorage.setItem('fg_baits', JSON.stringify(baitsData));
+      }
+      if (upgradesData && typeof upgradesData === 'object') {
+        setUpgrades(upgradesData);
+        localStorage.setItem('fg_upgrades', JSON.stringify(upgradesData));
+      }
+      if (selBaitId) {
+        setSelectedBaitId(selBaitId);
+        localStorage.setItem('fg_selected_bait', selBaitId);
+      }
+    },
+    []
+  );
+
   return {
     baits,
     selectedBaitId,
@@ -326,5 +345,6 @@ export function useBaitState(
     currentBaitCapacity,
     buyUpgrade,
     secondsToNextWorm,
+    hydrateBaitState,
   };
 }
