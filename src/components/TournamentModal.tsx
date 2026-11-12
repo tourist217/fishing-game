@@ -238,12 +238,7 @@ export const TournamentModal: React.FC<TournamentModalProps> = ({ onClose }) => 
             <span style={{ fontSize: '20px' }}>🎣</span>
             <div>
               <div style={{ fontSize: '13px', fontWeight: 800, color: '#f8fafc' }}>
-                {identity.name}{' '}
-                {identity.username && (
-                  <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>
-                    {identity.username}
-                  </span>
-                )}
+                {identity.name}
               </div>
               <div style={{ fontSize: '10.5px', color: '#94a3b8' }}>
                 Ваш рекорд: <strong style={{ color: '#38bdf8' }}>{localStats.bestCatchWeight > 0 ? `${localStats.bestCatchWeight.toFixed(3)} кг` : 'пока нет'}</strong>
@@ -368,7 +363,7 @@ export const TournamentModal: React.FC<TournamentModalProps> = ({ onClose }) => 
                           color: isCurrentPlayer ? '#fbbf24' : '#f8fafc',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '4px',
+                          gap: '6px',
                         }}
                       >
                         {item.name}
@@ -378,11 +373,6 @@ export const TournamentModal: React.FC<TournamentModalProps> = ({ onClose }) => 
                           </span>
                         )}
                       </div>
-                      {item.username && (
-                        <div style={{ fontSize: '9.5px', color: '#64748b' }}>
-                          {item.username}
-                        </div>
-                      )}
                     </div>
                   </div>
 

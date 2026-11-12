@@ -86,7 +86,6 @@ export async function handleCatchForTournament(
 
       const payload = {
         name: identity.name,
-        username: identity.username,
         bestCatchWeight: effectiveBest,
         totalScore: newTotal,
         updatedAt: Date.now(),
