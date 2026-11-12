@@ -176,29 +176,48 @@ export const TournamentModal: React.FC<TournamentModalProps> = ({ onClose }) => 
           style={{
             display: 'flex',
             justifyContent: 'space-around',
-            padding: '8px 12px',
-            background: 'rgba(251, 191, 36, 0.04)',
+            padding: '8px 10px',
+            background: 'rgba(251, 191, 36, 0.05)',
             borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-            fontSize: '10.5px',
+            fontSize: '11px',
           }}
         >
           <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', gap: '3px' }}>
             <span style={{ color: '#fbbf24', fontWeight: 800 }}>🥇 1:</span>
-            <span style={{ color: '#f8fafc', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-              50k <CoinIcon size={11} /> + 150 <GemIcon size={11} />
+            <span style={{ color: '#f8fafc', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+              3 000 <CoinIcon size={12} /> + 5 <GemIcon size={12} />
             </span>
           </div>
           <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', gap: '3px' }}>
             <span style={{ color: '#cbd5e1', fontWeight: 800 }}>🥈 2:</span>
-            <span style={{ color: '#f8fafc', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-              25k <CoinIcon size={11} /> + 75 <GemIcon size={11} />
+            <span style={{ color: '#f8fafc', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+              2 000 <CoinIcon size={12} />
             </span>
           </div>
           <div style={{ textAlign: 'center', display: 'flex', alignItems: 'center', gap: '3px' }}>
             <span style={{ color: '#b45309', fontWeight: 800 }}>🥉 3:</span>
-            <span style={{ color: '#f8fafc', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-              10k <CoinIcon size={11} /> + 35 <GemIcon size={11} />
+            <span style={{ color: '#f8fafc', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+              1 000 <CoinIcon size={12} />
             </span>
+          </div>
+        </div>
+
+        {/* Tournament Rules / Discipline Hint */}
+        <div
+          style={{
+            margin: '8px 14px 2px',
+            padding: '8px 12px',
+            borderRadius: '12px',
+            background: 'rgba(56, 189, 248, 0.08)',
+            border: '1px solid rgba(56, 189, 248, 0.25)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '8px',
+          }}
+        >
+          <span style={{ fontSize: '15px', lineHeight: 1 }}>💡</span>
+          <div style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: 1.4, textAlign: 'left' }}>
+            <strong style={{ color: '#38bdf8' }}>Охота за гигантом:</strong> в зачёт принимаются <strong style={{ color: '#fef08a' }}>все виды рыб</strong> на любых локациях. Рекордом становится ваш самый крупный пойманный экземпляр!
           </div>
         </div>
 
@@ -394,8 +413,8 @@ export const TournamentModal: React.FC<TournamentModalProps> = ({ onClose }) => 
             color: '#94a3b8',
           }}
         >
-          <span>Зачёт: по весу 1 рыбы</span>
-          <span style={{ color: '#10b981', fontWeight: 700 }}>🟢 Онлайн Firebase</span>
+          <span>Зачёт: по весу 1 самой крупной рыбы</span>
+          <span style={{ color: '#fbbf24', fontWeight: 700 }}>🏆 Награждение в воскресенье</span>
         </div>
       </div>
     </div>
