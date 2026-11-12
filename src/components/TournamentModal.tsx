@@ -55,7 +55,42 @@ export const TournamentModal: React.FC<TournamentModalProps> = ({ onClose }) => 
     else setLoading(true);
 
     const data = await fetchLeaderboard();
-    setLeaderboard(data);
+    const stats = getLocalTournamentStats();
+
+    // Смержим локальный рекорд игрока
+    let hasCurrent = false;
+    const merged = data.map((item) => {
+      if (item.id === identity.id) {
+        hasCurrent = true;
+        return {
+          ...item,
+          name: identity.name,
+          bestCatchWeight: Math.max(item.bestCatchWeight, stats.bestCatchWeight),
+          totalScore: Math.max(item.totalScore, stats.totalScore),
+        };
+      }
+      return item;
+    });
+
+    if (!hasCurrent && (stats.bestCatchWeight > 0 || stats.totalScore > 0)) {
+      merged.push({
+        id: identity.id,
+        name: identity.name,
+        username: identity.username || '',
+        bestCatchWeight: stats.bestCatchWeight,
+        totalScore: stats.totalScore,
+        updatedAt: Date.now(),
+        rank: 1,
+      });
+    }
+
+    merged.sort((a, b) => b.bestCatchWeight - a.bestCatchWeight);
+    const top20 = merged.slice(0, 20).map((item, idx) => ({
+      ...item,
+      rank: idx + 1,
+    }));
+
+    setLeaderboard(top20);
 
     setLoading(false);
     setRefreshing(false);

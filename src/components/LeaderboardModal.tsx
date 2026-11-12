@@ -5,7 +5,7 @@ import {
   type LeaderboardSortBy,
 } from '../services/leaderboardService';
 import { getPlayerIdentity } from '../firebase';
-import { getTotalCaughtWeight } from '../services/cloudSyncService';
+import { getTotalCaughtWeight, flushImmediateCloudSync } from '../services/cloudSyncService';
 
 interface LeaderboardModalProps {
   playerLevel: number;
@@ -30,9 +30,62 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
     if (isManual) setRefreshing(true);
     else setLoading(true);
 
-    const data = await fetchGlobalLeaderboard(type);
-    setEntries(data);
+    try {
+      // Гарантируем, что перед запросом свежего глобального лидерборда
+      // все наши локальные изменения (выловленный вес, уровень, опыт) уже сохранены в Firestore
+      await flushImmediateCloudSync();
+    } catch (e) {
+      console.warn('Leaderboard pre-fetch sync failed:', e);
+    }
 
+    const data = await fetchGlobalLeaderboard(type);
+    const currentWeight = getTotalCaughtWeight();
+
+    // Смержим локальные актуальные данные текущего игрока,
+    // чтобы исключить даже малейшую задержку репликации базы данных
+    let hasCurrent = false;
+    const merged = data.map((item) => {
+      if (item.id === identity.id) {
+        hasCurrent = true;
+        return {
+          ...item,
+          name: identity.name,
+          level: Math.max(item.level, playerLevel),
+          exp: Math.max(item.exp, playerExp),
+          totalCaughtWeight: Math.max(item.totalCaughtWeight, currentWeight),
+        };
+      }
+      return item;
+    });
+
+    if (!hasCurrent && (playerLevel > 1 || currentWeight > 0)) {
+      merged.push({
+        id: identity.id,
+        name: identity.name,
+        level: playerLevel,
+        exp: playerExp,
+        totalCaughtWeight: currentWeight,
+        trophiesCount: 0,
+        rank: 1,
+      });
+    }
+
+    if (type === 'level') {
+      merged.sort(
+        (a, b) => b.level - a.level || b.exp - a.exp || b.totalCaughtWeight - a.totalCaughtWeight
+      );
+    } else {
+      merged.sort(
+        (a, b) => b.totalCaughtWeight - a.totalCaughtWeight || b.level - a.level
+      );
+    }
+
+    const top20 = merged.slice(0, 20).map((item, idx) => ({
+      ...item,
+      rank: idx + 1,
+    }));
+
+    setEntries(top20);
     setLoading(false);
     setRefreshing(false);
   };

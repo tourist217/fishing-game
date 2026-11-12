@@ -32,6 +32,7 @@ const STORAGE_KEY_PROFILE_UPDATED = 'fg_profile_last_updated';
 const STORAGE_KEY_TOTAL_WEIGHT = 'fg_tournament_total_score';
 
 let syncTimeout: ReturnType<typeof setTimeout> | null = null;
+let latestProfileGetter: (() => CloudUserProfile) | null = null;
 
 /**
  * Загрузить облачный профиль игрока из Firestore
@@ -80,6 +81,7 @@ export async function saveCloudUserProfile(profile: CloudUserProfile): Promise<v
  * Исключает спам запросов к Firestore при частых действиях
  */
 export function scheduleDebouncedCloudSync(getProfile: () => CloudUserProfile): void {
+  latestProfileGetter = getProfile;
   if (syncTimeout) {
     clearTimeout(syncTimeout);
   }
@@ -91,15 +93,17 @@ export function scheduleDebouncedCloudSync(getProfile: () => CloudUserProfile): 
 }
 
 /**
- * Мгновенное сохранение (при закрытии приложения или сворачивании)
+ * Мгновенное сохранение (при закрытии приложения или перед открытием лидерборда)
  */
-export function flushImmediateCloudSync(getProfile: () => CloudUserProfile): void {
+export async function flushImmediateCloudSync(getProfile?: () => CloudUserProfile): Promise<void> {
   if (syncTimeout) {
     clearTimeout(syncTimeout);
     syncTimeout = null;
   }
-  const profile = getProfile();
-  saveCloudUserProfile(profile);
+  const getter = getProfile || latestProfileGetter;
+  if (getter) {
+    await saveCloudUserProfile(getter());
+  }
 }
 
 /**
