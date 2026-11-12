@@ -23,11 +23,13 @@ import { TutorialGuide } from './components/TutorialGuide';
 import { useFeederState } from './hooks/useFeederState';
 import { FeederModal } from './components/FeederModal';
 import { FeederWelcomeModal } from './components/FeederWelcomeModal';
+import { handleCatchForTournament, syncInitialPlayerRecord } from './services/tournamentService';
 
 export default function App() {
   // Предварительная загрузка всех картинок рыб в кэш браузера при старте и инициализация аналитики
   useEffect(() => {
     initUserAnalytics();
+    syncInitialPlayerRecord();
     FISH_DATABASE.forEach((fish) => {
       if (fish.image) {
         const img = new Image();
@@ -119,6 +121,7 @@ export default function App() {
     onFishCaught: (caughtItem, exp) => {
       player.addCaughtFish(caughtItem, exp);
       dailyQuests.handleFishCaught(caughtItem, baits.selectedBaitId);
+      handleCatchForTournament(caughtItem.weight, caughtItem.fish.name);
       trackGoal('fish_caught', {
         fish: caughtItem.fish.name,
         weight: caughtItem.weight,

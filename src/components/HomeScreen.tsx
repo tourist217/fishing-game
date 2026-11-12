@@ -13,6 +13,7 @@ import { APP_VERSION } from '../version';
 import type { FishJournal } from '../hooks/usePlayerState';
 import { FishJournalModal } from './FishJournalModal';
 import { RangerQuestsModal } from './RangerQuestsModal';
+import { TournamentModal } from './TournamentModal';
 import { BaitSelectModal } from './BaitSelectModal';
 import { QuickEnergyModal } from './QuickEnergyModal';
 import type { DailyProvisionsState } from '../data/provisionsData';
@@ -1639,77 +1640,9 @@ export const HomeScreen = ({
         />
       )}
 
-      {/* Ежедневный турнир */}
+      {/* Еженедельный турнир (Firestore Leaderboard) */}
       {activeModal === 'tournament' && (
-        <div
-          onClick={() => setActiveModal(null)}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.72)',
-            backdropFilter: 'blur(8px)',
-            zIndex: 50,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: '#0f172a',
-              borderRadius: '24px',
-              padding: '20px',
-              border: '1px solid rgba(251, 191, 36, 0.3)',
-              maxWidth: '320px',
-              textAlign: 'center',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
-              <img
-                src="/assets/icons/tournaments.png"
-                alt="Турниры"
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '16px',
-                  objectFit: 'cover',
-                  border: '1.5px solid rgba(251, 191, 36, 0.4)',
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.5)',
-                }}
-              />
-            </div>
-            <div style={{ fontSize: '16px', fontWeight: 800, color: '#fbbf24', marginBottom: '6px' }}>
-              Ежедневный турнир
-            </div>
-            <p style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: 1.5, margin: 0 }}>
-              Турнир: <strong>«Золотой карась»</strong>.<br />
-              Поймайте самого крупного карася за день.
-              <br />
-              Призовой фонд: <strong><CoinIcon size={16} /> 5,000 монет</strong>!
-            </p>
-            <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '8px' }}>
-              До окончания: <strong>14 часов 32 минуты</strong>
-            </div>
-            <button
-              onClick={() => setActiveModal(null)}
-              style={{
-                marginTop: '16px',
-                width: '100%',
-                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                border: 'none',
-                color: '#fff',
-                fontWeight: 700,
-                padding: '10px',
-                borderRadius: '12px',
-                cursor: 'pointer',
-              }}
-            >
-              Отлично 🎣
-            </button>
-          </div>
-        </div>
+        <TournamentModal onClose={() => setActiveModal(null)} />
       )}
 
       {/* Погода */}

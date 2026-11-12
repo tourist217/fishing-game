@@ -3,6 +3,7 @@ import { getRandomFish, type GeneratedFishResult } from '../fishData';
 import { getCurrentWeather } from '../utils/weatherTime';
 import type { FishJournal } from './usePlayerState';
 import type { CaughtFishItem } from '../components/InventoryScreen';
+import { handleCatchForTournament } from '../services/tournamentService';
 
 export const OFFLINE_MINUTES_REQUIRED = 30;
 export const OFFLINE_MS_REQUIRED = OFFLINE_MINUTES_REQUIRED * 60 * 1000;
@@ -512,6 +513,7 @@ export function useFeederState(
           totalCoins += item.fish.price;
           totalExp += item.fish.exp;
           fishCount++;
+          handleCatchForTournament(item.fish.weight, item.fish.fish.name);
 
           if (!directSell && addCaughtFish) {
             const caughtItem: CaughtFishItem = {

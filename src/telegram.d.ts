@@ -18,7 +18,16 @@ interface TelegramWebApp {
   safeAreaInset?: { top: number; bottom: number; left: number; right: number };
   onEvent?: (eventType: string, eventHandler: () => void) => void;
   offEvent?: (eventType: string, eventHandler: () => void) => void;
-  initDataUnsafe?: { user?: { first_name?: string } };
+  initDataUnsafe?: {
+    user?: {
+      id?: number | string;
+      first_name?: string;
+      last_name?: string;
+      username?: string;
+      language_code?: string;
+      photo_url?: string;
+    };
+  };
   openTelegramLink?: (url: string) => void;
   openLink?: (url: string, options?: { try_instant_view?: boolean }) => void;
   shareToStory?: (
