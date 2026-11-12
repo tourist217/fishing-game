@@ -41,6 +41,7 @@ interface FishingScreenProps {
   energy?: number;
   maxEnergy?: number;
   secondsToNextEnergy?: number;
+  secondsToNextWorm?: number;
   gems?: number;
   dailyProvisions?: DailyProvisionsState;
   onBuyProvision?: (id: 'tea' | 'sandwich') => boolean;
@@ -71,6 +72,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
   energy = 100,
   maxEnergy = 100,
   secondsToNextEnergy = 0,
+  secondsToNextWorm = 0,
   dailyProvisions,
   onBuyProvision,
   onBuyEnergyWithGems,
@@ -98,6 +100,9 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
   const isKeepnetFull = inventoryCount >= maxKeepnetCapacity;
   const hasEnoughEnergy = energy >= 5;
   const canCast = currentBaitCount > 0 && hasLineOnRod && !isKeepnetFull && hasEnoughEnergy;
+  const isNoBait = currentBaitCount <= 0;
+  const canGoToShopForBait = isNoBait && coins >= 6 && Boolean(onOpenShop);
+  const isWormRegenerating = isNoBait && selectedBaitId === 'worm' && secondsToNextWorm > 0;
   const pullButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const handlePullStart = (e?: React.SyntheticEvent) => {
@@ -562,9 +567,11 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                   ? onOpenKeepnet
                   : !hasLineOnRod
                   ? onOpenShop
+                  : canGoToShopForBait
+                  ? onOpenShop
                   : undefined
               }
-              disabled={hasLineOnRod && !isKeepnetFull && hasEnoughEnergy}
+              disabled={hasLineOnRod && !isKeepnetFull && hasEnoughEnergy && !canGoToShopForBait}
               style={{
                 height: '52px',
                 background: !hasEnoughEnergy
@@ -573,6 +580,8 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                   ? 'linear-gradient(180deg, #f59e0b 0%, #d97706 50%, #b45309 100%)'
                   : !hasLineOnRod
                   ? 'linear-gradient(180deg, #ef4444 0%, #dc2626 50%, #991b1b 100%)'
+                  : canGoToShopForBait
+                  ? 'linear-gradient(180deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%)'
                   : 'rgba(255, 255, 255, 0.08)',
                 border: !hasEnoughEnergy
                   ? '2px solid #fbbf24'
@@ -580,16 +589,20 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                   ? '2px solid #fde047'
                   : !hasLineOnRod
                   ? '2px solid #fca5a5'
+                  : canGoToShopForBait
+                  ? '2px solid #60a5fa'
                   : '1px solid rgba(255, 255, 255, 0.1)',
                 borderRadius: '24px',
-                color: !hasEnoughEnergy || isKeepnetFull || !hasLineOnRod ? '#ffffff' : '#64748b',
+                color: !hasEnoughEnergy || isKeepnetFull || !hasLineOnRod || canGoToShopForBait ? '#ffffff' : '#64748b',
                 fontSize: '15px',
                 fontWeight: 900,
-                cursor: !hasEnoughEnergy || isKeepnetFull || !hasLineOnRod ? 'pointer' : 'not-allowed',
+                cursor: !hasEnoughEnergy || isKeepnetFull || !hasLineOnRod || canGoToShopForBait ? 'pointer' : 'not-allowed',
                 boxShadow: !hasEnoughEnergy
                   ? '0 0 24px rgba(251, 191, 36, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4)'
                   : isKeepnetFull
                   ? '0 0 24px rgba(245, 158, 11, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4)'
+                  : canGoToShopForBait
+                  ? '0 0 24px rgba(59, 130, 246, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4)'
                   : 'none',
                 letterSpacing: '0.5px',
               }}
@@ -600,6 +613,10 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                 ? 'САДОК ПОЛОН (ПРОДАТЬ В САДКЕ 🧺)'
                 : !hasLineOnRod
                 ? 'НЕТ ЛЕСКИ (В МАГАЗИН) 🛒'
+                : isWormRegenerating
+                ? `⏳ ЧЕРВЬ ЧЕРЕЗ ${Math.floor(secondsToNextWorm / 60)}:${(secondsToNextWorm % 60).toString().padStart(2, '0')}`
+                : canGoToShopForBait
+                ? 'КУПИТЬ НАЖИВКУ (В МАГАЗИН) 🛒'
                 : 'НЕТ НАЖИВКИ 🚫'}
             </button>
           )

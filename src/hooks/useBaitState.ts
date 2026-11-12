@@ -11,7 +11,7 @@ export interface BaitItem {
 }
 
 export const AVAILABLE_BAITS: BaitItem[] = [
-  { id: 'worm', name: 'Червь', price: 2, levelReq: 1, icon: '🪱', image: '/assets/baits/worm.png', description: 'Универсальная насадка для карася, плотвы, некрупного окуня' },
+  { id: 'worm', name: 'Червь', price: 2, levelReq: 1, icon: '🪱', image: '/assets/baits/worm.png', description: 'Универсальная насадка. При балансе менее 6 монет восстанавливается до 3 шт.' },
   { id: 'bread', name: 'Хлеб', price: 1, levelReq: 1, icon: '🍞', image: '/assets/baits/bread.png', description: 'Отлично подходит для некрупной белой рыбы' },
   { id: 'dough', name: 'Тесто', price: 2, levelReq: 1, icon: '🥟', image: '/assets/baits/dough.png', description: 'Любимое лакомство карася и плотвы' },
   { id: 'maggot', name: 'Опарыш', price: 3, levelReq: 3, icon: '🐛', image: '/assets/baits/maggot.png', description: 'Бойкая личинка для плотвы, краснопёрки и подлещика' },
@@ -47,8 +47,10 @@ export interface UpgradesState {
 }
 
 // Интервал авто-восстановления червей: 1 червь каждые 2 минуты до лимита 3 шт.
+// Восстанавливаются только как защита от банкротства (если монет < 6, т.е. не хватает на пачку)
 export const WORM_REGEN_INTERVAL_MS = 120000; // 2 минуты (120 000 мс)
 export const MAX_AUTO_REGEN_WORMS = 3;
+export const WORM_REGEN_MAX_COINS = 6; // Порог монет для страховки от банкротства
 
 export function useBaitState(
   coins?: number,
@@ -88,9 +90,11 @@ export function useBaitState(
       // fallback
     }
 
-    // Офлайн-восстановление червей, если их меньше 3
+    // Офлайн-восстановление червей: только если их меньше 3 И монет меньше 6 (не хватает на пачку)
     const currentWorms = initialBaits.worm || 0;
-    if (currentWorms < MAX_AUTO_REGEN_WORMS) {
+    const currentCoins = typeof coins === 'number' ? coins : Number(localStorage.getItem('fg_coins')) || 0;
+
+    if (currentWorms < MAX_AUTO_REGEN_WORMS && currentCoins < WORM_REGEN_MAX_COINS) {
       const tsVal = localStorage.getItem('fg_worm_timestamp');
       const lastTs = Number(tsVal);
       if (!isNaN(lastTs) && lastTs > 0) {
@@ -148,9 +152,17 @@ export function useBaitState(
     localStorage.setItem('fg_upgrades', JSON.stringify(upgrades));
   }, [upgrades]);
 
-  // Таймер регенерации червей в реальном времени (до 3 шт. каждые 2 минуты)
+  // Таймер регенерации червей в реальном времени (до 3 шт. каждые 2 минуты, если монет < 6)
   useEffect(() => {
     const checkWormRegen = () => {
+      const currentCoins = typeof coins === 'number' ? coins : Number(localStorage.getItem('fg_coins')) || 0;
+
+      // Если у игрока достаточно монет (>= 6) на покупку пачки, авто-восстановление отключено
+      if (currentCoins >= WORM_REGEN_MAX_COINS) {
+        setSecondsToNextWorm(0);
+        return;
+      }
+
       setBaits((prev) => {
         const currentWorms = prev.worm || 0;
         const now = Date.now();
@@ -193,7 +205,7 @@ export function useBaitState(
     checkWormRegen();
     const timer = setInterval(checkWormRegen, 1000);
     return () => clearInterval(timer);
-  }, [lastWormTimestamp]);
+  }, [lastWormTimestamp, coins]);
 
   // Вместимость одной банки (3 шт. на старте, до 15 шт. на макс. уровне)
   const currentBaitCapacity = getBaitCapacity(upgrades.baitCapacityLevel);
@@ -271,14 +283,17 @@ export function useBaitState(
       localStorage.setItem('fg_baits', JSON.stringify(nextBaits));
 
       if (baitId === 'worm' && nextBaits.worm < MAX_AUTO_REGEN_WORMS) {
-        const now = Date.now();
-        setLastWormTimestamp((prev) => {
-          if (currentCount >= MAX_AUTO_REGEN_WORMS) {
-            localStorage.setItem('fg_worm_timestamp', now.toString());
-            return now;
-          }
-          return prev;
-        });
+        const currentCoins = typeof coins === 'number' ? coins : Number(localStorage.getItem('fg_coins')) || 0;
+        if (currentCoins < WORM_REGEN_MAX_COINS) {
+          const now = Date.now();
+          setLastWormTimestamp((prev) => {
+            if (currentCount >= MAX_AUTO_REGEN_WORMS) {
+              localStorage.setItem('fg_worm_timestamp', now.toString());
+              return now;
+            }
+            return prev;
+          });
+        }
       }
 
       return true;

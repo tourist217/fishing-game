@@ -361,6 +361,7 @@ export default function App() {
             energy={player.energy}
             maxEnergy={player.maxEnergy}
             secondsToNextEnergy={player.secondsToNextEnergy}
+            secondsToNextWorm={baits.secondsToNextWorm}
             dailyProvisions={player.dailyProvisions}
             onBuyProvision={player.buyProvision}
             onBuyEnergyWithGems={player.buyEnergyWithGems}
