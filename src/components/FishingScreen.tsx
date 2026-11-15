@@ -6,7 +6,7 @@ import { FishingSceneCanvas } from './FishingSceneCanvas';
 import { TrophyCardModal } from './TrophyCardModal';
 import { AVAILABLE_BAITS } from '../hooks/useBaitState';
 
-const QuickEnergyModal = React.lazy(() => import('./QuickEnergyModal').then(m => ({ default: m.QuickEnergyModal })));
+import { QuickEnergyModal } from './QuickEnergyModal';
 import type { DailyProvisionsState } from '../data/provisionsData';
 import { CoinIcon } from './CoinIcon';
 
@@ -965,19 +965,17 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
       )}
       {/* Окно быстрой провизии на водоёме */}
       {isEnergyModalOpen && onBuyProvision && (
-        <React.Suspense fallback={null}>
-          <QuickEnergyModal
-            onClose={() => setIsEnergyModalOpen(false)}
-            energy={energy}
-            maxEnergy={maxEnergy}
-            secondsToNextEnergy={secondsToNextEnergy}
-            coins={coins}
-            gems={gems}
-            dailyProvisions={dailyProvisions}
-            onBuyProvision={onBuyProvision}
-            onBuyEnergyWithGems={onBuyEnergyWithGems}
-          />
-        </React.Suspense>
+        <QuickEnergyModal
+          onClose={() => setIsEnergyModalOpen(false)}
+          energy={energy}
+          maxEnergy={maxEnergy}
+          secondsToNextEnergy={secondsToNextEnergy}
+          coins={coins}
+          gems={gems}
+          dailyProvisions={dailyProvisions}
+          onBuyProvision={onBuyProvision}
+          onBuyEnergyWithGems={onBuyEnergyWithGems}
+        />
       )}
     </div>
   );

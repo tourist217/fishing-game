@@ -1,18 +1,16 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { LOCATIONS, DEFAULT_LOCATION_ID, type FishingLocation } from './locationsData';
 import { Header } from './components/Header';
 import { Navigation, type ActiveTab } from './components/Navigation';
 import { FishingScreen } from './components/FishingScreen';
 import { HomeScreen } from './components/HomeScreen';
-
-// Lazy loading вторичных экранов и модальных окон для ускорения первой загрузки
-const InventoryScreen = lazy(() => import('./components/InventoryScreen').then(m => ({ default: m.InventoryScreen })));
-const ShopScreen = lazy(() => import('./components/ShopScreen').then(m => ({ default: m.ShopScreen })));
-const MapScreen = lazy(() => import('./components/MapScreen').then(m => ({ default: m.MapScreen })));
-const GearInventoryScreen = lazy(() => import('./components/GearInventoryScreen').then(m => ({ default: m.GearInventoryScreen })));
-const FeederModal = lazy(() => import('./components/FeederModal').then(m => ({ default: m.FeederModal })));
-const FeederWelcomeModal = lazy(() => import('./components/FeederWelcomeModal').then(m => ({ default: m.FeederWelcomeModal })));
-const ProfileModal = lazy(() => import('./components/ProfileModal').then(m => ({ default: m.ProfileModal })));
+import { InventoryScreen } from './components/InventoryScreen';
+import { ShopScreen } from './components/ShopScreen';
+import { MapScreen } from './components/MapScreen';
+import { GearInventoryScreen } from './components/GearInventoryScreen';
+import { FeederModal } from './components/FeederModal';
+import { FeederWelcomeModal } from './components/FeederWelcomeModal';
+import { ProfileModal } from './components/ProfileModal';
 
 import { usePlayerState } from './hooks/usePlayerState';
 import { useGearState } from './hooks/useGearState';
@@ -61,13 +59,21 @@ export default function App() {
   // Полный сброс прогресса (облако Firestore + лидерборд турнира + локальное хранилище)
   const resetAllProgress = async () => {
     try {
-      await resetCloudUserProfile();
-      await resetTournamentLeaderboardRecord();
+      // Защитный таймаут 800мс: игра никогда не зависнет, даже если база отвечает медленно
+      await Promise.race([
+        Promise.allSettled([resetCloudUserProfile(), resetTournamentLeaderboardRecord()]),
+        new Promise((resolve) => setTimeout(resolve, 800)),
+      ]);
     } catch (e) {
       console.warn('Ошибка при сбросе профиля:', e);
     }
-    localStorage.clear();
-    window.location.reload();
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch (e) {
+      console.warn('Ошибка очистки хранилища:', e);
+    }
+    window.location.href = window.location.pathname;
   };
 
   // 2. Снаряжение (удочки, катушки, лески)
@@ -340,8 +346,7 @@ export default function App() {
         />
       )}
 
-      <Suspense fallback={null}>
-        {(isMapOpen || activeTab === 'map') && (
+      {(isMapOpen || activeTab === 'map') && (
         <MapScreen
           playerLevel={player.level}
           currentLocationId={selectedLocationId}
@@ -728,7 +733,6 @@ export default function App() {
         onRestartTutorial={tutorial.resetTutorial}
         onResetProgress={resetAllProgress}
       />
-      </Suspense>
     </div>
   );
 }

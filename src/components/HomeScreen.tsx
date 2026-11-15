@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import type { FishingLocation } from '../locationsData';
 import {
   ROD_TIERS,
@@ -11,15 +11,13 @@ import {
 import { AVAILABLE_BAITS } from '../hooks/useBaitState';
 import type { FishJournal, UserAvatarId } from '../hooks/usePlayerState';
 import { BaitSelectModal } from './BaitSelectModal';
-
-// Lazy loading тяжёлых модальных окон для мгновенного первого рендера базы
-const ProfileModal = lazy(() => import('./ProfileModal').then(m => ({ default: m.ProfileModal })));
-const FishJournalModal = lazy(() => import('./FishJournalModal').then(m => ({ default: m.FishJournalModal })));
-const RangerQuestsModal = lazy(() => import('./RangerQuestsModal').then(m => ({ default: m.RangerQuestsModal })));
-const TournamentModal = lazy(() => import('./TournamentModal').then(m => ({ default: m.TournamentModal })));
-const LeaderboardModal = lazy(() => import('./LeaderboardModal').then(m => ({ default: m.LeaderboardModal })));
-const GemsShopModal = lazy(() => import('./GemsShopModal').then(m => ({ default: m.GemsShopModal })));
-const QuickEnergyModal = lazy(() => import('./QuickEnergyModal').then(m => ({ default: m.QuickEnergyModal })));
+import { ProfileModal } from './ProfileModal';
+import { FishJournalModal } from './FishJournalModal';
+import { RangerQuestsModal } from './RangerQuestsModal';
+import { TournamentModal } from './TournamentModal';
+import { LeaderboardModal } from './LeaderboardModal';
+import { GemsShopModal } from './GemsShopModal';
+import { QuickEnergyModal } from './QuickEnergyModal';
 import type { DailyProvisionsState } from '../data/provisionsData';
 import type { DailyQuest } from '../types/quests';
 import { getCurrentWeather, getWeatherForecast, TIME_CONFIGS, WEATHER_CONFIGS } from '../utils/weatherTime';
@@ -1439,8 +1437,7 @@ export const HomeScreen = ({
         />
       )}
 
-      <Suspense fallback={null}>
-        {/* Быстрое пополнение энергии / перекус */}
+      {/* Быстрое пополнение энергии / перекус */}
         {activeModal === 'energy' && onBuyProvision && (
         <QuickEnergyModal
           onClose={() => setActiveModal(null)}
@@ -1731,7 +1728,6 @@ export const HomeScreen = ({
         onRestartTutorial={onRestartTutorial}
         onResetProgress={onResetProgress || handleReset}
       />
-      </Suspense>
     </div>
   );
 };

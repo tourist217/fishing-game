@@ -49,6 +49,8 @@ const LOCATION_BG_MAP: Record<string, string> = {
 
 if (typeof window !== 'undefined') {
   getPreloadedImage('/assets/ui/rod_fps.webp');
+  getPreloadedImage('/assets/locations/loc_village_pond_base.webp');
+  getPreloadedImage('/assets/locations/loc_village_pond_dawn.webp');
 }
 
 function drawImageCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, width: number, height: number) {
