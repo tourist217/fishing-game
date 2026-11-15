@@ -631,6 +631,7 @@ export const JUNK_ITEMS: Fish[] = [
 ];
 
 let lastCaughtWasTrophy = false;
+let catchesSinceLastJunk = 15;
 
 // Функция подбора рыбы по водоёму, насадке, времени суток и погоде
 export function getRandomFish(
@@ -650,19 +651,28 @@ export function getRandomFish(
   const effectiveTime = timeOfDay || currentEnv.timeOfDay;
   const effectiveWeather = weather || currentEnv.weather;
 
-  // 0. Шанс 5% поймать мусор / ветку / банку
-  if (Math.random() < 0.05) {
+  // 0. Генерация речного мусора (банки, ветки, сапоги):
+  // - Полная защита новичка: на 1-2 уровне или менее 15 пойманных рыб мусор НЕ падает (0%).
+  // - Защита от серий (Bad-Luck Protection): не менее 15 нормальных рыб между выпадением мусора.
+  // - Шанс снижен до 1.5% (редкий шуточный улов вместо раздражающего спама).
+  const totalCaughtFish = journal ? Object.values(journal).reduce((sum, entry) => sum + (entry.count || 0), 0) : 0;
+  const canCatchJunk = playerLevel >= 3 && totalCaughtFish >= 15 && catchesSinceLastJunk >= 15;
+
+  if (canCatchJunk && Math.random() < 0.015) {
+    catchesSinceLastJunk = 0;
     const junk = JUNK_ITEMS[Math.floor(Math.random() * JUNK_ITEMS.length)];
     return {
       fish: junk,
       weight: 0.35,
       sizeCategory: 'small',
       categoryLabel: 'Мусор ♻️',
-      price: 1,
-      exp: 1,
+      price: 2,
+      exp: 2,
       rodBrokenRisk: false,
     };
   }
+
+  catchesSinceLastJunk++;
 
   // 1. Ищем всех рыб, которые водятся в этом водоёме
   let candidates = FISH_DATABASE.filter((f) => Boolean(f.habitats[locationId]));
