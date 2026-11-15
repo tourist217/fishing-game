@@ -220,31 +220,6 @@ export const Header = ({
             </div>
           </div>
         </div>
-
-        {/* Кнопка настроек шестерёнка */}
-        <button
-          onClick={onOpenSettings || onResetProgress || handleReset}
-          title="Настройки"
-          style={{
-            width: '34px',
-            height: '34px',
-            borderRadius: '12px',
-            background: 'rgba(28, 36, 48, 0.88)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            border: '1.5px solid rgba(255, 255, 255, 0.12)',
-            color: '#94a3b8',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '16px',
-            cursor: 'pointer',
-            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.4)',
-            padding: 0,
-          }}
-        >
-          ⚙️
-        </button>
       </div>
     </div>
   );
