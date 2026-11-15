@@ -215,7 +215,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                   </button>
                 ) : (
                   <div style={{ fontSize: '10px', color: '#4ade80', fontWeight: 800, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
-                    ✅ Главная награда ихтиолога получена (+5 000 <CoinIcon size={12} />, +100 💎)
+                    ✅ Главная награда ихтиолога получена (+5 000 <CoinIcon size={12} /> и +100 💎)
                   </div>
                 )}
               </div>
@@ -646,7 +646,8 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                   desc: 'Поймать первую рыбу в игре',
                   progress: Math.min(1, caughtSpeciesCount),
                   total: 1,
-                  reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+50 <CoinIcon size={12} /></span>,
+                  coins: 50,
+                  gems: 0,
                 },
                 {
                   icon: '🥈',
@@ -654,7 +655,8 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                   desc: 'Поймать 5 разных видов рыб',
                   progress: Math.min(5, caughtSpeciesCount),
                   total: 5,
-                  reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+250 <CoinIcon size={12} />, +10 💎</span>,
+                  coins: 250,
+                  gems: 10,
                 },
                 {
                   icon: '🥇',
@@ -662,7 +664,8 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                   desc: 'Открыть 12 видов рыб в журнале',
                   progress: Math.min(12, caughtSpeciesCount),
                   total: 12,
-                  reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+1 000 <CoinIcon size={12} />, +30 💎</span>,
+                  coins: 1000,
+                  gems: 30,
                 },
                 {
                   icon: '👑',
@@ -670,7 +673,8 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                   desc: 'Выловить 3 трофейных экземпляра',
                   progress: Math.min(3, trophyCount),
                   total: 3,
-                  reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+2 000 <CoinIcon size={12} />, +50 💎</span>,
+                  coins: 2000,
+                  gems: 50,
                 },
                 {
                   icon: '🌟',
@@ -678,7 +682,8 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                   desc: 'Собрать полную коллекцию (все 21 вид)',
                   progress: caughtSpeciesCount,
                   total: totalSpecies,
-                  reward: <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>+5 000 <CoinIcon size={12} />, +100 💎</span>,
+                  coins: 5000,
+                  gems: 100,
                 },
               ].map((medal, i) => {
                 const isCompleted = medal.progress >= medal.total;
@@ -693,15 +698,16 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
+                      gap: '10px',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '28px' }}>{medal.icon}</span>
-                      <div>
-                        <div style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+                      <span style={{ fontSize: '28px', flexShrink: 0 }}>{medal.icon}</span>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', wordBreak: 'break-word' }}>
                           {medal.title}
                         </div>
-                        <div style={{ fontSize: '10.5px', color: '#94a3b8', marginTop: '1px' }}>
+                        <div style={{ fontSize: '10.5px', color: '#94a3b8', marginTop: '1px', wordBreak: 'break-word', lineHeight: 1.25 }}>
                           {medal.desc}
                         </div>
                         <div style={{ fontSize: '10px', color: '#38bdf8', fontWeight: 800, marginTop: '2px' }}>
@@ -710,12 +716,19 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                       </div>
                     </div>
 
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '10px', fontWeight: 800, color: '#fbbf24' }}>
-                        {medal.reward}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px', flexShrink: 0, marginLeft: '4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: 800, color: '#fbbf24' }}>
+                          +{medal.coins.toLocaleString('ru-RU')}&nbsp;<CoinIcon size={12} />
+                        </span>
+                        {medal.gems > 0 && (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', fontSize: '11px', fontWeight: 800, color: '#38bdf8' }}>
+                            +{medal.gems}&nbsp;💎
+                          </span>
+                        )}
                       </div>
                       {isCompleted && (
-                        <span style={{ fontSize: '10px', color: '#4ade80', fontWeight: 900 }}>
+                        <span style={{ fontSize: '10px', color: '#4ade80', fontWeight: 900, whiteSpace: 'nowrap' }}>
                           ✓ Выполнено
                         </span>
                       )}
