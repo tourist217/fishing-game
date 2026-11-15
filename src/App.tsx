@@ -74,6 +74,9 @@ export default function App() {
   const [isAtPond, setIsAtPond] = useState<boolean>(false);
   const [isMapOpen, setIsMapOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>('base');
+  const [shopInitialTab, setShopInitialTab] = useState<
+    'rods' | 'reels' | 'lines' | 'baits' | 'upgrades' | 'provisions' | undefined
+  >(undefined);
   const [baseClickNonce, setBaseClickNonce] = useState<number>(0);
 
   const currentLocation: FishingLocation =
@@ -384,9 +387,10 @@ export default function App() {
               setActiveTab('map');
               triggerHaptic('selection');
             }}
-            onOpenShop={() => {
+            onOpenShop={(targetTab) => {
               fishing.resetToIdle();
               setIsAtPond(false);
+              setShopInitialTab(targetTab || 'baits');
               setActiveTab('shop');
               triggerHaptic('selection');
             }}
@@ -520,7 +524,10 @@ export default function App() {
           baits={baits.baits}
           baitCapacity={baits.currentBaitCapacity}
           upgrades={baits.upgrades}
-          initialTab={tutorial.step === 'buy_bait' ? 'baits' : tutorial.step === 'energy_info' ? 'provisions' : undefined}
+          initialTab={
+            shopInitialTab ||
+            (tutorial.step === 'buy_bait' ? 'baits' : tutorial.step === 'energy_info' ? 'provisions' : undefined)
+          }
           onBuyRod={gear.buyRod}
           onUpgradeRod={gear.upgradeRod}
           onEquipRod={gear.equipRod}
@@ -566,6 +573,9 @@ export default function App() {
         activeTab={activeTab}
         onTabChange={(tab) => {
           setBaseClickNonce((prev) => prev + 1);
+          if (tab !== 'shop') {
+            setShopInitialTab(undefined);
+          }
           if (tab === 'keepnet' && tutorial.step === 'open_keepnet') {
             tutorial.nextStep('open_keepnet', 'sell_fish');
           }

@@ -33,7 +33,7 @@ interface FishingScreenProps {
   onPullEnd: () => void;
   onDismissModal: () => void;
   onOpenMap: () => void;
-  onOpenShop?: () => void;
+  onOpenShop?: (tab?: 'rods' | 'reels' | 'lines' | 'baits' | 'upgrades' | 'provisions') => void;
   onOpenKeepnet?: () => void;
   onBackToHub?: () => void;
   inventoryCount?: number;
@@ -568,9 +568,9 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                   : isKeepnetFull
                   ? onOpenKeepnet
                   : !hasLineOnRod
-                  ? onOpenShop
+                  ? () => onOpenShop?.('lines')
                   : canGoToShopForBait
-                  ? onOpenShop
+                  ? () => onOpenShop?.('baits')
                   : undefined
               }
               disabled={hasLineOnRod && !isKeepnetFull && hasEnoughEnergy && !canGoToShopForBait}
