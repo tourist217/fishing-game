@@ -6,18 +6,37 @@ interface GemsShopModalProps {
   onClose: () => void;
   gems: number;
   onAddTestGems?: (amount: number) => void;
+  onAddGems?: (amount: number) => void;
 }
 
 export const GemsShopModal: React.FC<GemsShopModalProps> = ({
   onClose,
   gems,
   onAddTestGems,
+  onAddGems,
 }) => {
   const [starsNotice, setStarsNotice] = useState<string | null>(null);
   const [loadingPackId, setLoadingPackId] = useState<string | null>(null);
   const [hasClaimedTestGems, setHasClaimedTestGems] = useState<boolean>(() => {
     return localStorage.getItem('fg_claimed_test_gems') === 'true';
   });
+
+  // Автоматическая проверка и восстановление покупок Stars при открытии
+  React.useEffect(() => {
+    const identity = getPlayerIdentity();
+    if (identity?.id && !identity.id.startsWith('local_')) {
+      fetch(`/api/sync-gems?userId=${identity.id}`)
+        .then((r) => r.json())
+        .then((res) => {
+          if (res?.ok && typeof res.gems === 'number' && res.totalPaidGems > 0 && res.gems > gems) {
+            const diff = res.gems - gems;
+            onAddGems?.(diff);
+            setStarsNotice(`✨ Ваши купленные алмазы (+${diff} 💎) успешно восстановлены!`);
+          }
+        })
+        .catch((e) => console.warn('Auto-sync gems check error:', e));
+    }
+  }, []);
 
   const handleClaimTestGems = () => {
     if (hasClaimedTestGems || !onAddTestGems) return;
@@ -55,9 +74,17 @@ export const GemsShopModal: React.FC<GemsShopModalProps> = ({
       setStarsNotice(null);
 
       // Открываем защищенное нативное окно оплаты Telegram Stars
-      (tg as any).openInvoice(data.invoiceLink, (status: string) => {
+      (tg as any).openInvoice(data.invoiceLink, async (status: string) => {
         if (status === 'paid') {
-          setStarsNotice(`🎉 Оплата прошла успешно! +${packGems} 💎 зачисляются на ваш баланс.`);
+          setStarsNotice(`🎉 Оплата прошла успешно! +${packGems} 💎 зачислены на ваш баланс.`);
+          onAddGems?.(packGems);
+
+          // Запасная серверная синхронизация
+          try {
+            await fetch(`/api/sync-gems?userId=${identity.id}`);
+          } catch (e) {
+            console.warn('Sync gems error:', e);
+          }
         } else if (status === 'cancelled') {
           setStarsNotice('Оплата отменена.');
         } else if (status === 'failed') {

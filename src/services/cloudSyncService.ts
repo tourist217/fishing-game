@@ -71,11 +71,13 @@ export async function saveCloudUserProfile(profile: CloudUserProfile): Promise<v
     const identity = getPlayerIdentity();
     const userRef = doc(db, 'users', identity.id);
 
-    // Гарантируем корректное имя и ID
+    const localGems = Number(localStorage.getItem('fg_gems')) || 0;
+    // Гарантируем корректное имя, ID и сохранность валюты
     const cleanProfile: CloudUserProfile = {
       ...profile,
       id: identity.id,
       name: identity.name,
+      gems: Math.max(profile.gems || 0, localGems),
       updatedAt: Date.now(),
     };
 

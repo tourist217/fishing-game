@@ -221,6 +221,7 @@ interface HomeScreenProps {
   onClaimQuestReward?: (questId: string) => boolean;
   onClaimDailyBonus?: () => boolean;
   onAddTestGems?: (amount: number) => void;
+  onAddGems?: (amount: number) => void;
   onRestartTutorial?: () => void;
   isTutorialWelcome?: boolean;
   onOpenFeederModal?: () => void;
@@ -246,6 +247,7 @@ export const HomeScreen = ({
   dailyProvisions,
   onBuyEnergyWithGems,
   onAddTestGems,
+  onAddGems,
   inventoryCount = 0,
   maxKeepnetCapacity = 15,
   selectedBaitId,
@@ -1477,6 +1479,7 @@ export const HomeScreen = ({
           onClose={() => setActiveModal(null)}
           gems={gems}
           onAddTestGems={onAddTestGems}
+          onAddGems={onAddGems}
         />
       )}
 

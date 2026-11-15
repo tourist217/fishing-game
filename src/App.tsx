@@ -162,6 +162,8 @@ export default function App() {
         if (cloud.gear) gear.hydrateGearState(cloud.gear);
         if (cloud.baits) baits.hydrateBaitState(cloud.baits, cloud.upgrades, cloud.selectedBaitId);
         if (cloud.feeders) feeder.hydrateFeederState(cloud.feeders);
+      } else if (typeof cloud.gems === 'number' && cloud.gems > player.gems) {
+        player.addGems(cloud.gems - player.gems);
       }
     };
 
@@ -458,6 +460,7 @@ export default function App() {
             onBuyProvision={player.buyProvision}
             onBuyEnergyWithGems={player.buyEnergyWithGems}
             onAddTestGems={player.addGems}
+            onAddGems={player.addGems}
             inventoryCount={player.inventoryCount}
             maxKeepnetCapacity={player.maxKeepnetCapacity}
             selectedBaitId={baits.selectedBaitId}
