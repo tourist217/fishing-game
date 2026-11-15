@@ -4,6 +4,7 @@ import { db } from '../firebase';
 export interface GlobalLeaderboardEntry {
   id: string;
   name: string;
+  avatar?: 'male' | 'female';
   level: number;
   exp: number;
   totalCaughtWeight: number; // кг
@@ -33,6 +34,7 @@ export async function fetchGlobalLeaderboard(
       list.push({
         id: docSnap.id,
         name: data.name || 'Рыбак',
+        avatar: data.avatar === 'female' ? 'female' : 'male',
         level: Number(data.level) || 1,
         exp: Number(data.exp) || 0,
         totalCaughtWeight: Number(data.totalCaughtWeight) || 0,

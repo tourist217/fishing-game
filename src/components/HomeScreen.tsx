@@ -9,14 +9,14 @@ import {
   type RodTier,
 } from '../gearData';
 import { AVAILABLE_BAITS } from '../hooks/useBaitState';
-import { APP_VERSION } from '../version';
-import type { FishJournal } from '../hooks/usePlayerState';
+import type { FishJournal, UserAvatarId } from '../hooks/usePlayerState';
 import { FishJournalModal } from './FishJournalModal';
 import { RangerQuestsModal } from './RangerQuestsModal';
 import { TournamentModal } from './TournamentModal';
 import { LeaderboardModal } from './LeaderboardModal';
 import { BaitSelectModal } from './BaitSelectModal';
 import { QuickEnergyModal } from './QuickEnergyModal';
+import { ProfileModal } from './ProfileModal';
 import type { DailyProvisionsState } from '../data/provisionsData';
 import type { DailyQuest } from '../types/quests';
 import { getCurrentWeather, getWeatherForecast, TIME_CONFIGS, WEATHER_CONFIGS } from '../utils/weatherTime';
@@ -184,6 +184,8 @@ interface HomeScreenProps {
   currentLocation: FishingLocation;
   gear: PlayerGearState;
   userName: string;
+  avatar?: UserAvatarId;
+  onSelectAvatar?: (avatar: UserAvatarId) => void;
   level: number;
   exp: number;
   maxExp: number;
@@ -232,6 +234,8 @@ export const HomeScreen = ({
   currentLocation,
   gear,
   userName,
+  avatar = 'male',
+  onSelectAvatar,
   level,
   exp,
   maxExp,
@@ -372,17 +376,21 @@ export const HomeScreen = ({
               width: '36px',
               height: '36px',
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, #0284c7, #38bdf8)',
-              border: '2px solid #38bdf8',
+              border: avatar === 'female' ? '2px solid #f472b6' : '2px solid #38bdf8',
+              overflow: 'hidden',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '20px',
-              boxShadow: '0 0 10px rgba(56, 189, 248, 0.5)',
+              boxShadow: avatar === 'female' ? '0 0 10px rgba(244, 114, 182, 0.5)' : '0 0 10px rgba(56, 189, 248, 0.5)',
               flexShrink: 0,
+              background: '#091325',
             }}
           >
-            🧔
+            <img
+              src={avatar === 'female' ? '/assets/avatars/avatar_female.png' : '/assets/avatars/avatar_male.png'}
+              alt="Аватар"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
           </div>
           <div>
             <div
@@ -1445,6 +1453,7 @@ export const HomeScreen = ({
         <LeaderboardModal
           playerLevel={level}
           playerExp={exp}
+          avatar={avatar}
           onClose={() => setActiveModal(null)}
         />
       )}
@@ -1702,100 +1711,19 @@ export const HomeScreen = ({
         />
       )}
 
-      {/* Настройки */}
-      {activeModal === 'settings' && (
-        <div
-          onClick={() => setActiveModal(null)}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.72)',
-            backdropFilter: 'blur(8px)',
-            zIndex: 50,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: '#0f172a',
-              borderRadius: '24px',
-              padding: '20px',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              maxWidth: '320px',
-              textAlign: 'center',
-            }}
-          >
-            <div style={{ fontSize: '36px', marginBottom: '8px' }}>⚙️</div>
-            <div style={{ fontSize: '16px', fontWeight: 800, color: '#fff', marginBottom: '4px' }}>
-              Настройки игры
-            </div>
-            <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '16px' }}>
-              Версия: {APP_VERSION}
-            </div>
-
-            {onRestartTutorial && (
-              <button
-                onClick={() => {
-                  onRestartTutorial();
-                  setActiveModal(null);
-                }}
-                style={{
-                  width: '100%',
-                  background: 'rgba(34, 197, 94, 0.2)',
-                  border: '1px solid rgba(34, 197, 94, 0.5)',
-                  color: '#4ade80',
-                  borderRadius: '12px',
-                  padding: '10px',
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  fontWeight: 700,
-                  marginBottom: '10px',
-                }}
-              >
-                Пройти обучение заново 🎓
-              </button>
-            )}
-
-            <button
-              onClick={onResetProgress || handleReset}
-              style={{
-                width: '100%',
-                background: 'rgba(239, 68, 68, 0.2)',
-                border: '1px solid rgba(239, 68, 68, 0.4)',
-                color: '#f87171',
-                borderRadius: '12px',
-                padding: '10px',
-                fontSize: '12px',
-                cursor: 'pointer',
-                fontWeight: 700,
-              }}
-            >
-              Сбросить весь прогресс
-            </button>
-
-            <button
-              onClick={() => setActiveModal(null)}
-              style={{
-                marginTop: '10px',
-                width: '100%',
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: 'none',
-                color: '#fff',
-                fontWeight: 700,
-                padding: '10px',
-                borderRadius: '12px',
-                cursor: 'pointer',
-              }}
-            >
-              Назад
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Профиль и Настройки игрока */}
+      <ProfileModal
+        isOpen={activeModal === 'settings'}
+        onClose={() => setActiveModal(null)}
+        userName={userName}
+        level={level}
+        exp={exp}
+        maxExp={maxExp}
+        avatar={avatar}
+        onSelectAvatar={onSelectAvatar || (() => {})}
+        onRestartTutorial={onRestartTutorial}
+        onResetProgress={onResetProgress || handleReset}
+      />
     </div>
   );
 };

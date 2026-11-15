@@ -23,6 +23,7 @@ import { TutorialGuide } from './components/TutorialGuide';
 import { useFeederState } from './hooks/useFeederState';
 import { FeederModal } from './components/FeederModal';
 import { FeederWelcomeModal } from './components/FeederWelcomeModal';
+import { ProfileModal } from './components/ProfileModal';
 import { handleCatchForTournament, syncInitialPlayerRecord } from './services/tournamentService';
 import {
   loadCloudUserProfile,
@@ -110,6 +111,7 @@ export default function App() {
 
   const [isFeederModalOpen, setIsFeederModalOpen] = useState<boolean>(false);
   const [isFeederWelcomeOpen, setIsFeederWelcomeOpen] = useState<boolean>(false);
+  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
 
   // Автоматический показ окна приветствия с уловом при входе в игру
   useEffect(() => {
@@ -156,6 +158,7 @@ export default function App() {
       return {
         id: identity.id,
         name: identity.name,
+        avatar: player.avatar,
         coins: player.coins,
         exp: player.exp,
         level: player.level,
@@ -196,6 +199,7 @@ export default function App() {
       window.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [
+    player.avatar,
     player.coins,
     player.exp,
     player.level,
@@ -306,6 +310,7 @@ export default function App() {
       {(activeTab === 'keepnet' || activeTab === 'inventory' || activeTab === 'shop') && (
         <Header
           userName={player.userName}
+          avatar={player.avatar}
           level={player.level}
           coins={player.coins}
           gems={player.gems}
@@ -313,6 +318,7 @@ export default function App() {
           maxExp={player.expToNextLevel}
           energy={player.energy}
           maxEnergy={player.maxEnergy}
+          onOpenSettings={() => setIsProfileOpen(true)}
           rodName={`${gear.currentRod.name} [${gear.rodLevel} ур.]`}
           rodIcon={gear.currentRod.icon}
         />
@@ -416,6 +422,8 @@ export default function App() {
             currentLocation={currentLocation}
             gear={gear.gear}
             userName={player.userName}
+            avatar={player.avatar}
+            onSelectAvatar={player.selectAvatar}
             level={player.level}
             exp={player.exp}
             maxExp={player.expToNextLevel}
@@ -688,6 +696,19 @@ export default function App() {
           onClose={() => setIsFeederWelcomeOpen(false)}
         />
       )}
+
+      {/* Модальное окно профиля игрока из шапки */}
+      <ProfileModal
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        userName={player.userName}
+        level={player.level}
+        exp={player.exp}
+        maxExp={player.expToNextLevel}
+        avatar={player.avatar}
+        onSelectAvatar={player.selectAvatar}
+        onRestartTutorial={tutorial.resetTutorial}
+      />
     </div>
   );
 }

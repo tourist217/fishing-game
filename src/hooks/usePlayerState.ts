@@ -23,11 +23,23 @@ export interface FishJournalEntry {
 
 export type FishJournal = Record<string, FishJournalEntry>;
 
+export type UserAvatarId = 'male' | 'female';
+
 export function usePlayerState() {
   const [userName] = useState<string>(() => {
     const tg = window.Telegram?.WebApp;
     return tg?.initDataUnsafe?.user?.first_name || 'Рыбак';
   });
+
+  const [avatar, setAvatar] = useState<UserAvatarId>(() => {
+    const saved = localStorage.getItem('fg_user_avatar');
+    return saved === 'female' ? 'female' : 'male';
+  });
+
+  const selectAvatar = useCallback((newAvatar: UserAvatarId) => {
+    setAvatar(newAvatar);
+    localStorage.setItem('fg_user_avatar', newAvatar);
+  }, []);
   const [coins, setCoins] = useState<number>(() => {
     const val = localStorage.getItem('fg_coins');
     const parsed = Number(val);
@@ -570,6 +582,7 @@ export function usePlayerState() {
       journal?: FishJournal;
       hasClaimedAllSpeciesReward?: boolean;
       dailyProvisions?: DailyProvisionsState;
+      avatar?: UserAvatarId;
     }) => {
       if (typeof data.coins === 'number') {
         setCoins(data.coins);
@@ -610,12 +623,18 @@ export function usePlayerState() {
         setDailyProvisions(data.dailyProvisions);
         localStorage.setItem('fg_daily_provisions', JSON.stringify(data.dailyProvisions));
       }
+      if (data.avatar === 'male' || data.avatar === 'female') {
+        setAvatar(data.avatar);
+        localStorage.setItem('fg_user_avatar', data.avatar);
+      }
     },
     []
   );
 
   return {
     userName,
+    avatar,
+    selectAvatar,
     coins,
     gems,
     setGems,

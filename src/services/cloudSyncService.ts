@@ -9,6 +9,7 @@ import type { FeederSlotData } from '../hooks/useFeederState';
 export interface CloudUserProfile {
   id: string; // telegram_id or local test id
   name: string;
+  avatar?: 'male' | 'female';
   coins: number;
   exp: number;
   level: number;

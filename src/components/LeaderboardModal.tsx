@@ -10,14 +10,17 @@ import { getTotalCaughtWeight, flushImmediateCloudSync } from '../services/cloud
 interface LeaderboardModalProps {
   playerLevel: number;
   playerExp: number;
+  avatar?: 'male' | 'female';
   onClose: () => void;
 }
 
 export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
   playerLevel,
   playerExp,
+  avatar,
   onClose,
 }) => {
+  const myAvatar = avatar || (localStorage.getItem('fg_user_avatar') === 'female' ? 'female' : 'male');
   const [sortBy, setSortBy] = useState<LeaderboardSortBy>('level');
   const [entries, setEntries] = useState<GlobalLeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -50,6 +53,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
         return {
           ...item,
           name: identity.name,
+          avatar: item.avatar || myAvatar,
           level: Math.max(item.level, playerLevel),
           exp: Math.max(item.exp, playerExp),
           totalCaughtWeight: Math.max(item.totalCaughtWeight, currentWeight),
@@ -62,6 +66,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
       merged.push({
         id: identity.id,
         name: identity.name,
+        avatar: myAvatar,
         level: playerLevel,
         exp: playerExp,
         totalCaughtWeight: currentWeight,
@@ -253,7 +258,24 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '20px' }}>👤</span>
+            <div
+              style={{
+                width: '34px',
+                height: '34px',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                border: myAvatar === 'female' ? '2px solid #f472b6' : '2px solid #38bdf8',
+                boxShadow: myAvatar === 'female' ? '0 0 10px rgba(244, 114, 182, 0.4)' : '0 0 10px rgba(56, 189, 248, 0.4)',
+                flexShrink: 0,
+                background: '#091325',
+              }}
+            >
+              <img
+                src={myAvatar === 'female' ? '/assets/avatars/avatar_female.png' : '/assets/avatars/avatar_male.png'}
+                alt="Аватар"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
             <div>
               <div style={{ fontSize: '13px', fontWeight: 800, color: '#f8fafc' }}>
                 {identity.name}
@@ -377,6 +399,23 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
                     >
                       {medal}
                     </span>
+                    <div
+                      style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        overflow: 'hidden',
+                        border: item.avatar === 'female' ? '1.5px solid #f472b6' : '1.5px solid #38bdf8',
+                        flexShrink: 0,
+                        background: '#091325',
+                      }}
+                    >
+                      <img
+                        src={item.avatar === 'female' ? '/assets/avatars/avatar_female.png' : '/assets/avatars/avatar_male.png'}
+                        alt={item.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span
                         style={{

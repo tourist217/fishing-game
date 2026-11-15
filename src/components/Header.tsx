@@ -1,8 +1,10 @@
 import { CoinIcon } from './CoinIcon';
 import { EnergyIcon } from './EnergyIcon';
+import type { UserAvatarId } from '../hooks/usePlayerState';
 
 interface HeaderProps {
   userName: string;
+  avatar?: UserAvatarId;
   level: number;
   coins: number;
   gems?: number;
@@ -18,6 +20,7 @@ interface HeaderProps {
 
 export const Header = ({
   userName,
+  avatar = 'male',
   level,
   coins,
   exp,
@@ -72,17 +75,21 @@ export const Header = ({
             width: '36px',
             height: '36px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #0284c7, #38bdf8)',
-            border: '2px solid #38bdf8',
+            border: avatar === 'female' ? '2px solid #f472b6' : '2px solid #38bdf8',
+            overflow: 'hidden',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '20px',
-            boxShadow: '0 0 10px rgba(56, 189, 248, 0.5)',
+            boxShadow: avatar === 'female' ? '0 0 10px rgba(244, 114, 182, 0.5)' : '0 0 10px rgba(56, 189, 248, 0.5)',
             flexShrink: 0,
+            background: '#091325',
           }}
         >
-          🧔
+          <img
+            src={avatar === 'female' ? '/assets/avatars/avatar_female.png' : '/assets/avatars/avatar_male.png'}
+            alt="Аватар"
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
         </div>
         <div>
           <div
