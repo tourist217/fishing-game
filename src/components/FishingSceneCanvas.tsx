@@ -49,7 +49,7 @@ const LOCATION_BG_MAP: Record<string, string> = {
 
 if (typeof window !== 'undefined') {
   getPreloadedImage('/assets/ui/rod_fps.webp');
-  getPreloadedImage('/assets/locations/loc_village_pond_base.webp');
+  Object.values(LOCATION_BG_MAP).forEach((src) => getPreloadedImage(src));
   getPreloadedImage('/assets/locations/loc_village_pond_dawn.webp');
 }
 

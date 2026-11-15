@@ -299,14 +299,25 @@ export const HomeScreen = ({
 
   const expPercentage = Math.min(100, Math.max(0, (exp / maxExp) * 100));
 
-  const handleReset = async () => {
-    const confirmed = window.confirm('Точно сбросить весь прогресс до 1 уровня?');
-    if (confirmed) {
+  const handleReset = () => {
+    const message = 'Точно сбросить весь прогресс до 1 уровня?';
+    const proceed = async () => {
       if (onResetProgress) {
         await onResetProgress();
       } else {
         localStorage.clear();
-        window.location.reload();
+        sessionStorage.clear();
+        window.location.href = window.location.pathname;
+      }
+    };
+
+    if (window.Telegram?.WebApp?.showConfirm) {
+      window.Telegram.WebApp.showConfirm(message, (ok: boolean) => {
+        if (ok) proceed();
+      });
+    } else {
+      if (window.confirm(message)) {
+        proceed();
       }
     }
   };

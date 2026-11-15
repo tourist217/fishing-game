@@ -62,14 +62,25 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     }
   };
 
-  const handleReset = async () => {
-    const confirmed = window.confirm('Точно сбросить весь прогресс до 1 уровня? Это действие необратимо.');
-    if (confirmed) {
+  const handleReset = () => {
+    const message = 'Точно сбросить весь прогресс до 1 уровня? Это действие необратимо.';
+    const proceed = async () => {
       if (onResetProgress) {
         await onResetProgress();
       } else {
         localStorage.clear();
-        window.location.reload();
+        sessionStorage.clear();
+        window.location.href = window.location.pathname;
+      }
+    };
+
+    if (window.Telegram?.WebApp?.showConfirm) {
+      window.Telegram.WebApp.showConfirm(message, (ok: boolean) => {
+        if (ok) proceed();
+      });
+    } else {
+      if (window.confirm(message)) {
+        proceed();
       }
     }
   };

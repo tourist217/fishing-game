@@ -30,6 +30,8 @@ interface TelegramWebApp {
   };
   openTelegramLink?: (url: string) => void;
   openLink?: (url: string, options?: { try_instant_view?: boolean }) => void;
+  showConfirm?: (message: string, callback?: (confirmed: boolean) => void) => void;
+  showAlert?: (message: string, callback?: () => void) => void;
   shareToStory?: (
     media_url: string,
     params?: {
