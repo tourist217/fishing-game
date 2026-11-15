@@ -21,17 +21,18 @@ export const GemsShopModal: React.FC<GemsShopModalProps> = ({
     return localStorage.getItem('fg_claimed_test_gems') === 'true';
   });
 
-  // Автоматическая проверка и восстановление покупок Stars при открытии
+  // Автоматическая проверка и начисление покупок Stars при открытии
   React.useEffect(() => {
     const identity = getPlayerIdentity();
     if (identity?.id && !identity.id.startsWith('local_')) {
       fetch(`/api/sync-gems?userId=${identity.id}`)
         .then((r) => r.json())
         .then((res) => {
-          if (res?.ok && typeof res.gems === 'number' && res.totalPaidGems > 0 && res.gems > gems) {
-            const diff = res.gems - gems;
-            onAddGems?.(diff);
-            setStarsNotice(`✨ Ваши купленные алмазы (+${diff} 💎) успешно восстановлены!`);
+          if (res?.ok && res.addedGems > 0) {
+            onAddGems?.(res.addedGems);
+            setStarsNotice(`✨ Ваши купленные алмазы (+${res.addedGems} 💎) успешно зачислены!`);
+          } else if (res?.ok && typeof res.gems === 'number' && res.gems > gems) {
+            onAddGems?.(res.gems - gems);
           }
         })
         .catch((e) => console.warn('Auto-sync gems check error:', e));

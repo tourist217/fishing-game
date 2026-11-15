@@ -40,43 +40,52 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Database unavailable' });
     }
 
-    // Находим все подтвержденные платежи этого пользователя
-    const paymentsSnap = await db.collection('payments').where('userId', '==', userId).get();
-    let totalPaidGems = 0;
-    const charges = [];
-
-    paymentsSnap.forEach((doc) => {
-      const data = doc.data();
-      const gems = Number(data.gems) || 0;
-      totalPaidGems += gems;
-      charges.push({ chargeId: doc.id, gems, createdAt: data.createdAt });
-    });
-
+    // 1. Получаем профиль пользователя
     const userDocRef = db.collection('users').doc(userId);
     const userSnap = await userDocRef.get();
-    const currentGems = userSnap.exists ? Number(userSnap.data()?.gems) || 0 : 0;
+    const userData = userSnap.exists ? userSnap.data() || {} : {};
+    const currentGems = Number(userData.gems) || 0;
+    const claimedChargeIds = Array.isArray(userData.claimedChargeIds) ? userData.claimedChargeIds : [];
 
-    // Если баланс меньше суммы оплаченных алмазов — восстанавливаем!
+    // 2. Находим все подтвержденные чеки пользователя в базе
+    const paymentsSnap = await db.collection('payments').where('userId', '==', userId).get();
+    let unclaimedGems = 0;
+    const newClaimedIds = [...claimedChargeIds];
+
+    paymentsSnap.forEach((doc) => {
+      const chargeId = doc.id;
+      const data = doc.data();
+      const gems = Number(data.gems) || 0;
+
+      // Если этот чек ещё не был начислен в баланс игрока
+      if (!claimedChargeIds.includes(chargeId) && gems > 0) {
+        unclaimedGems += gems;
+        newClaimedIds.push(chargeId);
+      }
+    });
+
     let updatedGems = currentGems;
-    if (totalPaidGems > 0 && currentGems < totalPaidGems) {
-      updatedGems = totalPaidGems;
+
+    // 3. Если есть неначисленные чеки — прибавляем их к балансу!
+    if (unclaimedGems > 0) {
+      updatedGems = currentGems + unclaimedGems;
       await userDocRef.set(
         {
           gems: updatedGems,
+          claimedChargeIds: newClaimedIds,
           updatedAt: Date.now(),
         },
         { merge: true }
       );
-      console.log(`Restored ${totalPaidGems} gems for user ${userId}`);
+      console.log(`Credited unclaimed ${unclaimedGems} gems to user ${userId}. New total: ${updatedGems}`);
     }
 
     return res.status(200).json({
       ok: true,
       userId,
-      totalPaidGems,
+      addedGems: unclaimedGems,
       gems: updatedGems,
-      chargesCount: charges.length,
-      charges,
+      claimedCount: newClaimedIds.length,
     });
   } catch (err) {
     console.error('sync-gems error:', err);
