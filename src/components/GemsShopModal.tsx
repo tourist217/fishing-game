@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { GemIcon } from './GemIcon';
+import { getPlayerIdentity } from '../firebase';
 
 interface GemsShopModalProps {
   onClose: () => void;
@@ -13,6 +14,7 @@ export const GemsShopModal: React.FC<GemsShopModalProps> = ({
   onAddTestGems,
 }) => {
   const [starsNotice, setStarsNotice] = useState<string | null>(null);
+  const [loadingPackId, setLoadingPackId] = useState<string | null>(null);
   const [hasClaimedTestGems, setHasClaimedTestGems] = useState<boolean>(() => {
     return localStorage.getItem('fg_claimed_test_gems') === 'true';
   });
@@ -24,14 +26,48 @@ export const GemsShopModal: React.FC<GemsShopModalProps> = ({
     localStorage.setItem('fg_claimed_test_gems', 'true');
   };
 
-  const handleBuyWithStars = (packGems: number, starsPrice: number) => {
-    // Подготовка для интеграции Telegram Stars (openInvoice)
+  const handleBuyWithStars = async (packId: string, packGems: number, starsPrice: number) => {
     const tg = window.Telegram?.WebApp;
-    if (tg && typeof (tg as any).openInvoice === 'function') {
-      // Когда бэкенд формирует invoiceLink: tg.openInvoice(link, (status) => ...)
-      setStarsNotice(`⭐ Оплата через Telegram Stars (${starsPrice} ⭐ за ${packGems} 💎) подключается! Сейчас можно протестировать начисление кнопкой ниже.`);
-    } else {
-      setStarsNotice(`⭐ Оплата через Telegram Stars (${starsPrice} ⭐ за ${packGems} 💎) на финальной стадии подключения!`);
+    if (!tg || typeof (tg as any).openInvoice !== 'function') {
+      setStarsNotice(`⭐ Оплата за Stars (${starsPrice} ⭐ за ${packGems} 💎) работает внутри официального приложения Telegram.`);
+      return;
+    }
+
+    setLoadingPackId(packId);
+    setStarsNotice(`Подготовка счёта Telegram Stars (${starsPrice} ⭐)...`);
+
+    try {
+      const identity = getPlayerIdentity();
+      const res = await fetch('/api/create-invoice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          packageId: packId,
+          userId: identity.id,
+        }),
+      });
+
+      const data = await res.json();
+      if (!data.ok || !data.invoiceLink) {
+        throw new Error(data.error || 'Не удалось сформировать платёж');
+      }
+
+      setStarsNotice(null);
+
+      // Открываем защищенное нативное окно оплаты Telegram Stars
+      (tg as any).openInvoice(data.invoiceLink, (status: string) => {
+        if (status === 'paid') {
+          setStarsNotice(`🎉 Оплата прошла успешно! +${packGems} 💎 зачисляются на ваш баланс.`);
+        } else if (status === 'cancelled') {
+          setStarsNotice('Оплата отменена.');
+        } else if (status === 'failed') {
+          setStarsNotice('⚠️ Ошибка при проведении платежа.');
+        }
+      });
+    } catch (err: any) {
+      setStarsNotice(`⚠️ ${err?.message || 'Ошибка связи с сервером'}`);
+    } finally {
+      setLoadingPackId(null);
     }
   };
 
@@ -153,85 +189,89 @@ export const GemsShopModal: React.FC<GemsShopModalProps> = ({
                 fontSize: '9px',
                 padding: '2px 6px',
                 borderRadius: '8px',
-                background: 'rgba(56, 189, 248, 0.2)',
-                color: '#38bdf8',
+                background: 'rgba(245, 158, 11, 0.2)',
+                color: '#fbbf24',
                 fontWeight: 900,
               }}
             >
-              СКОРО
+              ОФИЦИАЛЬНО
             </span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {[
-              { gems: 50, stars: 25, label: 'Горсть алмазов', badge: null },
-              { gems: 150, stars: 70, label: 'Мешочек кристаллов', badge: '+20% БОНУС' },
-              { gems: 500, stars: 200, label: 'Сундук старателя', badge: 'ХИТ 🔥' },
-              { gems: 1200, stars: 450, label: 'Сокровищница озера', badge: '+50% МАКС' },
-            ].map((pack) => (
-              <div
-                key={pack.gems}
-                onClick={() => handleBuyWithStars(pack.gems, pack.stars)}
-                style={{
-                  background: 'rgba(30, 41, 59, 0.65)',
-                  border: pack.badge ? '1.5px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '16px',
-                  padding: '10px 12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  cursor: 'pointer',
-                  transition: 'transform 0.1s ease',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <GemIcon size={24} />
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff' }}>
-                        +{pack.gems} 💎
-                      </span>
-                      {pack.badge && (
-                        <span
-                          style={{
-                            fontSize: '9px',
-                            fontWeight: 900,
-                            color: '#38bdf8',
-                            background: 'rgba(56, 189, 248, 0.18)',
-                            padding: '2px 6px',
-                            borderRadius: '6px',
-                          }}
-                        >
-                          {pack.badge}
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                      {pack.label}
-                    </div>
-                  </div>
-                </div>
-
+              { id: 'pack_50', gems: 50, stars: 25, label: 'Горсть алмазов', badge: null },
+              { id: 'pack_150', gems: 150, stars: 70, label: 'Мешочек кристаллов', badge: '+20% БОНУС' },
+              { id: 'pack_500', gems: 500, stars: 200, label: 'Сундук старателя', badge: 'ХИТ 🔥' },
+              { id: 'pack_1200', gems: 1200, stars: 450, label: 'Сокровищница озера', badge: '+50% МАКС' },
+            ].map((pack) => {
+              const isLoading = loadingPackId === pack.id;
+              return (
                 <div
+                  key={pack.id}
+                  onClick={() => !isLoading && handleBuyWithStars(pack.id, pack.gems, pack.stars)}
                   style={{
-                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                    border: '1px solid #fde68a',
-                    borderRadius: '12px',
-                    padding: '6px 12px',
-                    color: '#ffffff',
-                    fontWeight: 900,
-                    fontSize: '12px',
+                    background: 'rgba(30, 41, 59, 0.65)',
+                    border: pack.badge ? '1.5px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '16px',
+                    padding: '10px 12px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '4px',
-                    boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)',
+                    justifyContent: 'space-between',
+                    cursor: isLoading ? 'wait' : 'pointer',
+                    opacity: isLoading ? 0.7 : 1,
+                    transition: 'transform 0.1s ease',
                   }}
                 >
-                  <span>{pack.stars}</span>
-                  <span>⭐</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <GemIcon size={24} />
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff' }}>
+                          +{pack.gems} 💎
+                        </span>
+                        {pack.badge && (
+                          <span
+                            style={{
+                              fontSize: '9px',
+                              fontWeight: 900,
+                              color: '#38bdf8',
+                              background: 'rgba(56, 189, 248, 0.18)',
+                              padding: '2px 6px',
+                              borderRadius: '6px',
+                            }}
+                          >
+                            {pack.badge}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                        {pack.label}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                      border: '1px solid #fde68a',
+                      borderRadius: '12px',
+                      padding: '6px 12px',
+                      color: '#ffffff',
+                      fontWeight: 900,
+                      fontSize: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)',
+                    }}
+                  >
+                    <span>{isLoading ? '⏳' : pack.stars}</span>
+                    <span>⭐</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
