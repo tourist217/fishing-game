@@ -102,6 +102,7 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
   // Позиция заброса и прогресс полета поплавка (в рефах, не вызывает лишних ре-рендеров)
   const castTargetRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.65 });
   const castProgressRef = useRef<number>(1);
+  const castStartTimeRef = useRef<number>(0);
   const crankAngleRef = useRef<number>(0);
   const currentBendRef = useRef<number>(0);
 
@@ -113,6 +114,7 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
       const ry = 0.58 + Math.random() * 0.14;
       castTargetRef.current = { x: rx, y: ry };
       castProgressRef.current = 0; // Стартуем анимацию полета
+      castStartTimeRef.current = performance.now();
       lerpedCatchProgressRef.current = 0;
     } else if (gameState === 'hooked') {
       hookedStartTimeRef.current = Date.now();
@@ -122,7 +124,7 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
     }
   }, [gameState]);
 
-  // Главный 2D Canvas цикл отрисовки — работает непрерывно на 60 FPS
+  // Главный 2D Canvas цикл отрисовки — работает непрерывно с расчётом Delta Time (dt)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -132,19 +134,25 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
 
     let animationFrameId: number;
     const startTime = Date.now();
+    let lastRenderTime = performance.now();
 
     const render = () => {
+      const now = performance.now();
+      const dt = Math.min(0.1, (now - lastRenderTime) / 1000);
+      lastRenderTime = now;
+
       const time = (Date.now() - startTime) / 1000;
       const width = canvas.width;
       const height = canvas.height;
+      const curGameState = gameStateRef.current;
 
-      // Плавное продвижение полета поплавка при забросе (внутри Canvas-цикла)
-      if (castProgressRef.current < 1) {
-        castProgressRef.current = Math.min(1, castProgressRef.current + 0.035);
+      // Плавное продвижение полета поплавка при забросе (ровно 480 мс на любом экране независимо от FPS)
+      if (curGameState === 'waiting' && castProgressRef.current < 1) {
+        const elapsedMs = now - castStartTimeRef.current;
+        castProgressRef.current = Math.min(1, elapsedMs / 480);
       }
       const curCastProgress = castProgressRef.current;
       const curCastTarget = castTargetRef.current;
-      const curGameState = gameStateRef.current;
       const curTension = tensionRef.current;
       const curLocation = locationRef.current;
       const curTime = effectiveTimeRef.current;
@@ -241,7 +249,8 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
         isBobberVisible = false;
 
         const targetProgress = catchProgressRef.current;
-        lerpedCatchProgressRef.current += (targetProgress - lerpedCatchProgressRef.current) * 0.08;
+        const progressLerp = 1 - Math.exp(-10 * dt);
+        lerpedCatchProgressRef.current += (targetProgress - lerpedCatchProgressRef.current) * progressLerp;
         const p = Math.max(0, Math.min(1, lerpedCatchProgressRef.current / 100));
 
         // Точка у мостков/берега (внизу экрана)
@@ -321,35 +330,36 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
         }
       }
 
-      // 6. Вычисление Нагрузки и Плавного Изгиба Удочки (Progressive Arc Bending)
+      // 6. Вычисление Нагрузки и Плавного Изгиба Удочки (Progressive Arc Bending с Delta Time)
       let targetBend = 0;
+      const dt60 = dt * 60; // Нормализованный множитель под 60 FPS
       if (curGameState === 'hooked') {
         // При поклевке вершинка слегка пружинит в такт поплавку
         targetBend = 0.12 + Math.max(0, Math.sin(time * 14)) * 0.10;
-        currentBendRef.current += (targetBend - currentBendRef.current) * 0.15;
+        currentBendRef.current += (targetBend - currentBendRef.current) * (1 - Math.exp(-10 * dt));
       } else if (curGameState === 'reeling') {
         if (isPullingRef.current) {
           // Игрок ЗАЖАЛ кнопку "ТЯНУТЬ!":
           // Удочка пружинит и сгибается под нагрузкой натяжения лески + легкие упругие рывки рыбы
           const fishStruggle = Math.sin(time * 6.5) * 0.05;
           targetBend = Math.min(1.0, Math.max(0.18, (curTension / 100) * 0.82 + fishStruggle));
-          currentBendRef.current += (targetBend - currentBendRef.current) * 0.12;
+          currentBendRef.current += (targetBend - currentBendRef.current) * (1 - Math.exp(-9 * dt));
 
           // Вращение ручки катушки ТОЛЬКО при нажатии на кнопку "ТЯНУТЬ"!
-          crankAngleRef.current += 0.28 + (curTension / 100) * 0.22;
+          crankAngleRef.current += (0.28 + (curTension / 100) * 0.22) * dt60;
         } else {
           // Игрок ОТПУСТИЛ кнопку "ТЯНУТЬ":
           // Удочка плавно и естественно выпрямляется обратно в спокойное положение (без лишней тряски)
           targetBend = 0;
-          currentBendRef.current += (0 - currentBendRef.current) * 0.07;
+          currentBendRef.current += (0 - currentBendRef.current) * (1 - Math.exp(-6 * dt));
         }
       } else if (curGameState === 'caught') {
         targetBend = 0.15;
-        currentBendRef.current += (targetBend - currentBendRef.current) * 0.10;
+        currentBendRef.current += (targetBend - currentBendRef.current) * (1 - Math.exp(-8 * dt));
       } else {
         // Спокойное состояние (idle, waiting) - удочка неподвижна и прямая
         targetBend = 0;
-        currentBendRef.current += (0 - currentBendRef.current) * 0.10;
+        currentBendRef.current += (0 - currentBendRef.current) * (1 - Math.exp(-8 * dt));
       }
 
       const bendFactor = Math.min(1.0, Math.max(0, currentBendRef.current));

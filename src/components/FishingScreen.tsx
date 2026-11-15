@@ -376,7 +376,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                     height: '100%',
                     width: `${catchProgress}%`,
                     background: 'linear-gradient(90deg, #10b981, #34d399)',
-                    transition: 'width 0.05s linear',
+                    willChange: 'width',
                   }}
                 />
               </div>
@@ -425,7 +425,8 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                     background: 'rgba(16, 185, 129, 0.35)',
                     borderLeft: '2px solid #10b981',
                     borderRight: '2px solid #10b981',
-                    transition: 'left 0.3s ease-in-out, width 0.3s ease-in-out',
+                    transition: 'left 0.25s ease-out, width 0.25s ease-out',
+                    willChange: 'left, width',
                   }}
                 />
 
@@ -435,12 +436,13 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                     position: 'absolute',
                     top: '2px',
                     bottom: '2px',
-                    left: `calc(${tension}% - 5px)`,
+                    left: `${tension}%`,
+                    transform: 'translateX(-50%)',
                     width: '10px',
                     background: '#fff',
                     borderRadius: '5px',
                     boxShadow: '0 0 10px rgba(255, 255, 255, 0.8)',
-                    transition: 'left 0.04s linear',
+                    willChange: 'left',
                   }}
                 />
               </div>

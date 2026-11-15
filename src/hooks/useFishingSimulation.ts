@@ -291,7 +291,7 @@ export function useFishingSimulation({
     return () => clearInterval(moveInterval);
   }, [gameState, currentFish]);
 
-  // Физический тик вываживания (40 мс)
+  // Физический цикл вываживания на requestAnimationFrame с точным дельта-временем (dt)
   useEffect(() => {
     if (gameState !== 'reeling') {
       isPullingRef.current = false;
@@ -300,8 +300,14 @@ export function useFishingSimulation({
 
     tensionRef.current = 50;
     progressRef.current = 15;
+    let animId: number;
+    let lastTime = performance.now();
 
-    const interval = setInterval(() => {
+    const loop = (now: number) => {
+      const dt = Math.min(0.1, (now - lastTime) / 1000);
+      lastTime = now;
+      const dtRatio = dt / 0.04; // Опорный коэффициент относительно базового шага 40 мс
+
       const active = currentFishRef.current;
       const pullForce = active?.fish.fightBehavior?.pullForce || 1.0;
       const lineLimit = lineTensileRef.current;
@@ -321,11 +327,11 @@ export function useFishingSimulation({
           // При перегрузе снасти натяжение зашкаливает при зажатии в разы быстрее
           pullSpeed += Math.min(24, (overloadRatio - 1) * 14.0);
         }
-        tensionRef.current += pullSpeed;
+        tensionRef.current += pullSpeed * dtRatio;
       } else {
         // При перегрузе тяжелая рыба стремительно тянет снасть вниз
         const releaseMultiplier = Math.max(1.0, Math.min(3.2, overloadRatio * 1.35));
-        tensionRef.current -= 1.8 * pullForce * releaseMultiplier;
+        tensionRef.current -= 1.8 * pullForce * releaseMultiplier * dtRatio;
       }
 
       const diffConfig = active
@@ -357,12 +363,11 @@ export function useFishingSimulation({
       const outOfZoneDrain = isOverloaded ? -0.65 : -0.4;
 
       const inZone = tensionRef.current >= curStart && tensionRef.current <= curEnd;
-      progressRef.current += inZone
+      progressRef.current += (inZone
         ? 1.0 * reelSpeedRef.current * sizeSpeedModifier * overloadProgressMod
-        : outOfZoneDrain;
+        : outOfZoneDrain) * dtRatio;
 
       if (tensionRef.current >= 100 || tensionRef.current <= 0 || progressRef.current <= 0) {
-        clearInterval(interval);
         isPullingRef.current = false;
         if (tensionRef.current >= 100 && isLineOverloaded) {
           onLineBreakRef.current?.();
@@ -377,7 +382,6 @@ export function useFishingSimulation({
       }
 
       if (progressRef.current >= 100) {
-        clearInterval(interval);
         isPullingRef.current = false;
         const caught = currentFishRef.current;
         if (caught) {
@@ -400,10 +404,14 @@ export function useFishingSimulation({
 
       setTension(Math.max(0, Math.min(100, tensionRef.current)));
       setCatchProgress(Math.max(0, Math.min(100, progressRef.current)));
-    }, 40);
+
+      animId = requestAnimationFrame(loop);
+    };
+
+    animId = requestAnimationFrame(loop);
 
     return () => {
-      clearInterval(interval);
+      cancelAnimationFrame(animId);
       isPullingRef.current = false;
     };
   }, [gameState]);
