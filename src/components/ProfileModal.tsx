@@ -62,11 +62,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     }
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     const confirmed = window.confirm('Точно сбросить весь прогресс до 1 уровня? Это действие необратимо.');
     if (confirmed) {
       if (onResetProgress) {
-        onResetProgress();
+        await onResetProgress();
       } else {
         localStorage.clear();
         window.location.reload();

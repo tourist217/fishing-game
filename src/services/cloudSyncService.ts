@@ -2,7 +2,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db, getPlayerIdentity } from '../firebase';
 import type { CaughtFishItem } from '../components/InventoryScreen';
 import type { FishJournal } from '../hooks/usePlayerState';
-import type { PlayerGearState } from '../gearData';
+import { INITIAL_PLAYER_GEAR, type PlayerGearState } from '../gearData';
 import type { UpgradesState } from '../hooks/useBaitState';
 import type { FeederSlotData } from '../hooks/useFeederState';
 
@@ -34,6 +34,15 @@ const STORAGE_KEY_TOTAL_WEIGHT = 'fg_tournament_total_score';
 
 let syncTimeout: ReturnType<typeof setTimeout> | null = null;
 let latestProfileGetter: (() => CloudUserProfile) | null = null;
+let isSyncDisabled = false;
+
+export function disableCloudSync(): void {
+  isSyncDisabled = true;
+  if (syncTimeout) {
+    clearTimeout(syncTimeout);
+    syncTimeout = null;
+  }
+}
 
 /**
  * Загрузить облачный профиль игрока из Firestore
@@ -57,6 +66,7 @@ export async function loadCloudUserProfile(): Promise<CloudUserProfile | null> {
  * Отправить актуальный профиль в Firestore
  */
 export async function saveCloudUserProfile(profile: CloudUserProfile): Promise<void> {
+  if (isSyncDisabled) return;
   try {
     const identity = getPlayerIdentity();
     const userRef = doc(db, 'users', identity.id);
@@ -82,6 +92,7 @@ export async function saveCloudUserProfile(profile: CloudUserProfile): Promise<v
  * Исключает спам запросов к Firestore при частых действиях
  */
 export function scheduleDebouncedCloudSync(getProfile: () => CloudUserProfile): void {
+  if (isSyncDisabled) return;
   latestProfileGetter = getProfile;
   if (syncTimeout) {
     clearTimeout(syncTimeout);
@@ -97,6 +108,7 @@ export function scheduleDebouncedCloudSync(getProfile: () => CloudUserProfile): 
  * Мгновенное сохранение (при закрытии приложения или перед открытием лидерборда)
  */
 export async function flushImmediateCloudSync(getProfile?: () => CloudUserProfile): Promise<void> {
+  if (isSyncDisabled) return;
   if (syncTimeout) {
     clearTimeout(syncTimeout);
     syncTimeout = null;
@@ -104,6 +116,46 @@ export async function flushImmediateCloudSync(getProfile?: () => CloudUserProfil
   const getter = getProfile || latestProfileGetter;
   if (getter) {
     await saveCloudUserProfile(getter());
+  }
+}
+
+/**
+ * Полный сброс облачного профиля игрока в Firestore до 1 уровня
+ */
+export async function resetCloudUserProfile(): Promise<void> {
+  disableCloudSync();
+  try {
+    const identity = getPlayerIdentity();
+    const userRef = doc(db, 'users', identity.id);
+    const initialProfile: CloudUserProfile = {
+      id: identity.id,
+      name: identity.name,
+      avatar: 'male',
+      coins: 0,
+      exp: 0,
+      level: 1,
+      gems: 120,
+      energy: 100,
+      lastEnergyTimestamp: Date.now(),
+      inventory: [],
+      journal: {},
+      hasClaimedAllSpeciesReward: false,
+      gear: INITIAL_PLAYER_GEAR,
+      baits: { worm: 20 },
+      upgrades: {
+        baitCapacityLevel: 0,
+        hookSharpenLevel: 0,
+        reelOilLevel: 0,
+      },
+      selectedBaitId: 'worm',
+      feeders: [],
+      totalCaughtWeight: 0,
+      trophiesCount: 0,
+      updatedAt: Date.now(),
+    };
+    await setDoc(userRef, initialProfile);
+  } catch (err) {
+    console.warn('Ошибка при сбросе облачного профиля:', err);
   }
 }
 

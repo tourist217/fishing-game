@@ -137,3 +137,22 @@ export async function syncInitialPlayerRecord(): Promise<LeaderboardEntry | null
   }
   return null;
 }
+
+/**
+ * Сброс записи игрока в турнире при полном сбросе прогресса
+ */
+export async function resetTournamentLeaderboardRecord(): Promise<void> {
+  try {
+    const identity = getPlayerIdentity();
+    const userDocRef = doc(db, 'leaderboard', identity.id);
+    await setDoc(userDocRef, {
+      name: identity.name,
+      username: identity.username || '',
+      bestCatchWeight: 0,
+      totalScore: 0,
+      updatedAt: Date.now(),
+    });
+  } catch (err) {
+    console.warn('Ошибка при сбросе рекорда турнира:', err);
+  }
+}

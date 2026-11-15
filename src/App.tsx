@@ -24,11 +24,12 @@ import { useFeederState } from './hooks/useFeederState';
 import { FeederModal } from './components/FeederModal';
 import { FeederWelcomeModal } from './components/FeederWelcomeModal';
 import { ProfileModal } from './components/ProfileModal';
-import { handleCatchForTournament, syncInitialPlayerRecord } from './services/tournamentService';
+import { handleCatchForTournament, syncInitialPlayerRecord, resetTournamentLeaderboardRecord } from './services/tournamentService';
 import {
   loadCloudUserProfile,
   scheduleDebouncedCloudSync,
   flushImmediateCloudSync,
+  resetCloudUserProfile,
   getTotalCaughtWeight,
   type CloudUserProfile,
 } from './services/cloudSyncService';
@@ -54,6 +55,18 @@ export default function App() {
   // 1. Состояние игрока и экономики
   const player = usePlayerState();
   const tutorial = useTutorial(player.level, player.exp);
+
+  // Полный сброс прогресса (облако Firestore + лидерборд турнира + локальное хранилище)
+  const resetAllProgress = async () => {
+    try {
+      await resetCloudUserProfile();
+      await resetTournamentLeaderboardRecord();
+    } catch (e) {
+      console.warn('Ошибка при сбросе профиля:', e);
+    }
+    localStorage.clear();
+    window.location.reload();
+  };
 
   // 2. Снаряжение (удочки, катушки, лески)
   const gear = useGearState(
@@ -319,6 +332,7 @@ export default function App() {
           energy={player.energy}
           maxEnergy={player.maxEnergy}
           onOpenSettings={() => setIsProfileOpen(true)}
+          onResetProgress={resetAllProgress}
           rodName={`${gear.currentRod.name} [${gear.rodLevel} ур.]`}
           rodIcon={gear.currentRod.icon}
         />
@@ -474,6 +488,7 @@ export default function App() {
               }
             }}
             onRestartTutorial={tutorial.resetTutorial}
+            onResetProgress={resetAllProgress}
             onOpenKeepnet={() => {
               setActiveTab('keepnet');
               triggerHaptic('selection');
@@ -708,6 +723,7 @@ export default function App() {
         avatar={player.avatar}
         onSelectAvatar={player.selectAvatar}
         onRestartTutorial={tutorial.resetTutorial}
+        onResetProgress={resetAllProgress}
       />
     </div>
   );

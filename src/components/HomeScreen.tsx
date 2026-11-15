@@ -299,11 +299,15 @@ export const HomeScreen = ({
 
   const expPercentage = Math.min(100, Math.max(0, (exp / maxExp) * 100));
 
-  const handleReset = () => {
+  const handleReset = async () => {
     const confirmed = window.confirm('Точно сбросить весь прогресс до 1 уровня?');
     if (confirmed) {
-      localStorage.clear();
-      window.location.reload();
+      if (onResetProgress) {
+        await onResetProgress();
+      } else {
+        localStorage.clear();
+        window.location.reload();
+      }
     }
   };
 
