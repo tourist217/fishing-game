@@ -425,7 +425,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
                     background: 'rgba(16, 185, 129, 0.35)',
                     borderLeft: '2px solid #10b981',
                     borderRight: '2px solid #10b981',
-                    transition: 'left 0.25s ease-out, width 0.25s ease-out',
+                    transition: 'left 0.12s cubic-bezier(0, 0, 0.2, 1), width 0.15s ease-out',
                     willChange: 'left, width',
                   }}
                 />

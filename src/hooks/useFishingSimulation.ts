@@ -322,16 +322,27 @@ export function useFishingSimulation({
       const overloadRatio = (active && gearLimit > 0) ? active.weight / gearLimit : 1.0;
 
       if (isPullingRef.current) {
-        let pullSpeed = 1.9;
+        let pullSpeed = 2.45; // Сбалансированная отзывчивая скорость (было 1.9)
+
+        // Progressive Catch-up: если бегунок далеко позади зелёной зоны
+        // (например зона на 70%, а бегунок на 20-30%), даём комфортное ускорение догона,
+        // которое плавно снижается по мере приближения к зоне (исключает перелёт в красную зону на ПК)
+        const targetZone = sweetZoneCenterRef.current;
+        const distanceBehind = targetZone - tensionRef.current;
+        if (distanceBehind > 15) {
+          const catchUpBonus = Math.min(1.15, (distanceBehind - 15) * 0.035);
+          pullSpeed += catchUpBonus;
+        }
+
         if (isOverloaded && active) {
-          // При перегрузе снасти натяжение зашкаливает при зажатии в разы быстрее
-          pullSpeed += Math.min(24, (overloadRatio - 1) * 14.0);
+          // При перегрузе снасти натяжение зашкаливает при зажатии быстрее
+          pullSpeed += Math.min(16, (overloadRatio - 1) * 9.0);
         }
         tensionRef.current += pullSpeed * dtRatio;
       } else {
-        // При перегрузе тяжелая рыба стремительно тянет снасть вниз
-        const releaseMultiplier = Math.max(1.0, Math.min(3.2, overloadRatio * 1.35));
-        tensionRef.current -= 1.8 * pullForce * releaseMultiplier * dtRatio;
+        // При отпускании рыба тянет снасть вниз
+        const releaseMultiplier = Math.max(1.0, Math.min(2.7, overloadRatio * 1.25));
+        tensionRef.current -= 1.65 * pullForce * releaseMultiplier * dtRatio;
       }
 
       const diffConfig = active

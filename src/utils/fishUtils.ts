@@ -85,29 +85,29 @@ export function getFishDifficultyConfig(
   const loadRatio = weightKg / gearLimit;
 
   let widthMultiplier = 1.0;
-  let finalIntervalMs = 1500;
+  let finalIntervalMs = 1700;
 
   if (loadRatio < 0.35) {
     widthMultiplier = 1.25;
-    finalIntervalMs = 1800; // Спокойная рыба под мощную снасть
+    finalIntervalMs = 2000; // Спокойная рыба под мощную снасть
   } else if (loadRatio <= 0.70) {
     widthMultiplier = 1.0;
-    finalIntervalMs = 1500;
+    finalIntervalMs = 1700;
   } else if (loadRatio <= 0.95) {
-    widthMultiplier = 0.80;
-    finalIntervalMs = 1300;
+    widthMultiplier = 0.85;
+    finalIntervalMs = 1500;
   } else if (loadRatio <= 1.20) {
     // Небольшой перегруз снасти (на 10-20% выше предела)
-    widthMultiplier = 0.48;
-    finalIntervalMs = 950;
+    widthMultiplier = 0.55;
+    finalIntervalMs = 1350;
   } else if (loadRatio <= 1.50) {
     // Существенный перегруз снасти (на 20-50% выше предела)
-    widthMultiplier = 0.28;
-    finalIntervalMs = 750;
+    widthMultiplier = 0.36;
+    finalIntervalMs = 1200;
   } else {
     // Экстремальный перегруз снасти (> 1.5x) - например 4.4 кг на 2.5 кг удочку
-    widthMultiplier = 0.16;
-    finalIntervalMs = 550; // Зона мечется каждые 0.55 сек, рыба яростно бьётся
+    widthMultiplier = 0.24;
+    finalIntervalMs = 1050; // Зона активно перемещается, сохраняя честный шанс догнать
   }
 
   // Бонус заточки крючка: при перегрузе снасти крючок не может бесконечно расширять зону
