@@ -1,40 +1,29 @@
-import * as admin from 'firebase-admin';
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8855072906:AAFeiso-CDnzg60PHVz8Fd_cYnHvF2iPNqQ';
 
 function getAdminDb() {
-  if (!admin.apps.length) {
+  if (!getApps().length) {
     const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
     if (raw) {
       try {
-        const cert = JSON.parse(raw);
-        admin.initializeApp({
-          credential: admin.credential.cert(cert),
+        const serviceAccount = JSON.parse(raw);
+        initializeApp({
+          credential: cert(serviceAccount),
         });
       } catch (e) {
         console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:', e);
       }
-    } else if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
-      try {
-        admin.initializeApp({
-          credential: admin.credential.cert({
-            projectId: process.env.FIREBASE_PROJECT_ID,
-            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-            privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-          }),
-        });
-      } catch (e) {
-        console.error('Failed to init Firebase Admin from env variables:', e);
-      }
     } else {
-      console.warn('FIREBASE_SERVICE_ACCOUNT is not configured yet. Payments will be logged only.');
+      console.warn('FIREBASE_SERVICE_ACCOUNT env var is missing');
     }
   }
 
-  return admin.apps.length ? admin.firestore() : null;
+  return getApps().length ? getFirestore() : null;
 }
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(200).send('Telegram Stars Webhook Endpoint is Active');
   }
@@ -63,8 +52,7 @@ export default async function handler(req: any, res: any) {
       const chargeId = payment.telegram_payment_charge_id;
       const chatId = message.chat?.id;
 
-      // Парсим полезную нагрузку нашего счёта
-      let payloadData: any = null;
+      let payloadData = null;
       try {
         payloadData = JSON.parse(payment.invoice_payload);
       } catch (e) {
@@ -76,7 +64,7 @@ export default async function handler(req: any, res: any) {
       const starsPaid = Number(payment.total_amount) || 0;
       const packageId = String(payloadData?.p || 'unknown');
 
-      console.log(`Received successful payment: ${starsPaid} Stars for ${gemsToAdd} gems from user ${userId} (charge: ${chargeId})`);
+      console.log(`Payment received: ${starsPaid} Stars for ${gemsToAdd} gems from user ${userId} (charge: ${chargeId})`);
 
       const db = getAdminDb();
       if (db) {
@@ -104,7 +92,7 @@ export default async function handler(req: any, res: any) {
         batch.set(
           userDocRef,
           {
-            gems: admin.firestore.FieldValue.increment(gemsToAdd),
+            gems: FieldValue.increment(gemsToAdd),
             updatedAt: Date.now(),
           },
           { merge: true }
@@ -113,7 +101,7 @@ export default async function handler(req: any, res: any) {
         await batch.commit();
         console.log(`Successfully credited ${gemsToAdd} gems to user ${userId} in Firestore.`);
       } else {
-        console.error('Cannot credit gems to Firestore: Firebase Admin is not initialized! (Missing FIREBASE_SERVICE_ACCOUNT)');
+        console.error('Firestore not available: FIREBASE_SERVICE_ACCOUNT might be missing or invalid');
       }
 
       // Отправляем игроку чек в чат с ботом
@@ -133,7 +121,7 @@ export default async function handler(req: any, res: any) {
     }
 
     return res.status(200).json({ ok: true, message: 'update ignored' });
-  } catch (err: any) {
+  } catch (err) {
     console.error('Webhook processing exception:', err);
     return res.status(200).json({ ok: false, error: err?.message });
   }

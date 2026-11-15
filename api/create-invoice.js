@@ -1,6 +1,6 @@
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8855072906:AAFeiso-CDnzg60PHVz8Fd_cYnHvF2iPNqQ';
 
-export const GEM_PACKAGES: Record<string, { id: string; gems: number; stars: number; title: string; description: string }> = {
+export const GEM_PACKAGES = {
   pack_50: {
     id: 'pack_50',
     gems: 50,
@@ -31,8 +31,7 @@ export const GEM_PACKAGES: Record<string, { id: string; gems: number; stars: num
   },
 };
 
-export default async function handler(req: any, res: any) {
-  // CORS заголовки для локальной и веб-отладки
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -59,7 +58,6 @@ export default async function handler(req: any, res: any) {
 
     const pack = GEM_PACKAGES[packageId];
 
-    // Компактный payload (строго до 128 байт для Telegram Bot API)
     const payload = JSON.stringify({
       u: String(userId),
       p: pack.id,
@@ -77,7 +75,7 @@ export default async function handler(req: any, res: any) {
         title: pack.title,
         description: pack.description,
         payload,
-        provider_token: '', // Для Telegram Stars всегда пустая строка
+        provider_token: '',
         currency: 'XTR',
         prices: [
           {
@@ -88,7 +86,7 @@ export default async function handler(req: any, res: any) {
       }),
     });
 
-    const data: any = await telegramRes.json();
+    const data = await telegramRes.json();
 
     if (!data.ok) {
       console.error('Telegram createInvoiceLink API error:', data);
@@ -104,7 +102,7 @@ export default async function handler(req: any, res: any) {
         stars: pack.stars,
       },
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error('create-invoice handler exception:', err);
     return res.status(500).json({ error: err?.message || 'Internal server error' });
   }
