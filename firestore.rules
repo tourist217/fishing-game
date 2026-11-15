@@ -1,0 +1,263 @@
+rules_version = '2';
+
+/**
+ * ===============================================================
+ * Cloud Firestore Security Rules - Fishing Game (Telegram Mini App)
+ * ===============================================================
+ *
+ * Project ID: fishing-game-97536
+ *
+ * HOW TO DEPLOY THESE RULES:
+ * ---------------------------------------------------------------
+ * Option A (Firebase CLI - Recommended):
+ *   1. Ensure Firebase CLI is installed and you are logged in:
+ *      npm install -g firebase-tools
+ *      firebase login
+ *   2. Run deploy command from the project root:
+ *      firebase deploy --only firestore:rules
+ *
+ * Option B (Firebase Console):
+ *   1. Navigate to https://console.firebase.google.com/project/fishing-game-97536/firestore/rules
+ *   2. Copy the entire contents of this file.
+ *   3. Paste into the rules editor and click "Publish".
+ *
+ * ARCHITECTURAL CONTEXT & SECURITY NOTE:
+ * ---------------------------------------------------------------
+ * This application is a Telegram Mini App that currently connects directly
+ * to Firestore without Firebase Auth (unauthenticated or anonymous SDK client).
+ *
+ * Current Safeguards implemented in these rules:
+ *   - Strict schema validation: No undefined / malicious fields allowed.
+ *   - Strict type checking: Every field validated for CEL type (string, number, bool, list, map).
+ *   - Strict value boundaries: Anti-cheat limits on coins, gems, level, energy, and catch weights.
+ *   - Document ID anchoring: Document ID and internal user ID must match.
+ *   - Resource exhaustion prevention: Strict limits on string lengths, list sizes, and map sizes.
+ *   - Complete delete lockdown: No client-side deletions permitted.
+ *   - Default deny: All collections outside 'users' and 'leaderboard' are blocked.
+ *   - Public read: Enabled for global hall of fame, tournament leaderboards, and user profiles.
+ *
+ * Recommended Future Hardening (Roadmap):
+ *   - Integrate Firebase Custom Auth using a Cloud Function that validates Telegram's
+ *     `initData` HMAC-SHA256 signature and returns a custom Firebase token.
+ *   - Once custom tokens are active, write access can be tightened to:
+ *     `request.auth.uid == userId`.
+ * ===============================================================
+ * Assumed Data Model
+ * ===============================================================
+ *
+ * Collection: users/{userId}
+ * Document ID: userId (Telegram user ID string or local test ID)
+ * Fields:
+ *   - id: string (required, 1-128 chars, matches document ID, immutable on update)
+ *   - name: string (required, 1-60 chars) - Telegram player name / display name
+ *   - avatar: string (optional, enum: 'male' | 'female') - Player avatar icon
+ *   - coins: number (required, 0 <= coins <= 100,000,000) - In-game soft currency
+ *   - exp: number (required, 0 <= exp <= 1,000,000,000) - Experience points
+ *   - level: number (required, 1 <= level <= 100) - Profile progression level
+ *   - gems: number (required, 0 <= gems <= 100,000) - In-game premium currency
+ *   - energy: number (required, 0 <= energy <= 100) - Player energy meter
+ *   - lastEnergyTimestamp: number (required, >= 0) - Epoch timestamp in ms for regen
+ *   - inventory: list (required, size <= 50) - Caught fish currently kept
+ *   - journal: map (required, size <= 100) - Discovered fish species and records
+ *   - hasClaimedAllSpeciesReward: bool (required) - Quest completion flag
+ *   - gear: map (required, size <= 20) - Rods, reels, lines configuration
+ *   - baits: map (required, size <= 50) - Bait inventory counts
+ *   - upgrades: map (required, size <= 20) - Persistent character/gear upgrades
+ *   - selectedBaitId: string (required, 1-50 chars) - Currently equipped bait ID
+ *   - feeders: list (required, size <= 10) - Feeder tackle slot states
+ *   - totalCaughtWeight: number (required, 0 <= weight <= 10,000,000) - Total catch in kg
+ *   - trophiesCount: number (required, 0 <= count <= 10,000) - Number of trophy fish
+ *   - updatedAt: number (required, >= 0) - Timestamp in ms of last cloud sync
+ *
+ * Collection: leaderboard/{userId}
+ * Document ID: userId (matches Telegram user ID or local test ID)
+ * Fields:
+ *   - name: string (required, 1-60 chars) - Player display name
+ *   - username: string (optional, 0-60 chars) - Telegram @username
+ *   - bestCatchWeight: number (required, 0 <= weight <= 500) - Biggest single fish in kg
+ *   - totalScore: number (required, 0 <= score <= 10,000,000) - Total accumulated weight in kg
+ *   - updatedAt: number (required, >= 0) - Timestamp in ms
+ *   - id: string (optional, if present matches document ID userId)
+ *
+ * ===============================================================
+ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Domain Validator: User Profile (users/{userId})
+    // ===============================================================
+    function isValidUserProfile(data, userId) {
+      return (
+        // Strict Schema: Only allowed fields, and all required fields present
+        data.keys().hasOnly([
+          'id', 'name', 'avatar', 'coins', 'exp', 'level', 'gems', 'energy',
+          'lastEnergyTimestamp', 'inventory', 'journal',
+          'hasClaimedAllSpeciesReward', 'gear', 'baits', 'upgrades',
+          'selectedBaitId', 'feeders', 'totalCaughtWeight',
+          'trophiesCount', 'updatedAt'
+        ]) &&
+        data.keys().hasAll([
+          'id', 'name', 'coins', 'exp', 'level', 'gems', 'energy',
+          'lastEnergyTimestamp', 'inventory', 'journal',
+          'hasClaimedAllSpeciesReward', 'gear', 'baits', 'upgrades',
+          'selectedBaitId', 'feeders', 'totalCaughtWeight',
+          'trophiesCount', 'updatedAt'
+        ]) &&
+
+        // Document ID matching & size check
+        data.id is string &&
+        data.id == userId &&
+        data.id.size() >= 1 &&
+        data.id.size() <= 128 &&
+
+        // Player Name
+        data.name is string &&
+        data.name.size() >= 1 &&
+        data.name.size() <= 60 &&
+
+        // Optional Avatar enum
+        (!('avatar' in data) || data.avatar in ['male', 'female']) &&
+
+        // Economic & Progression Balance Bounds
+        data.coins is number &&
+        data.coins >= 0 &&
+        data.coins <= 100000000 &&
+
+        data.exp is number &&
+        data.exp >= 0 &&
+        data.exp <= 1000000000 &&
+
+        data.level is number &&
+        data.level >= 1 &&
+        data.level <= 100 &&
+
+        data.gems is number &&
+        data.gems >= 0 &&
+        data.gems <= 100000 &&
+
+        data.energy is number &&
+        data.energy >= 0 &&
+        data.energy <= 100 &&
+
+        data.lastEnergyTimestamp is number &&
+        data.lastEnergyTimestamp >= 0 &&
+
+        // Inventory & Journal Containers with strict capacity bounds
+        data.inventory is list &&
+        data.inventory.size() <= 50 &&
+
+        data.journal is map &&
+        data.journal.size() <= 100 &&
+
+        data.hasClaimedAllSpeciesReward is bool &&
+
+        data.gear is map &&
+        data.gear.size() <= 20 &&
+
+        data.baits is map &&
+        data.baits.size() <= 50 &&
+
+        data.upgrades is map &&
+        data.upgrades.size() <= 20 &&
+
+        data.selectedBaitId is string &&
+        data.selectedBaitId.size() >= 1 &&
+        data.selectedBaitId.size() <= 50 &&
+
+        data.feeders is list &&
+        data.feeders.size() <= 10 &&
+
+        // Overall stats
+        data.totalCaughtWeight is number &&
+        data.totalCaughtWeight >= 0 &&
+        data.totalCaughtWeight <= 10000000 &&
+
+        data.trophiesCount is number &&
+        data.trophiesCount >= 0 &&
+        data.trophiesCount <= 10000 &&
+
+        data.updatedAt is number &&
+        data.updatedAt >= 0
+      );
+    }
+
+    // ===============================================================
+    // Domain Validator: Leaderboard Record (leaderboard/{userId})
+    // ===============================================================
+    function isValidLeaderboardEntry(data, userId) {
+      return (
+        // Strict Schema: Only allowed fields, and all required fields present
+        data.keys().hasOnly(['name', 'username', 'bestCatchWeight', 'totalScore', 'updatedAt', 'id']) &&
+        data.keys().hasAll(['name', 'bestCatchWeight', 'totalScore', 'updatedAt']) &&
+
+        // Name
+        data.name is string &&
+        data.name.size() >= 1 &&
+        data.name.size() <= 60 &&
+
+        // Optional Username (0-60 chars)
+        (!('username' in data) || (data.username is string && data.username.size() <= 60)) &&
+
+        // Optional internal ID check (must match doc ID if provided)
+        (!('id' in data) || (data.id is string && data.id == userId)) &&
+
+        // Catch weight and tournament score bounds (max fish weight 500 kg)
+        data.bestCatchWeight is number &&
+        data.bestCatchWeight >= 0 &&
+        data.bestCatchWeight <= 500 &&
+
+        data.totalScore is number &&
+        data.totalScore >= 0 &&
+        data.totalScore <= 10000000 &&
+
+        data.updatedAt is number &&
+        data.updatedAt >= 0
+      );
+    }
+
+    // ===============================================================
+    // Rules: Users Collection
+    // ===============================================================
+    match /users/{userId} {
+      // Public read: allows global Hall of Fame queries & user cloud sync reads
+      allow read: if true;
+
+      // Create: strictly validated schema and identity match
+      allow create: if isValidUserProfile(request.resource.data, userId);
+
+      // Update: strictly validated schema, identity match, and immutable internal ID
+      allow update: if isValidUserProfile(request.resource.data, userId) &&
+                       request.resource.data.id == resource.data.id;
+
+      // Deletions are forbidden from client SDK
+      allow delete: if false;
+    }
+
+    // ===============================================================
+    // Rules: Leaderboard Collection
+    // ===============================================================
+    match /leaderboard/{userId} {
+      // Public read: allows Top-20 tournament leaderboard display
+      allow read: if true;
+
+      // Create: strictly validated schema and tournament score bounds
+      allow create: if isValidLeaderboardEntry(request.resource.data, userId);
+
+      // Update: strictly validated schema and immutable ID
+      allow update: if isValidLeaderboardEntry(request.resource.data, userId) &&
+                       (!('id' in resource.data) || !('id' in request.resource.data) || request.resource.data.id == resource.data.id);
+
+      // Deletions are forbidden from client SDK
+      allow delete: if false;
+    }
+
+    // ===============================================================
+    // Default Deny: All other paths are locked down
+    // ===============================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
