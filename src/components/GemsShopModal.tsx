@@ -13,6 +13,16 @@ export const GemsShopModal: React.FC<GemsShopModalProps> = ({
   onAddTestGems,
 }) => {
   const [starsNotice, setStarsNotice] = useState<string | null>(null);
+  const [hasClaimedTestGems, setHasClaimedTestGems] = useState<boolean>(() => {
+    return localStorage.getItem('fg_claimed_test_gems') === 'true';
+  });
+
+  const handleClaimTestGems = () => {
+    if (hasClaimedTestGems || !onAddTestGems) return;
+    onAddTestGems(50);
+    setHasClaimedTestGems(true);
+    localStorage.setItem('fg_claimed_test_gems', 'true');
+  };
 
   const handleBuyWithStars = (packGems: number, starsPrice: number) => {
     // Подготовка для интеграции Telegram Stars (openInvoice)
@@ -262,23 +272,26 @@ export const GemsShopModal: React.FC<GemsShopModalProps> = ({
         {/* Кнопка быстрого тест-пополнения для разработчика/тестировщика */}
         {onAddTestGems && (
           <button
-            onClick={() => onAddTestGems(50)}
+            onClick={handleClaimTestGems}
+            disabled={hasClaimedTestGems}
             style={{
-              background: 'rgba(56, 189, 248, 0.12)',
-              border: '1px dashed rgba(56, 189, 248, 0.45)',
+              background: hasClaimedTestGems ? 'rgba(255, 255, 255, 0.04)' : 'rgba(56, 189, 248, 0.12)',
+              border: hasClaimedTestGems ? '1px solid rgba(255, 255, 255, 0.1)' : '1px dashed rgba(56, 189, 248, 0.45)',
               borderRadius: '14px',
               padding: '9px',
-              color: '#38bdf8',
+              color: hasClaimedTestGems ? '#64748b' : '#38bdf8',
               fontWeight: 800,
               fontSize: '12px',
-              cursor: 'pointer',
+              cursor: hasClaimedTestGems ? 'default' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '6px',
             }}
           >
-            <span>+50 💎 (Тестовое начисление)</span>
+            <span>
+              {hasClaimedTestGems ? '✓ Тестовый бонус уже получен (1 раз)' : '+50 💎 (Тестовый бонус — 1 раз)'}
+            </span>
           </button>
         )}
 

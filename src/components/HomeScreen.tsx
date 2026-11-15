@@ -240,7 +240,7 @@ export const HomeScreen = ({
   exp,
   maxExp,
   coins,
-  gems = 120,
+  gems = 0,
   energy,
   maxEnergy,
   secondsToNextEnergy = 0,

@@ -105,7 +105,7 @@ export function usePlayerState() {
   const [gems, setGems] = useState<number>(() => {
     const val = localStorage.getItem('fg_gems');
     const parsed = Number(val);
-    return !isNaN(parsed) && parsed >= 0 ? parsed : 120;
+    return !isNaN(parsed) && parsed >= 0 ? parsed : 0;
   });
 
   // Суточный учёт покупок чая и бутербродов (максимум 5 в день со ступенчатой ценой)

@@ -69,9 +69,9 @@ export function useBaitState(
   // 2. Количество каждой наживки (с офлайн-расчётом червей при загрузке)
   const [baits, setBaits] = useState<Record<string, number>>(() => {
     let initialBaits: Record<string, number> = {
-      worm: 10,
-      bread: 5,
-      dough: 5,
+      worm: 3,
+      bread: 0,
+      dough: 0,
       corn: 0,
       maggot: 0,
       bloodworm: 0,
