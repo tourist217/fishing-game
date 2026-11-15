@@ -271,7 +271,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
               }}
             >
               <img
-                src={myAvatar === 'female' ? '/assets/avatars/avatar_female.png' : '/assets/avatars/avatar_male.png'}
+                src={myAvatar === 'female' ? '/assets/avatars/avatar_female.webp' : '/assets/avatars/avatar_male.webp'}
                 alt="Аватар"
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
@@ -411,7 +411,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
                       }}
                     >
                       <img
-                        src={item.avatar === 'female' ? '/assets/avatars/avatar_female.png' : '/assets/avatars/avatar_male.png'}
+                        src={item.avatar === 'female' ? '/assets/avatars/avatar_female.webp' : '/assets/avatars/avatar_male.webp'}
                         alt={item.name}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />

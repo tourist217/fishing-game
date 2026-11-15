@@ -178,7 +178,7 @@ export const TutorialGuide: React.FC<TutorialGuideProps> = ({ step, onNext, onSk
             }}
           >
             <img
-              src="/assets/icons/ranger_quests.png"
+              src="/assets/icons/ranger_quests.webp"
               alt="Старый Егерь"
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />

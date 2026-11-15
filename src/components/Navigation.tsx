@@ -166,12 +166,12 @@ export const Navigation = ({
     {
       id: 'map' as ActiveTab,
       label: 'Карта',
-      iconSrc: '/assets/ui/nav_map.png',
+      iconSrc: '/assets/ui/nav_map.webp',
     },
     {
       id: 'shop' as ActiveTab,
       label: 'Магазин',
-      iconSrc: '/assets/ui/nav_shop.png',
+      iconSrc: '/assets/ui/nav_shop.webp',
     },
     {
       id: 'base' as ActiveTab,
@@ -182,13 +182,13 @@ export const Navigation = ({
     {
       id: 'keepnet' as ActiveTab,
       label: 'Садок',
-      iconSrc: '/assets/ui/nav_keepnet.png',
+      iconSrc: '/assets/ui/nav_keepnet.webp',
       badge: inventoryCount > 0 ? inventoryCount : undefined,
     },
     {
       id: 'inventory' as ActiveTab,
       label: 'Инвентарь',
-      iconSrc: '/assets/ui/nav_inventory.png',
+      iconSrc: '/assets/ui/nav_inventory.webp',
     },
   ];
 

@@ -170,7 +170,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = (props) => {
           width: 'min(calc((100dvh - 84px) * 0.727), 100vw - 12px, 430px)',
           aspectRatio: '745 / 1024',
           maxHeight: 'calc(100dvh - 84px)',
-          backgroundImage: "url('/assets/ui/universal_board.png')",
+          backgroundImage: "url('/assets/ui/universal_board.webp')",
           backgroundSize: '100% 100%',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',

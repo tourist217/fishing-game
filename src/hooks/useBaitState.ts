@@ -11,13 +11,13 @@ export interface BaitItem {
 }
 
 export const AVAILABLE_BAITS: BaitItem[] = [
-  { id: 'worm', name: 'Червь', price: 2, levelReq: 1, icon: '🪱', image: '/assets/baits/worm.png', description: 'Универсальная насадка. При балансе менее 6 монет восстанавливается до 3 шт.' },
-  { id: 'bread', name: 'Хлеб', price: 1, levelReq: 1, icon: '🍞', image: '/assets/baits/bread.png', description: 'Отлично подходит для некрупной белой рыбы' },
-  { id: 'dough', name: 'Тесто', price: 2, levelReq: 1, icon: '🥟', image: '/assets/baits/dough.png', description: 'Любимое лакомство карася и плотвы' },
-  { id: 'maggot', name: 'Опарыш', price: 3, levelReq: 3, icon: '🐛', image: '/assets/baits/maggot.png', description: 'Бойкая личинка для плотвы, краснопёрки и подлещика' },
-  { id: 'bloodworm', name: 'Мотыль', price: 3, levelReq: 3, icon: '🦟', image: '/assets/baits/bloodworm.png', description: 'Нежный деликатес для пескаря и мелкого окуня-матросика' },
-  { id: 'livebait', name: 'Живец', price: 8, levelReq: 6, icon: '🐟', image: '/assets/baits/livebait.png', description: 'Живой малёк для отборных хищников: щука, крупный окунь, судак' },
-  { id: 'corn', name: 'Кукуруза', price: 5, levelReq: 9, icon: '🌽', image: '/assets/baits/corn.png', description: 'Сладкие зерна для карпа, сазана и крупного амура' },
+  { id: 'worm', name: 'Червь', price: 2, levelReq: 1, icon: '🪱', image: '/assets/baits/worm.webp', description: 'Универсальная насадка. При балансе менее 6 монет восстанавливается до 3 шт.' },
+  { id: 'bread', name: 'Хлеб', price: 1, levelReq: 1, icon: '🍞', image: '/assets/baits/bread.webp', description: 'Отлично подходит для некрупной белой рыбы' },
+  { id: 'dough', name: 'Тесто', price: 2, levelReq: 1, icon: '🥟', image: '/assets/baits/dough.webp', description: 'Любимое лакомство карася и плотвы' },
+  { id: 'maggot', name: 'Опарыш', price: 3, levelReq: 3, icon: '🐛', image: '/assets/baits/maggot.webp', description: 'Бойкая личинка для плотвы, краснопёрки и подлещика' },
+  { id: 'bloodworm', name: 'Мотыль', price: 3, levelReq: 3, icon: '🦟', image: '/assets/baits/bloodworm.webp', description: 'Нежный деликатес для пескаря и мелкого окуня-матросика' },
+  { id: 'livebait', name: 'Живец', price: 8, levelReq: 6, icon: '🐟', image: '/assets/baits/livebait.webp', description: 'Живой малёк для отборных хищников: щука, крупный окунь, судак' },
+  { id: 'corn', name: 'Кукуруза', price: 5, levelReq: 9, icon: '🌽', image: '/assets/baits/corn.webp', description: 'Сладкие зерна для карпа, сазана и крупного амура' },
 ];
 
 export interface BaitCapacityTier {

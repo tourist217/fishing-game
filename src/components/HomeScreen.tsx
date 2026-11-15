@@ -324,7 +324,7 @@ export const HomeScreen = ({
         border: 'none',
         boxShadow: 'none',
         userSelect: 'none',
-        backgroundImage: 'url(/assets/locations/main_fishing_dock.jpg)',
+        backgroundImage: 'url(/assets/locations/main_fishing_dock.webp)',
         backgroundSize: 'cover',
         backgroundPosition: 'center bottom',
         paddingTop: 'max(96px, var(--tg-content-safe-area-inset-top, calc(env(safe-area-inset-top, 44px) + 52px)))',
@@ -391,7 +391,7 @@ export const HomeScreen = ({
             }}
           >
             <img
-              src={avatar === 'female' ? '/assets/avatars/avatar_female.png' : '/assets/avatars/avatar_male.png'}
+              src={avatar === 'female' ? '/assets/avatars/avatar_female.webp' : '/assets/avatars/avatar_male.webp'}
               alt="Аватар"
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
@@ -619,7 +619,7 @@ export const HomeScreen = ({
             }}
           >
             <img
-              src="/assets/icons/ranger_quests.png"
+              src="/assets/icons/ranger_quests.webp"
               alt="Заказы егеря"
               style={{
                 width: '100%',
@@ -701,7 +701,7 @@ export const HomeScreen = ({
                 }}
               >
                 <img
-                  src="/assets/icons/journal.png"
+                  src="/assets/icons/journal.webp"
                   alt="Журнал"
                   style={{
                     width: '100%',
@@ -759,7 +759,7 @@ export const HomeScreen = ({
             }}
           >
             <img
-              src="/assets/ui/btn_feeder.png"
+              src="/assets/ui/btn_feeder.webp"
               alt="Фидер"
               style={{
                 width: '100%',
@@ -858,7 +858,7 @@ export const HomeScreen = ({
             }}
           >
             <img
-              src="/assets/icons/tournaments.png"
+              src="/assets/icons/tournaments.webp"
               alt="Турниры"
               style={{
                 width: '100%',
@@ -886,7 +886,7 @@ export const HomeScreen = ({
             }}
           >
             <img
-              src="/assets/icons/weather.png"
+              src="/assets/icons/weather.webp"
               alt="Погода"
               style={{
                 width: '100%',
@@ -936,7 +936,7 @@ export const HomeScreen = ({
             }}
           >
             <img
-              src="/assets/icons/leaderboard.png"
+              src="/assets/icons/leaderboard.webp"
               alt="Лидерборд"
               style={{
                 width: '100%',
@@ -1115,7 +1115,7 @@ export const HomeScreen = ({
               }}
             >
               <img
-                src="/assets/ui/btn_cast.png"
+                src="/assets/ui/btn_cast.webp"
                 alt="Забросить"
                 style={{
                   width: '100%',
@@ -1604,7 +1604,7 @@ export const HomeScreen = ({
           >
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
               <img
-                src="/assets/icons/weather.png"
+                src="/assets/icons/weather.webp"
                 alt="Погода"
                 style={{
                   width: '64px',

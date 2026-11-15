@@ -64,7 +64,7 @@ export function shareTrophyFish(fish: ActiveFishState, mode: 'story' | 'message'
     try {
       const mediaUrl = fish.fish.image
         ? (fish.fish.image.startsWith('http') ? fish.fish.image : `${window.location.origin}${fish.fish.image}`)
-        : `${window.location.origin}/assets/icons/app_icon.png`;
+        : `${window.location.origin}/assets/icons/coin.webp`;
 
       tg.shareToStory(mediaUrl, {
         text,

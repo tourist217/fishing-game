@@ -27,14 +27,14 @@ export const AVATAR_OPTIONS: {
     id: 'male',
     label: 'Рыбак',
     sublabel: 'Мужской образ',
-    image: '/assets/avatars/avatar_male.png',
+    image: '/assets/avatars/avatar_male.webp',
     activeColor: '#38bdf8',
   },
   {
     id: 'female',
     label: 'Рыбачка',
     sublabel: 'Женский образ',
-    image: '/assets/avatars/avatar_female.png',
+    image: '/assets/avatars/avatar_female.webp',
     activeColor: '#f472b6',
   },
 ];
@@ -173,7 +173,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             }}
           >
             <img
-              src={avatar === 'female' ? '/assets/avatars/avatar_female.png' : '/assets/avatars/avatar_male.png'}
+              src={avatar === 'female' ? '/assets/avatars/avatar_female.webp' : '/assets/avatars/avatar_male.webp'}
               alt={userName || 'Рыбак'}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />

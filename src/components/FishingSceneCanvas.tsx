@@ -34,7 +34,7 @@ function getPreloadedImage(src: string): HTMLImageElement | null {
 }
 
 if (typeof window !== 'undefined') {
-  getPreloadedImage('/assets/ui/rod_fps.png');
+  getPreloadedImage('/assets/ui/rod_fps.webp');
 }
 
 function drawImageCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, width: number, height: number) {
@@ -160,22 +160,22 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
       const curRodMaterial = rodMaterialRef.current;
 
       const LOCATION_BG_MAP: Record<string, string> = {
-        loc_village_pond: '/assets/locations/loc_village_pond_base.jpg',
-        loc_old_oxbow: '/assets/locations/loc_old_oxbow.jpg',
-        loc_forest_lake: '/assets/locations/loc_forest_lake.jpg',
-        loc_quiet_river: '/assets/locations/loc_quiet_river.jpg',
-        loc_beaver_backwater: '/assets/locations/loc_beaver_backwater.jpg',
-        loc_wide_reach: '/assets/locations/loc_wide_reach.jpg',
-        loc_reservoir: '/assets/locations/loc_reservoir.jpg',
-        loc_oka_river: '/assets/locations/loc_oka_river.jpg',
-        loc_ladoga_lake: '/assets/locations/loc_ladoga_lake.jpg',
-        loc_akhtuba_pits: '/assets/locations/loc_akhtuba_pits.jpg',
-        loc_caspian_delta: '/assets/locations/loc_caspian_delta.jpg',
+        loc_village_pond: '/assets/locations/loc_village_pond_base.webp',
+        loc_old_oxbow: '/assets/locations/loc_old_oxbow.webp',
+        loc_forest_lake: '/assets/locations/loc_forest_lake.webp',
+        loc_quiet_river: '/assets/locations/loc_quiet_river.webp',
+        loc_beaver_backwater: '/assets/locations/loc_beaver_backwater.webp',
+        loc_wide_reach: '/assets/locations/loc_wide_reach.webp',
+        loc_reservoir: '/assets/locations/loc_reservoir.webp',
+        loc_oka_river: '/assets/locations/loc_oka_river.webp',
+        loc_ladoga_lake: '/assets/locations/loc_ladoga_lake.webp',
+        loc_akhtuba_pits: '/assets/locations/loc_akhtuba_pits.webp',
+        loc_caspian_delta: '/assets/locations/loc_caspian_delta.webp',
       };
 
       const bgSrc = curLocation.image || LOCATION_BG_MAP[curLocation.id];
       const photoImg = bgSrc
-        ? getPreloadedImage(bgSrc) || (curLocation.id === 'loc_village_pond' ? getPreloadedImage('/assets/locations/loc_village_pond_dawn.jpg') : null)
+        ? getPreloadedImage(bgSrc) || (curLocation.id === 'loc_village_pond' ? getPreloadedImage('/assets/locations/loc_village_pond_dawn.webp') : null)
         : null;
 
       if (photoImg) {

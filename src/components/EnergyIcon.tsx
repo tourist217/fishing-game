@@ -9,7 +9,7 @@ interface EnergyIconProps {
 export const EnergyIcon: React.FC<EnergyIconProps> = ({ size = 18, className, style }) => {
   return (
     <img
-      src="/assets/icons/energy.png"
+      src="/assets/icons/energy.webp"
       alt="энергия"
       width={size}
       height={size}

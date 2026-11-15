@@ -549,7 +549,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
               }}
             >
               <img
-                src="/assets/ui/btn_cast.png"
+                src="/assets/ui/btn_cast.webp"
                 alt="Забросить"
                 style={{
                   width: '100%',
@@ -640,7 +640,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
             }}
           >
             <img
-              src="/assets/ui/btn_waiting.png"
+              src="/assets/ui/btn_waiting.webp"
               alt="Ожидание поклёвки..."
               draggable={false}
               style={{
@@ -723,7 +723,7 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
             title="Зажмите и удерживайте, чтобы тянуть леску"
           >
             <img
-              src="/assets/ui/btn_pull.png"
+              src="/assets/ui/btn_pull.webp"
               alt="Тянуть"
               draggable={false}
               style={{

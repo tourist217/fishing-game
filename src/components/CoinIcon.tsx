@@ -9,7 +9,7 @@ interface CoinIconProps {
 export const CoinIcon: React.FC<CoinIconProps> = ({ size = 16, className, style }) => {
   return (
     <img
-      src="/assets/icons/coin.png"
+      src="/assets/icons/coin.webp"
       alt="монета"
       width={size}
       height={size}

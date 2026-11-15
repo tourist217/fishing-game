@@ -49,7 +49,7 @@ export const BaitSelectModal: React.FC<BaitSelectModalProps> = ({
           width: 'min(94vh * 0.727, 100vw - 16px, 420px)',
           aspectRatio: '745 / 1024',
           maxHeight: '94vh',
-          backgroundImage: "url('/assets/ui/universal_board.png')",
+          backgroundImage: "url('/assets/ui/universal_board.webp')",
           backgroundSize: '100% 100%',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',

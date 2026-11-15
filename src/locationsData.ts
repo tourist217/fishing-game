@@ -22,7 +22,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#10b981',
     waterType: 'still',
     weightModifier: 1.0,
-    image: '/assets/locations/loc_village_pond_base.jpg',
+    image: '/assets/locations/loc_village_pond_base.webp',
   },
   {
     id: 'loc_old_oxbow',
@@ -34,7 +34,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#34d399',
     waterType: 'still',
     weightModifier: 1.25,
-    image: '/assets/locations/loc_old_oxbow.jpg',
+    image: '/assets/locations/loc_old_oxbow.webp',
   },
   {
     id: 'loc_forest_lake',
@@ -46,7 +46,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#06b6d4',
     waterType: 'still',
     weightModifier: 1.5,
-    image: '/assets/locations/loc_forest_lake.jpg',
+    image: '/assets/locations/loc_forest_lake.webp',
   },
   {
     id: 'loc_quiet_river',
@@ -58,7 +58,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#38bdf8',
     waterType: 'slow_current',
     weightModifier: 1.8,
-    image: '/assets/locations/loc_quiet_river.jpg',
+    image: '/assets/locations/loc_quiet_river.webp',
   },
   {
     id: 'loc_beaver_backwater',
@@ -70,7 +70,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#eab308',
     waterType: 'slow_current',
     weightModifier: 2.2,
-    image: '/assets/locations/loc_beaver_backwater.jpg',
+    image: '/assets/locations/loc_beaver_backwater.webp',
   },
   {
     id: 'loc_wide_reach',
@@ -82,7 +82,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#60a5fa',
     waterType: 'slow_current',
     weightModifier: 2.7,
-    image: '/assets/locations/loc_wide_reach.jpg',
+    image: '/assets/locations/loc_wide_reach.webp',
   },
   {
     id: 'loc_reservoir',
@@ -94,7 +94,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#818cf8',
     waterType: 'deep_water',
     weightModifier: 3.3,
-    image: '/assets/locations/loc_reservoir.jpg',
+    image: '/assets/locations/loc_reservoir.webp',
   },
   {
     id: 'loc_oka_river',
@@ -106,7 +106,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#2dd4bf',
     waterType: 'fast_current',
     weightModifier: 4.0,
-    image: '/assets/locations/loc_oka_river.jpg',
+    image: '/assets/locations/loc_oka_river.webp',
   },
   {
     id: 'loc_lower_volga',
@@ -129,7 +129,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#94a3b8',
     waterType: 'deep_water',
     weightModifier: 6.2,
-    image: '/assets/locations/loc_ladoga_lake.jpg',
+    image: '/assets/locations/loc_ladoga_lake.webp',
   },
   {
     id: 'loc_akhtuba_pits',
@@ -141,7 +141,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#c084fc',
     waterType: 'deep_water',
     weightModifier: 7.8,
-    image: '/assets/locations/loc_akhtuba_pits.jpg',
+    image: '/assets/locations/loc_akhtuba_pits.webp',
   },
   {
     id: 'loc_caspian_delta',
@@ -153,7 +153,7 @@ export const LOCATIONS: FishingLocation[] = [
     accentColor: '#fbbf24',
     waterType: 'slow_current',
     weightModifier: 10.0,
-    image: '/assets/locations/loc_caspian_delta.jpg',
+    image: '/assets/locations/loc_caspian_delta.webp',
   },
 ];
 

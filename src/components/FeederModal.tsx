@@ -69,7 +69,7 @@ export const FeederModal: React.FC<FeederModalProps> = ({
   // Select card background variant matching tab index and locked/unlocked state
   const bgImageSrc = `/assets/ui/feeder_card_tab${selectedSlotIndex}_${
     currentFeeder.isUnlocked ? 'clean' : 'locked'
-  }.png`;
+  }.webp`;
 
   return (
     <div

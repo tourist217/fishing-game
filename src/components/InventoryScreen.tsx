@@ -57,7 +57,7 @@ export const InventoryScreen: React.FC<InventoryScreenProps> = ({
           width: 'min(calc((100dvh - 84px) * 0.727), 100vw - 12px, 430px)',
           aspectRatio: '745 / 1024',
           maxHeight: 'calc(100dvh - 84px)',
-          backgroundImage: "url('/assets/ui/universal_board.png')",
+          backgroundImage: "url('/assets/ui/universal_board.webp')",
           backgroundSize: '100% 100%',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -140,7 +140,7 @@ export const InventoryScreen: React.FC<InventoryScreenProps> = ({
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <img
-                src="/assets/ui/keepnet_basket.png"
+                src="/assets/ui/keepnet_basket.webp"
                 alt="Садок"
                 style={{
                   width: '44px',
@@ -189,7 +189,7 @@ export const InventoryScreen: React.FC<InventoryScreenProps> = ({
                 }}
                 style={{
                   position: 'relative',
-                  backgroundImage: "url('/assets/ui/btn_sell_all.png')",
+                  backgroundImage: "url('/assets/ui/btn_sell_all.webp')",
                   backgroundSize: '100% 100%',
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'center',
@@ -255,7 +255,7 @@ export const InventoryScreen: React.FC<InventoryScreenProps> = ({
                 }}
               >
                 <img
-                  src="/assets/ui/keepnet_basket.png"
+                  src="/assets/ui/keepnet_basket.webp"
                   alt="Пустой садок"
                   style={{
                     width: '64px',

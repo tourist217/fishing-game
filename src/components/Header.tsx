@@ -86,7 +86,7 @@ export const Header = ({
           }}
         >
           <img
-            src={avatar === 'female' ? '/assets/avatars/avatar_female.png' : '/assets/avatars/avatar_male.png'}
+            src={avatar === 'female' ? '/assets/avatars/avatar_female.webp' : '/assets/avatars/avatar_male.webp'}
             alt="Аватар"
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />

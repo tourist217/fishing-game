@@ -81,7 +81,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
           width: 'min(94vh * 0.727, 100vw - 16px, 420px)',
           aspectRatio: '745 / 1024',
           maxHeight: '94vh',
-          backgroundImage: "url('/assets/ui/universal_board.png')",
+          backgroundImage: "url('/assets/ui/universal_board.webp')",
           backgroundSize: '100% 100%',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -319,8 +319,8 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                       overflow: 'hidden',
                       cursor: 'pointer',
                       backgroundImage: isDiscovered
-                        ? "url('/assets/ui/card_fish_bg.png')"
-                        : "url('/assets/ui/card_fish_locked.png')",
+                        ? "url('/assets/ui/card_fish_bg.webp')"
+                        : "url('/assets/ui/card_fish_locked.webp')",
                       backgroundSize: '100% 100%',
                       backgroundRepeat: 'no-repeat',
                       boxShadow: entry?.hasLegendary
@@ -387,7 +387,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                             return (
                               <img
                                 key={starIdx}
-                                src={isEarned ? '/assets/ui/star_gold.png' : '/assets/ui/star_gray.png'}
+                                src={isEarned ? '/assets/ui/star_gold.webp' : '/assets/ui/star_gray.webp'}
                                 alt="star"
                                 style={{
                                   width: '10.5px',
@@ -950,7 +950,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                         return (
                           <img
                             key={starIdx}
-                            src={isEarned ? '/assets/ui/star_gold.png' : '/assets/ui/star_gray.png'}
+                            src={isEarned ? '/assets/ui/star_gold.webp' : '/assets/ui/star_gray.webp'}
                             alt="star"
                             style={{
                               width: '18px',
@@ -1087,7 +1087,7 @@ export const FishJournalModal: React.FC<FishJournalModalProps> = ({
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                           <img
-                            src={lvl.isUnlocked ? '/assets/ui/star_gold.png' : '/assets/ui/star_gray.png'}
+                            src={lvl.isUnlocked ? '/assets/ui/star_gold.webp' : '/assets/ui/star_gray.webp'}
                             alt="star"
                             style={{
                               width: '16px',
