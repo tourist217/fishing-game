@@ -461,34 +461,36 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
         }}
       />
       
-      {/* Метка текущего времени суток и погоды */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '12px',
-          left: '14px',
-          background: 'rgba(0, 0, 0, 0.45)',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255, 255, 255, 0.18)',
-          borderRadius: '12px',
-          padding: '5px 10px',
-          fontSize: '12px',
-          fontWeight: 'bold',
-          color: '#f8fafc',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
-          pointerEvents: 'none',
-        }}
-      >
-        <span>{TIME_CONFIGS[effectiveTime]?.icon || '🌅'}</span>
-        <span>{TIME_CONFIGS[effectiveTime]?.label || 'Утро'}</span>
-        <span style={{ opacity: 0.4, margin: '0 1px' }}>•</span>
-        <span style={{ fontSize: '14px' }}>
-          {WEATHER_CONFIGS[effectiveWeather]?.icon || '☀️'}
-        </span>
-      </div>
+      {/* Метка текущего времени суток и погоды (скрывается во время вываживания, чтобы не мешать шкале) */}
+      {gameState !== 'reeling' && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '12px',
+            left: '14px',
+            background: 'rgba(0, 0, 0, 0.45)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255, 255, 255, 0.18)',
+            borderRadius: '12px',
+            padding: '5px 10px',
+            fontSize: '12px',
+            fontWeight: 'bold',
+            color: '#f8fafc',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
+            pointerEvents: 'none',
+          }}
+        >
+          <span>{TIME_CONFIGS[effectiveTime]?.icon || '🌅'}</span>
+          <span>{TIME_CONFIGS[effectiveTime]?.label || 'Утро'}</span>
+          <span style={{ opacity: 0.4, margin: '0 1px' }}>•</span>
+          <span style={{ fontSize: '14px' }}>
+            {WEATHER_CONFIGS[effectiveWeather]?.icon || '☀️'}
+          </span>
+        </div>
+      )}
     </div>
   );
 };

@@ -274,32 +274,34 @@ export const FishingScreen: React.FC<FishingScreenProps> = ({
           isPulling={isPulling}
         />
 
-        {/* Компактный индикатор энергии на водоеме */}
-        <div
-          onClick={() => setIsEnergyModalOpen(true)}
-          style={{
-            position: 'absolute',
-            top: '8px',
-            right: '8px',
-            zIndex: 10,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-            background: 'rgba(15, 23, 42, 0.75)',
-            border: '1px solid rgba(251, 191, 36, 0.4)',
-            borderRadius: '16px',
-            padding: '4px 8px',
-            cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
-            backdropFilter: 'blur(6px)',
-          }}
-          title="Пополнить энергию ☕"
-        >
-          <span style={{ fontSize: '12px' }}>⚡</span>
-          <span style={{ fontSize: '11px', fontWeight: 800, color: '#fbbf24' }}>
-            {energy}/{maxEnergy}
-          </span>
-        </div>
+        {/* Компактный индикатор энергии на водоеме (скрывается во время вываживания, чтобы не перекрывать шкалу) */}
+        {gameState !== 'reeling' && (
+          <div
+            onClick={() => setIsEnergyModalOpen(true)}
+            style={{
+              position: 'absolute',
+              top: '8px',
+              right: '8px',
+              zIndex: 10,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              background: 'rgba(15, 23, 42, 0.75)',
+              border: '1px solid rgba(251, 191, 36, 0.4)',
+              borderRadius: '16px',
+              padding: '4px 8px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(6px)',
+            }}
+            title="Пополнить энергию ☕"
+          >
+            <span style={{ fontSize: '12px' }}>⚡</span>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: '#fbbf24' }}>
+              {energy}/{maxEnergy}
+            </span>
+          </div>
+        )}
 
 
         {gameState === 'hooked' && (
