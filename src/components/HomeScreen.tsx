@@ -14,13 +14,11 @@ import { BaitSelectModal } from './BaitSelectModal';
 import { ProfileModal } from './ProfileModal';
 import { FishJournalModal } from './FishJournalModal';
 import { RangerQuestsModal } from './RangerQuestsModal';
-import { TournamentModal } from './TournamentModal';
 import { LeaderboardModal } from './LeaderboardModal';
 import { GemsShopModal } from './GemsShopModal';
 import { QuickEnergyModal } from './QuickEnergyModal';
 import type { DailyProvisionsState } from '../data/provisionsData';
 import type { DailyQuest } from '../types/quests';
-import { getCurrentWeather, getWeatherForecast, TIME_CONFIGS, WEATHER_CONFIGS } from '../utils/weatherTime';
 import { CoinIcon } from './CoinIcon';
 import { EnergyIcon } from './EnergyIcon';
 import { GemIcon } from './GemIcon';
@@ -231,7 +229,7 @@ interface HomeScreenProps {
 }
 
 export const HomeScreen = ({
-  currentLocation,
+  currentLocation: _currentLocation,
   gear,
   userName,
   avatar = 'male',
@@ -282,8 +280,6 @@ export const HomeScreen = ({
   const rodLevel = gear.rodLevels[gear.equippedRodId] || 1;
   const currentBait = AVAILABLE_BAITS.find((b) => b.id === selectedBaitId) || AVAILABLE_BAITS[0];
   const currentBaitCount = baits[selectedBaitId] || 0;
-  const currentEnv = getCurrentWeather();
-  const forecast = getWeatherForecast(4);
 
   // Интерактивные модальные окна
   const [activeModal, setActiveModal] = useState<
@@ -850,87 +846,9 @@ export const HomeScreen = ({
           </div>
         </div>
 
-        {/* Правая колонка: Турниры, Погода, Лидерборд */}
+        {/* Правая колонка: Лидерборд */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
-          {/* 1. Турниры */}
-          <div
-            onClick={() => setActiveModal('tournament')}
-            style={{
-              width: '74px',
-              height: '74px',
-              borderRadius: '20px',
-              cursor: 'pointer',
-              position: 'relative',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.55)',
-              transition: 'transform 0.12s ease',
-              overflow: 'hidden',
-              background: '#152232',
-              border: '1.5px solid rgba(251, 191, 36, 0.4)',
-            }}
-          >
-            <img
-              src="/assets/icons/tournaments.webp"
-              alt="Турниры"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                display: 'block',
-              }}
-            />
-          </div>
-
-          {/* 2. Погода */}
-          <div
-            onClick={() => setActiveModal('weather')}
-            style={{
-              width: '74px',
-              height: '74px',
-              borderRadius: '20px',
-              cursor: 'pointer',
-              position: 'relative',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.55)',
-              transition: 'transform 0.12s ease',
-              overflow: 'hidden',
-              background: '#152232',
-              border: '1.5px solid rgba(251, 191, 36, 0.4)',
-            }}
-          >
-            <img
-              src="/assets/icons/weather.webp"
-              alt="Погода"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                display: 'block',
-              }}
-            />
-            {/* Небольшой бейдж текущей погоды */}
-            <span
-              style={{
-                position: 'absolute',
-                top: '4px',
-                right: '4px',
-                padding: '2px 5px',
-                borderRadius: '8px',
-                background: 'rgba(15, 23, 42, 0.85)',
-                color: '#38bdf8',
-                fontSize: '11px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '2px',
-                border: '1px solid rgba(56, 189, 248, 0.5)',
-                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.6)',
-                zIndex: 2,
-              }}
-            >
-              {WEATHER_CONFIGS[currentEnv.weather]?.icon || '🌤️'}
-            </span>
-          </div>
-
-          {/* 3. Лидерборд */}
+          {/* Лидерборд */}
           <div
             onClick={() => setActiveModal('leaderboard')}
             style={{
@@ -1577,144 +1495,6 @@ export const HomeScreen = ({
           onClaimDailyBonus={onClaimDailyBonus || (() => false)}
           onClose={() => setActiveModal(null)}
         />
-      )}
-
-      {/* Еженедельный турнир (Firestore Leaderboard) */}
-      {activeModal === 'tournament' && (
-        <TournamentModal onClose={() => setActiveModal(null)} />
-      )}
-
-      {/* Погода */}
-      {activeModal === 'weather' && (
-        <div
-          onClick={() => setActiveModal(null)}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.72)',
-            backdropFilter: 'blur(8px)',
-            zIndex: 50,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: '#0f172a',
-              borderRadius: '24px',
-              padding: '20px',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              maxWidth: '340px',
-              width: '100%',
-              textAlign: 'center',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
-              <img
-                src="/assets/icons/weather.webp"
-                alt="Погода"
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '16px',
-                  objectFit: 'cover',
-                  border: '1.5px solid rgba(251, 191, 36, 0.4)',
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.5)',
-                }}
-              />
-            </div>
-            <div style={{ fontSize: '17px', fontWeight: 800, color: '#bae6fd', marginBottom: '2px' }}>
-              Сводка погоды и прогноз
-            </div>
-            <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '14px' }}>
-              Синхронизировано у всех рыбаков онлайн (период 15 мин)
-            </div>
-
-            {/* Карточка текущей погоды */}
-            <div
-              style={{
-                background: 'rgba(30, 41, 59, 0.7)',
-                borderRadius: '16px',
-                padding: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                marginBottom: '14px',
-                textAlign: 'left',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <span style={{ fontSize: '11px', color: '#94a3b8' }}>{currentLocation.name}:</span>
-                <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 700 }}>
-                  {TIME_CONFIGS[currentEnv.timeOfDay]?.icon} {TIME_CONFIGS[currentEnv.timeOfDay]?.label}
-                </span>
-              </div>
-              <div style={{ fontSize: '15px', fontWeight: 800, color: '#f8fafc', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span>{WEATHER_CONFIGS[currentEnv.weather]?.icon}</span>
-                <span>{WEATHER_CONFIGS[currentEnv.weather]?.label}</span>
-              </div>
-              <div style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: 1.4 }}>
-                {WEATHER_CONFIGS[currentEnv.weather]?.description}
-              </div>
-            </div>
-
-            {/* Прогноз на следующие периоды */}
-            <div style={{ textAlign: 'left', marginBottom: '14px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', marginBottom: '8px' }}>
-                ⏳ Прогноз смены погоды:
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-                {forecast.map((slot, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      background: 'rgba(30, 41, 59, 0.5)',
-                      borderRadius: '12px',
-                      padding: '8px',
-                      border: '1px solid rgba(255, 255, 255, 0.05)',
-                      textAlign: 'center',
-                    }}
-                  >
-                    <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '2px' }}>
-                      через ~{slot.startsInMinutes} мин
-                    </div>
-                    <div style={{ fontSize: '18px', margin: '2px 0' }}>
-                      {TIME_CONFIGS[slot.timeOfDay]?.icon} {WEATHER_CONFIGS[slot.weather]?.icon}
-                    </div>
-                    <div style={{ fontSize: '11px', fontWeight: 700, color: '#e2e8f0' }}>
-                      {slot.timeLabel}
-                    </div>
-                    <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                      {WEATHER_CONFIGS[slot.weather]?.label}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <p style={{ fontSize: '11px', color: '#64748b', lineHeight: 1.4, margin: '0 0 14px 0' }}>
-              💡 Активность рыбы зависит от времени и погоды. Подбирайте правильные снасти и наживки под условия!
-            </p>
-
-            <button
-              onClick={() => setActiveModal(null)}
-              style={{
-                width: '100%',
-                background: '#0284c7',
-                border: 'none',
-                color: '#fff',
-                fontWeight: 700,
-                padding: '10px',
-                borderRadius: '12px',
-                cursor: 'pointer',
-              }}
-            >
-              Закрыть
-            </button>
-          </div>
-        </div>
       )}
 
       {/* Магазин Алмазов */}
