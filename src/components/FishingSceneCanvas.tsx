@@ -33,6 +33,20 @@ function getPreloadedImage(src: string): HTMLImageElement | null {
   return bgImages[src].complete && bgImages[src].naturalWidth > 0 ? bgImages[src] : null;
 }
 
+const LOCATION_BG_MAP: Record<string, string> = {
+  loc_village_pond: '/assets/locations/loc_village_pond_base.webp',
+  loc_old_oxbow: '/assets/locations/loc_old_oxbow.webp',
+  loc_forest_lake: '/assets/locations/loc_forest_lake.webp',
+  loc_quiet_river: '/assets/locations/loc_quiet_river.webp',
+  loc_beaver_backwater: '/assets/locations/loc_beaver_backwater.webp',
+  loc_wide_reach: '/assets/locations/loc_wide_reach.webp',
+  loc_reservoir: '/assets/locations/loc_reservoir.webp',
+  loc_oka_river: '/assets/locations/loc_oka_river.webp',
+  loc_ladoga_lake: '/assets/locations/loc_ladoga_lake.webp',
+  loc_akhtuba_pits: '/assets/locations/loc_akhtuba_pits.webp',
+  loc_caspian_delta: '/assets/locations/loc_caspian_delta.webp',
+};
+
 if (typeof window !== 'undefined') {
   getPreloadedImage('/assets/ui/rod_fps.webp');
 }
@@ -158,20 +172,6 @@ export const FishingSceneCanvas: React.FC<FishingSceneCanvasProps> = ({
       const curTime = effectiveTimeRef.current;
       const curWeather = effectiveWeatherRef.current;
       const curRodMaterial = rodMaterialRef.current;
-
-      const LOCATION_BG_MAP: Record<string, string> = {
-        loc_village_pond: '/assets/locations/loc_village_pond_base.webp',
-        loc_old_oxbow: '/assets/locations/loc_old_oxbow.webp',
-        loc_forest_lake: '/assets/locations/loc_forest_lake.webp',
-        loc_quiet_river: '/assets/locations/loc_quiet_river.webp',
-        loc_beaver_backwater: '/assets/locations/loc_beaver_backwater.webp',
-        loc_wide_reach: '/assets/locations/loc_wide_reach.webp',
-        loc_reservoir: '/assets/locations/loc_reservoir.webp',
-        loc_oka_river: '/assets/locations/loc_oka_river.webp',
-        loc_ladoga_lake: '/assets/locations/loc_ladoga_lake.webp',
-        loc_akhtuba_pits: '/assets/locations/loc_akhtuba_pits.webp',
-        loc_caspian_delta: '/assets/locations/loc_caspian_delta.webp',
-      };
 
       const bgSrc = curLocation.image || LOCATION_BG_MAP[curLocation.id];
       const photoImg = bgSrc

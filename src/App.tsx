@@ -1,13 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { LOCATIONS, DEFAULT_LOCATION_ID, type FishingLocation } from './locationsData';
 import { Header } from './components/Header';
 import { Navigation, type ActiveTab } from './components/Navigation';
 import { FishingScreen } from './components/FishingScreen';
-import { InventoryScreen } from './components/InventoryScreen';
-import { ShopScreen } from './components/ShopScreen';
-import { MapScreen } from './components/MapScreen';
 import { HomeScreen } from './components/HomeScreen';
-import { GearInventoryScreen } from './components/GearInventoryScreen';
+
+// Lazy loading вторичных экранов и модальных окон для ускорения первой загрузки
+const InventoryScreen = lazy(() => import('./components/InventoryScreen').then(m => ({ default: m.InventoryScreen })));
+const ShopScreen = lazy(() => import('./components/ShopScreen').then(m => ({ default: m.ShopScreen })));
+const MapScreen = lazy(() => import('./components/MapScreen').then(m => ({ default: m.MapScreen })));
+const GearInventoryScreen = lazy(() => import('./components/GearInventoryScreen').then(m => ({ default: m.GearInventoryScreen })));
+const FeederModal = lazy(() => import('./components/FeederModal').then(m => ({ default: m.FeederModal })));
+const FeederWelcomeModal = lazy(() => import('./components/FeederWelcomeModal').then(m => ({ default: m.FeederWelcomeModal })));
+const ProfileModal = lazy(() => import('./components/ProfileModal').then(m => ({ default: m.ProfileModal })));
 
 import { usePlayerState } from './hooks/usePlayerState';
 import { useGearState } from './hooks/useGearState';
@@ -21,9 +26,6 @@ import { initUserAnalytics, trackGoal } from './utils/analytics';
 import { useTutorial } from './hooks/useTutorial';
 import { TutorialGuide } from './components/TutorialGuide';
 import { useFeederState } from './hooks/useFeederState';
-import { FeederModal } from './components/FeederModal';
-import { FeederWelcomeModal } from './components/FeederWelcomeModal';
-import { ProfileModal } from './components/ProfileModal';
 import { handleCatchForTournament, syncInitialPlayerRecord, resetTournamentLeaderboardRecord } from './services/tournamentService';
 import {
   loadCloudUserProfile,
@@ -338,7 +340,8 @@ export default function App() {
         />
       )}
 
-      {(isMapOpen || activeTab === 'map') && (
+      <Suspense fallback={null}>
+        {(isMapOpen || activeTab === 'map') && (
         <MapScreen
           playerLevel={player.level}
           currentLocationId={selectedLocationId}
@@ -725,6 +728,7 @@ export default function App() {
         onRestartTutorial={tutorial.resetTutorial}
         onResetProgress={resetAllProgress}
       />
+      </Suspense>
     </div>
   );
 }
